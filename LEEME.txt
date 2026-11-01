@@ -1,0 +1,35 @@
+﻿XuperTV para LG webOS - instalador (1.6.5)
+
+QUE HACER
+  1. Conecta el ordenador y la TV a la MISMA red WiFi.
+  2. En la TV, abre la app "Developer Mode" de LG (si no la tienes,
+     instalala desde LG Content Store). Activa el modo, espera el
+     reinicio y apunta la IP y la clave que muestra.
+  3. Doble clic en INSTALAR-XUPERTV.bat
+  4. Escribe la IP cuando te la pida.
+  5. Escribe la clave de la TV UNA vez (no se ve al escribir).
+     Si tu TV tiene "KEY SERVER" en ON no pasa nada: el instalador
+     usa la llave de la TV y lo indica en pantalla.
+  6. Espera a que diga "LISTO". La app se abre sola en la TV.
+
+GUIA CON DIBUJOS
+  Abre guia-instalacion.html con doble clic (funciona sin internet).
+
+SI ALGO FALLA
+  Mira el paso 5 de la guia. Casi siempre es:
+    - el PC y la TV no estan en la misma red,
+    - la IP cambio,
+    - o la clave caduco (el Modo Desarrollador dura 50 horas).
+
+IMPORTANTE
+  No ejecutes el instalador desde dentro del ZIP: extrae la carpeta
+  completa primero. El archivo .ipk tiene que estar junto al .bat.
+
+CODIGO FUENTE Y VERSION WEB
+  source/ contiene el codigo de la app y del servicio, mas
+  tools/build-ipk.sh para generar nuevos IPK.
+  XUPER-WEB.sh (Linux) y XUPER-WEB.bat (Windows) abren la version web
+  local. Solo necesitan Node.js 18 o superior.
+
+Proyecto no oficial, sin relacion con XuperTV ni con LG.
+No incluye contenido audiovisual.
