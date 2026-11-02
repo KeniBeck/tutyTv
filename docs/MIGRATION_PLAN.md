@@ -149,13 +149,16 @@ Completado:
 - TV en vivo: filtrado de canales visibles por favoritos, conservando los
   indices originales, y busqueda de canales/categorias extraidos a Core;
   `Ht` y `lvRenderResults` usan wrappers con fallback legacy
+- normalizacion de categorias del portal con fallback, categoria de Addons M3U,
+  validacion HTTP(S) y alta/actualizacion de addons por URL extraidas a Core;
+  `Bt`, `Xt` y la validacion de URL usan wrappers con fallback legacy
 
 Pendiente:
 
 - migrar progresivamente la coordinacion restante de eventos, relay, historial
   y estado de reproduccion que aun reside en `app.js`
 - migrar progresivamente las reglas de visibilidad y los focos especificos de UI
-- completar la coordinacion restante de live TV (categorias, carga y foco) y
+- completar la coordinacion restante de live TV (carga y foco) y la UI de
   addons
 
 ## Fase 4 - Integracion progresiva UI actual (primer corte completado)
@@ -458,6 +461,11 @@ verificacion estructural del IPK y prueba en TV fisica.
     (`liveChannels`). `Ht` y `lvRenderResults` usan wrappers con fallback.
     Verificados lint, typecheck, 235 pruebas y builds web/core/webOS. No se
     regenero IPK ni se probo en TV en este incremento.
+70. TV en vivo/Addons: normalizacion de categorias del portal, fallback y
+    entrada de Addons M3U extraidos a `liveCategories`; validacion HTTP(S) y
+    alta/actualizacion por URL extraidas a `addons`. `Bt`, `Xt` y la validacion
+    de URL usan wrappers con fallback. Verificados lint, typecheck, 243 pruebas
+    y builds web/core/webOS. No se regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

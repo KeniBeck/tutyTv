@@ -2207,6 +2207,76 @@
         }
     }
 
+    function legacyNormalizeLiveCategories(categories) {
+        var _core = window.TutyCore;
+        if (_core && _core.normalizeLiveCategories) return _core.normalizeLiveCategories(categories);
+        var result = [];
+        if (categories && categories.length)
+            for (var index = 0; index < categories.length; index++) {
+                var category = categories[index],
+                    name = category.name;
+                "ChannelList" !== name && 76182 !== category.id || (name = "Todos"), result.push({
+                    id: category.id,
+                    name: name,
+                    code: category.code,
+                    isAddon: !1
+                })
+            }
+        else result = [{
+            id: 76182,
+            name: "Todos",
+            isAddon: !1
+        }, {
+            id: 76206,
+            name: "Deportes",
+            isAddon: !1
+        }, {
+            id: 76205,
+            name: "Cine y Series",
+            isAddon: !1
+        }, {
+            id: 76188,
+            name: "Colombia",
+            isAddon: !1
+        }, {
+            id: 76191,
+            name: "España",
+            isAddon: !1
+        }, {
+            id: 76197,
+            name: "México",
+            isAddon: !1
+        }];
+        return result.push({
+            id: "addons",
+            name: "➕ Addons M3U",
+            isAddon: !0
+        }), result
+    }
+
+    function legacyIsAddonUrl(value) {
+        var _core = window.TutyCore;
+        if (_core && _core.isM3uAddonUrl) return _core.isM3uAddonUrl(value);
+        return /^https?:\/\//i.test(String(value).trim())
+    }
+
+    function legacyUpsertM3uAddon(addons, entry, count) {
+        var _core = window.TutyCore;
+        if (_core && _core.upsertM3uAddon) return _core.upsertM3uAddon(addons, entry, count);
+        for (var next = addons.slice(), index = 0; index < next.length; index++)
+            if (next[index].url === entry.url) {
+                var updated = {};
+                for (var key in next[index]) updated[key] = next[index][key];
+                return updated.count = count, next[index] = updated, next
+            }
+        return next.push({
+            id: entry.id || "addon_" + Date.now(),
+            name: entry.name || "Lista M3U",
+            url: entry.url,
+            count: count
+        }), next
+    }
+
     function Ft(e) {
         var t = wt();
         if (!t || !t.length) return F.splice(0, F.length), Ht(!1), Rn(), void(e && e());
@@ -2251,41 +2321,8 @@
                         }
                         if (r || (r = !0, Lt || function(e) {
                                 Lt && St.length ? e && e(null, St) : q("liveCategories", {}, function(t, i) {
-                                    var a = [];
-                                    if (i && i.categories && i.categories.length)
-                                        for (var n = 0; n < i.categories.length; n++) {
-                                            var r = i.categories[n],
-                                                o = r.name;
-                                            "ChannelList" !== o && 76182 !== r.id || (o = "Todos"), a.push({
-                                                id: r.id,
-                                                name: o,
-                                                code: r.code,
-                                                isAddon: !1
-                                            })
-                                        } else a = [{
-                                            id: 76182,
-                                            name: "Todos"
-                                        }, {
-                                            id: 76206,
-                                            name: "Deportes"
-                                        }, {
-                                            id: 76205,
-                                            name: "Cine y Series"
-                                        }, {
-                                            id: 76188,
-                                            name: "Colombia"
-                                        }, {
-                                            id: 76191,
-                                            name: "España"
-                                        }, {
-                                            id: 76197,
-                                            name: "México"
-                                        }];
-                                    a.push({
-                                        id: "addons",
-                                        name: "➕ Addons M3U",
-                                        isAddon: !0
-                                    }), St = a, Lt = !0, _t || (_t = St[0]), qn(), liveUpdateLabel(), e && e(null, St)
+                                    var a = legacyNormalizeLiveCategories(i && i.categories);
+                                    St = a, Lt = !0, _t || (_t = St[0]), qn(), liveUpdateLabel(), e && e(null, St)
                                 })
                             }(), t && t(o, s)), !o && s && s.hasMore && l.length) return n++, void setTimeout(e, 25);
                         Mt = !1, o && !kt && setTimeout(function() {
@@ -2675,7 +2712,7 @@
         c && (c._activate = function() {
             var e = t("da-custom-url"),
                 i = e ? (e.value || "").trim() : "";
-            i && /^https?:\/\//i.test(i) ? (c.textContent = "Descargando…", Xt({
+            i && legacyIsAddonUrl(i) ? (c.textContent = "Descargando…", Xt({
                 id: "custom_" + Date.now(),
                 name: "Lista Personalizada",
                 url: i
@@ -2694,16 +2731,7 @@
             url: e.url
         }, function(i, a) {
             if (!i && a && a.channels && a.channels.length) {
-                for (var n = wt(), r = !1, o = 0; o < n.length; o++)
-                    if (n[o].url === e.url) {
-                        n[o].count = a.channels.length, r = !0;
-                        break
-                    } r || n.push({
-                    id: e.id || "addon_" + Date.now(),
-                    name: e.name || "Lista M3U",
-                    url: e.url,
-                    count: a.channels.length
-                }), xt(n), t && t(null, a.channels.length)
+                xt(legacyUpsertM3uAddon(wt(), e, a.channels.length)), t && t(null, a.channels.length)
             } else t && t(i || "No se encontraron canales en la lista")
         })
     }

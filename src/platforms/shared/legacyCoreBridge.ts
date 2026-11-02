@@ -45,6 +45,8 @@ export {
   toggleLiveFavorite
 } from "../../core/usecases/favorites/liveFavorites";
 export { filterLiveChannels, findLiveSearchMatches } from "../../core/usecases/live/liveChannels";
+export { normalizeLiveCategories } from "../../core/usecases/live/liveCategories";
+export { isM3uAddonUrl, upsertM3uAddon } from "../../core/usecases/live/addons";
 export { isLegacyFocusVisible } from "../../core/usecases/ui/focusVisibility";
 export { computeLegacyScrollAdjustment } from "../../core/usecases/ui/focusScroll";
 export { ensureViewerProfile } from "../../core/usecases/storage/viewerProfile";

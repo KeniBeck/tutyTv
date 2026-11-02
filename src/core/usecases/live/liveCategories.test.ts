@@ -1,0 +1,25 @@
+import { describe, expect, it } from "vitest";
+import { DEFAULT_LIVE_CATEGORIES, normalizeLiveCategories } from "./liveCategories";
+
+describe("live category normalization", () => {
+  it("normalizes portal categories and appends the addon category", () => {
+    expect(normalizeLiveCategories([
+      { id: 76182, name: "ChannelList", code: "all" },
+      { id: 76206, name: "Deportes", code: "sports" }
+    ])).toEqual([
+      { id: 76182, name: "Todos", code: "all", isAddon: false },
+      { id: 76206, name: "Deportes", code: "sports", isAddon: false },
+      { id: "addons", name: "➕ Addons M3U", isAddon: true }
+    ]);
+  });
+
+  it("uses the default categories when the portal list is empty", () => {
+    const categories = normalizeLiveCategories([]);
+
+    expect(categories).toHaveLength(DEFAULT_LIVE_CATEGORIES.length + 1);
+    expect(categories.slice(0, -1).map((category) => category.name)).toEqual([
+      "Todos", "Deportes", "Cine y Series", "Colombia", "España", "México"
+    ]);
+    expect(categories.at(-1)?.isAddon).toBe(true);
+  });
+});

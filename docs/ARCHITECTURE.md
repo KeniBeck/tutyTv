@@ -302,6 +302,9 @@ fallback sin el puente.
 - Busqueda en historial y validacion de episodios (`history`)
 - TV en vivo: filtrado de canales visibles por favoritos, conservando indices, y
   busqueda de canales/categorias con normalizacion compartida (`liveChannels`)
+- Normalizacion de categorias del portal, fallback de categorias y entrada de
+  Addons M3U (`liveCategories`)
+- Addons M3U: validacion HTTP(S) y alta/actualizacion por URL (`addons`)
 - Adaptador JSON de almacenamiento (`createJsonStorageAdapter`) con
   implementaciones Web y webOS
 - Puente IIFE `tuty-core.js` integrado en el runtime legacy con fallback
@@ -324,15 +327,15 @@ fallback sin el puente.
 - Cableado de eventos del video y de HLS centralizado (`playbackEventWiring`)
 - Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
   estado visible, modo VOD y transicion detalle-reproductor
-- 235 pruebas automatizadas sin dependencia de televisor ni navegador
+- 243 pruebas automatizadas sin dependencia de televisor ni navegador
 - Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
   titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
 
 ## 9. Modulos pendientes prioritarios
 
 - evaluar integracion adicional de navegacion/foco y capacidades de plataforma
-- migrar la coordinacion restante de live TV (categorias, carga y foco), addons
-  y estados de UI que aun vive en `app.js`
+- migrar la coordinacion restante de live TV (carga y foco), la UI de addons y
+  los estados de UI que aun viven en `app.js`
 
 ## 10. Branding y compatibilidad de datos
 
