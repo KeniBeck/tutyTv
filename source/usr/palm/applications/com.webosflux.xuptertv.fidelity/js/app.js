@@ -364,7 +364,7 @@
             contentId: e.id
         }, function(t, i) {
             if (e._detailLoading = !1, !t && i && !1 !== i.returnValue && i.item) {
-                if (R(e, i.item), e.episodes = i.episodes || [], e.seasons = e._catalogSeasons || i.seasons || [], e.seasonId || (e.seasonId = e.id), e.seasons && e.seasons.length && e.seasons.sort(function(e, t) {
+                if (R(e, i.item), e.episodes = i.episodes || [], e.seasons = i.seasons && i.seasons.length ? i.seasons : e._catalogSeasons || [], e.seasonId || (e.seasonId = e.id), e.seasons && e.seasons.length && e.seasons.sort(function(e, t) {
                         return (parseInt(e.number, 10) || 0) - (parseInt(t.number, 10) || 0)
                     }), (!e.seasons || !e.seasons.length) && S(e)) {
                     var a = 1,
@@ -4844,7 +4844,13 @@
             preferred: preferred,
             fallback: fallback,
             episodes: episodes.length,
-            episode: j.playerEpisode && j.playerEpisode.id
+            episode: j.playerEpisode && j.playerEpisode.id,
+            seasons: seasons.map(function(season) {
+                return {
+                    id: season && season.id,
+                    number: season && season.number
+                }
+            })
         });
         return target
     }

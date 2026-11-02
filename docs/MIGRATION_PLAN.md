@@ -634,8 +634,12 @@ verificacion estructural del IPK y prueba en TV fisica.
     temporada real por `seasonId` guardado, id raiz o numero del titulo
     (`Temp.1`, `T2`, etc.) y se sincroniza `item.seasonId` antes de calcular el
     siguiente episodio. Corrige casos como Round 6 Temp.1 / Goodbye Dear Wife.
-    Verificados lint, typecheck, 318 pruebas y builds web/core/webOS. No se
-    regenero IPK ni se probo en TV.
+    Verificados lint, typecheck, 318 pruebas y builds web/core/webOS.
+92. Series agrupadas: el detalle ahora prioriza las temporadas devueltas por la
+    API sobre `_catalogSeasons` del agrupado del catalogo. Esto evita que falte
+    la temporada siguiente en series como Tierra de Mafia T1 (la API devuelve T1
+    y T2, pero el catalogo agrupado solo tenia T1). Verificados lint, typecheck,
+    318 pruebas y builds web/core/webOS. No se regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 
