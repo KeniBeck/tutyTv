@@ -1,6 +1,6 @@
 {
   "id": "com.webosflux.xuptertv.fidelity",
-  "version": "1.6.7",
+  "version": "1.6.8",
   "app": "com.webosflux.xuptertv.fidelity",
   "services": [
     "com.webosflux.xuptertv.fidelity.service"
