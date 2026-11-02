@@ -51,6 +51,15 @@ export { liveListScrollTop } from "../../core/usecases/live/liveFocus";
 export { isLegacyFocusVisible } from "../../core/usecases/ui/focusVisibility";
 export { computeLegacyScrollAdjustment } from "../../core/usecases/ui/focusScroll";
 export { ensureViewerProfile } from "../../core/usecases/storage/viewerProfile";
+export {
+  buildReminderEntry,
+  isReminderActive,
+  mergeReminderUpdate,
+  reminderCount,
+  selectReminderCheckIds,
+  shouldCheckReminders,
+  toggleReminderEntry
+} from "../../core/usecases/reminders/reminders";
 export { buildDevServiceUrl, buildQueryString } from "../../core/usecases/api/serviceRequest";
 export {
   buildServiceParams,

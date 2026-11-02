@@ -133,6 +133,9 @@ Completado:
 - sesion/API normalizada, validacion de sesion, parametros de catalogo,
   busqueda y detalle, URL de servicio y descripcion de errores extraidos a
   Core; `y`, `b`, `C`, `m` y `N` usan wrappers con fallback
+- recordatorios extraidos a Core: alta/baja, estado activo, throttle,
+  seleccion de IDs y fusion de nuevos episodios; `reminderOn`,
+  `toggleReminder` y `checkReminders` usan wrappers con fallback
 - el mapeo de teclas multimedia (play, pause, stop, avance, retroceso y menu)
   se extrajo a Core y `lt` conserva toda la logica de pantalla y foco
 - el formato y parseo de duraciones, la resolucion de duracion con fallback y
@@ -532,6 +535,11 @@ verificacion estructural del IPK y prueba en TV fisica.
     errores (`apiSession`). `y`, `b`, `C`, `m` y `N` usan wrappers con fallback.
     Verificados lint, typecheck, 260 pruebas y builds web/core/webOS. No se
     regenero IPK ni se probo en TV.
+78. Recordatorios extraidos a Core (`reminders`): alta/baja, estado activo,
+    throttle de comprobacion, IDs a consultar y fusion de nuevos episodios.
+    `reminderOn`, `toggleReminder` y `checkReminders` usan wrappers con
+    fallback. Verificados lint, typecheck, 267 pruebas y builds
+    web/core/webOS. No se regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

@@ -725,6 +725,64 @@
         return !code && !message ? "" : (code ? String(code) + ": " : "") + (message ? String(message) : "La API rechazó la petición")
     }
 
+    function legacyIsReminderActive(itemId, reminders) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.isReminderActive === "function") return _core.isReminderActive(itemId, reminders);
+        return !!(itemId && reminders && reminders[String(itemId)])
+    }
+
+    function legacyToggleReminderEntry(reminders, item, now) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.toggleReminderEntry === "function") return _core.toggleReminderEntry(reminders, item, now);
+        if (!item || !item.id) return {
+            reminders: reminders,
+            active: !1
+        };
+        var id = String(item.id),
+            active = !reminders[id],
+            next = {};
+        for (var key in reminders) next[key] = reminders[key];
+        return active ? next[id] = {
+            id: id,
+            title: String(item.title || "Contenido"),
+            poster: String(item.poster || item.cover || ""),
+            count: item.episodes && item.episodes.length ? item.episodes.length : parseInt(item.updateCount || item.volumeCount || 0, 10) || 0,
+            createdAt: now
+        } : delete next[id], {
+            reminders: next,
+            active: active
+        }
+    }
+
+    function legacyShouldCheckReminders(reminders, lastCheckAt, now) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.shouldCheckReminders === "function") return _core.shouldCheckReminders(reminders, lastCheckAt, now);
+        if (!reminders) return !1;
+        var ids = Object.keys(reminders);
+        return ids.length > 0 && !(lastCheckAt && now - lastCheckAt < 216e5)
+    }
+
+    function legacySelectReminderCheckIds(reminders) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.selectReminderCheckIds === "function") return _core.selectReminderCheckIds(reminders);
+        return reminders ? Object.keys(reminders).slice(0, 10) : []
+    }
+
+    function legacyMergeReminderUpdate(reminder, response) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.mergeReminderUpdate === "function") return _core.mergeReminderUpdate(reminder, response);
+        var item = response && response.item || {},
+            episodes = response && response.episodes,
+            count = episodes && episodes.length ? episodes.length : parseInt(item.updateCount || item.volumeCount || 0, 10) || 0,
+            increased = count > 0 && reminder.count > 0 && count > reminder.count,
+            next = {};
+        for (var key in reminder) next[key] = reminder[key];
+        return count > 0 && (next.count = count), next.title = String(item.title || reminder.title), next.poster = String(item.poster || item.posterUrl || reminder.poster), {
+            reminder: next,
+            increased: increased
+        }
+    }
+
     function legacyFormatPlaybackTime(value) {
         var _core = window.TutyCore;
         if (_core && typeof _core.formatPlaybackTime === "function") return _core.formatPlaybackTime(value);
@@ -1346,22 +1404,13 @@
     }
 
     function reminderOn(e) {
-        return !!(e && e.id && X.reminders && X.reminders[String(e.id)])
+        return legacyIsReminderActive(e && e.id, X.reminders)
     }
 
     function toggleReminder(e) {
         if (!e || !e.id) return !1;
-        var t = String(e.id),
-            i = !reminderOn(e);
-        if (i) X.reminders[t] = {
-            id: t,
-            title: e.title || "Contenido",
-            poster: e.poster || e.cover || "",
-            count: e.episodes && e.episodes.length ? e.episodes.length : parseInt(e.updateCount || e.volumeCount || 0, 10) || 0,
-            createdAt: Date.now()
-        };
-        else delete X.reminders[t];
-        return J(W, X), i
+        var result = legacyToggleReminderEntry(X.reminders, e, Date.now());
+        return X.reminders = result.reminders, J(W, X), result.active
     }
 
     function toast(msg) {
@@ -1390,20 +1439,20 @@
     }
 
     function checkReminders() {
-        if (!X.reminders) return;
-        var e = Object.keys(X.reminders);
-        if (!e.length || X.reminderCheckAt && Date.now() - X.reminderCheckAt < 216e5) return;
-        X.reminderCheckAt = Date.now(), J(W, X);
-        for (var t = e.slice(0, 10), i = [], a = 0, n = 0; n < t.length; n++)(function(e) {
+        var now = Date.now();
+        if (!legacyShouldCheckReminders(X.reminders, X.reminderCheckAt, now)) return;
+        var t = legacySelectReminderCheckIds(X.reminders);
+        if (!t.length) return;
+        X.reminderCheckAt = now, J(W, X);
+        for (var i = [], a = 0, n = 0; n < t.length; n++)(function(e) {
             q("detail", {
                 contentId: e
             }, function(n, r) {
                 if (a++, !n && r && !1 !== r.returnValue) {
-                    var s = r.item || {},
-                        l = X.reminders[e];
+                    var l = X.reminders[e];
                     if (l) {
-                        var d = r.episodes && r.episodes.length ? r.episodes.length : parseInt(s.updateCount || s.volumeCount || 0, 10) || 0;
-                        d > 0 && (l.count > 0 && d > l.count && i.push(s.title || l.title || "Una serie"), l.count = d), l.title = s.title || l.title, l.poster = s.poster || s.posterUrl || l.poster, J(W, X)
+                        var merged = legacyMergeReminderUpdate(l, r);
+                        merged.increased && i.push(merged.reminder.title || "Una serie"), X.reminders[e] = merged.reminder, J(W, X)
                     }
                 }
                 a === t.length && i.length && toast("Nuevos episodios: " + i.slice(0, 3).join(", "))
