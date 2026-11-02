@@ -639,7 +639,14 @@ verificacion estructural del IPK y prueba en TV fisica.
     API sobre `_catalogSeasons` del agrupado del catalogo. Esto evita que falte
     la temporada siguiente en series como Tierra de Mafia T1 (la API devuelve T1
     y T2, pero el catalogo agrupado solo tenia T1). Verificados lint, typecheck,
-    318 pruebas y builds web/core/webOS. No se regenero IPK ni se probo en TV.
+    318 pruebas y builds web/core/webOS.
+93. Red de seguridad para temporadas incompletas: si al llegar al final solo
+    hay una temporada en cache, se vuelve a consultar el detalle por
+    `contentId`, se reemplazan las temporadas con las de la API, se resuelve de
+    nuevo `seasonId` y se reintenta el aviso. Cubre fichas cacheadas como
+    Juego de Tronos T1, donde el log mostraba `seasons: Array(1)` pese a que la
+    API devuelve 8. Verificados lint, typecheck, 318 pruebas y builds
+    web/core/webOS. No se regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

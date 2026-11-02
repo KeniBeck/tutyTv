@@ -4819,6 +4819,32 @@
         j.nextEpisodeTimer && clearTimeout(j.nextEpisodeTimer), j.nextEpisodeTimer = setTimeout(tick, 1e3)
     }
 
+    function refreshNextSeasons(item) {
+        if (!item || item._nextSeasonsLoading || item._nextSeasonsTried) return;
+        item._nextSeasonsLoading = !0;
+        try {
+            q("detail", {
+                contentId: item.id
+            }, function(error, response) {
+                item._nextSeasonsLoading = !1, item._nextSeasonsTried = !0;
+                if (!error && response && !1 !== response.returnValue && response.seasons && response.seasons.length) {
+                    item.seasons = response.seasons.slice().sort(function(a, b) {
+                        return (parseInt(a.number, 10) || 0) - (parseInt(b.number, 10) || 0)
+                    });
+                    var resolved = legacyResolveDetailSeason(item.seasons, item.id, item.seasonId, item.title || item.alias);
+                    j.detailSeason = resolved.seasonIndex, resolved.seasonId && (item.seasonId = resolved.seasonId), window.TUTYTV_WEB && window.console && console.log("[TUTYTV] seasons refreshed", {
+                        item: item.id,
+                        seasons: item.seasons.length,
+                        seasonId: item.seasonId
+                    })
+                }
+                "player" === j.screen && S(item) && maybeShowNextEpisodePrompt(Yn(), Zn())
+            })
+        } catch (error) {
+            item._nextSeasonsLoading = !1, item._nextSeasonsTried = !0
+        }
+    }
+
     function findNextPlaybackTarget() {
         var item = j.playerItem;
         if (!item || !S(item) || "player" !== j.screen) return null;
@@ -4838,6 +4864,7 @@
             legacyFindEpisodeIndex(fallbackEpisodes, j.playerEpisode) >= 0 && (preferred = fallback, episodes = fallbackEpisodes)
         }
         var target = legacyResolveNextPlaybackTarget(seasons, preferred, fallback, episodes, j.playerEpisode);
+        !target && seasons.length <= 1 && refreshNextSeasons(item);
         window.TUTYTV_WEB && window.console && !target && console.log("[TUTYTV] next target not found", {
             item: item && item.id,
             seasonId: item && item.seasonId,
