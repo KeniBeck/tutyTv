@@ -648,6 +648,12 @@ verificacion estructural del IPK y prueba en TV fisica.
     API devuelve 8. Verificados lint, typecheck, 318 pruebas y builds
     web/core/webOS. No se regenero IPK ni se probo en TV.
 
+94. Evitado el aviso fantasma al cambiar de temporada/episodio: durante 2.5-3 s
+    despues de iniciar un cambio de fuente se ignoran `ended`/`timeupdate` del
+    video anterior, por lo que no se vuelve a abrir el aviso ni se salta otro
+    episodio. Verificados lint, typecheck, 318 pruebas y builds
+    web/core/webOS. No se regenero IPK ni se probo en TV.
+
 ## Riesgos pendientes
 
 - monolito `app.js` con acoplamiento UI+plataforma elevado

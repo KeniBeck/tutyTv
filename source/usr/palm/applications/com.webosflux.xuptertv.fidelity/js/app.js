@@ -489,6 +489,7 @@
             nextEpisodeSeq: 0,
             nextEpisodeCountdown: 7,
             nextEpisodeDismissed: !1,
+            nextEpisodeGuardUntil: 0,
             episodeBrowserOpen: !1,
             categoryPickerOpen: !1,
             liveCategoriesOpen: !1,
@@ -4737,7 +4738,7 @@
 
     function gn(e, t, saveHistory) {
         if (e && t) {
-            !1 !== saveHistory && ar(), j.playerItem = e, j.playerEpisode = t, j.detailEpisode = t, j.playerSeasonIndex = j.detailSeason || 0, ye && be && vr(), bn(e), j.episodeSwitchTimer && clearTimeout(j.episodeSwitchTimer), j.episodeSwitchSeq = (j.episodeSwitchSeq || 0) + 1;
+            j.nextEpisodeGuardUntil = Date.now() + 3e3, !1 !== saveHistory && ar(), j.playerItem = e, j.playerEpisode = t, j.detailEpisode = t, j.playerSeasonIndex = j.detailSeason || 0, ye && be && vr(), bn(e), j.episodeSwitchTimer && clearTimeout(j.episodeSwitchTimer), j.episodeSwitchSeq = (j.episodeSwitchSeq || 0) + 1;
             var i = j.episodeSwitchSeq;
             nr("Cambiando capítulo…"), j.episodeSwitchTimer = setTimeout(function() {
                 j.episodeSwitchTimer = null, i === j.episodeSwitchSeq && ("player" === j.screen || "detail" === j.screen) && (j.resumePosition = 0, sr(e, t))
@@ -4772,6 +4773,7 @@
         var item = j.playerItem;
         if (!item || !target) return;
         var seq = ++j.nextEpisodeSeq;
+        j.nextEpisodeGuardUntil = Date.now() + 3e3;
         window.TUTYTV_WEB && window.console && console.log("[TUTYTV] next target", {
             kind: target.kind,
             seasonIndex: target.seasonIndex,
@@ -4883,7 +4885,7 @@
     }
 
     function maybeShowNextEpisodePrompt(position, total) {
-        if (j.nextEpisodeDismissed || j.nextEpisodeOpen || "vod" !== j.playerMode || !(total > 0) || position < total - 7) return;
+        if (j.nextEpisodeDismissed || j.nextEpisodeOpen || Date.now() < j.nextEpisodeGuardUntil || "vod" !== j.playerMode || !(total > 0) || position < total - 7) return;
         var target = findNextPlaybackTarget();
         target && showNextEpisodePrompt(target, total - position)
     }
@@ -4891,7 +4893,7 @@
     function yn() {
         var item = j.playerItem;
         if (item && S(item) && "player" === j.screen) {
-            if (j.nextEpisodeDismissed) return void mn();
+            if (j.nextEpisodeDismissed || Date.now() < j.nextEpisodeGuardUntil) return void mn();
             var target = findNextPlaybackTarget();
             target ? showNextEpisodePrompt(target) : mn()
         }
@@ -5494,7 +5496,7 @@
                     resumeAt = 0
                 }
             };
-            j.noHistorySave = !0, ar(), j.noHistorySave = !1, j.nextEpisodeDismissed = !1, Fn = e;
+            j.noHistorySave = !0, ar(), j.noHistorySave = !1, j.nextEpisodeDismissed = !1, j.nextEpisodeGuardUntil = Date.now() + 2500, Fn = e;
             var a = /^(http:\/\/127\.0\.0\.1:\d+)/.exec(e);
             if (a && (Un = a[1]), /\/s\/[0-9a-f]+\.mp4/i.test(e)) {
                 Hn = e.split("?")[0];
