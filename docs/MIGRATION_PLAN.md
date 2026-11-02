@@ -130,6 +130,9 @@ Completado:
   (`audioCode`/`subCode`) y la preferencia es/pt/en como respaldo
 - la construccion de la URL del servicio de desarrollo y su query string se
   extrajo a Core; el transporte Luna y el fallback de servicio siguen en `q`
+- sesion/API normalizada, validacion de sesion, parametros de catalogo,
+  busqueda y detalle, URL de servicio y descripcion de errores extraidos a
+  Core; `y`, `b`, `C`, `m` y `N` usan wrappers con fallback
 - el mapeo de teclas multimedia (play, pause, stop, avance, retroceso y menu)
   se extrajo a Core y `lt` conserva toda la logica de pantalla y foco
 - el formato y parseo de duraciones, la resolucion de duracion con fallback y
@@ -523,6 +526,12 @@ verificacion estructural del IPK y prueba en TV fisica.
 76. Alcance de la Fase 7 ajustado: el rediseno de UI no inicia al cerrar
     favoritos, sino cuando termine la migracion funcional y la limpieza legacy
     pendiente. Se continua primero con la coordinacion restante.
+
+77. API funcional extraida a Core: normalizacion/validacion de sesion,
+    parametros de catalogo/busqueda/detalle, resolucion de URL y descripcion de
+    errores (`apiSession`). `y`, `b`, `C`, `m` y `N` usan wrappers con fallback.
+    Verificados lint, typecheck, 260 pruebas y builds web/core/webOS. No se
+    regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 
