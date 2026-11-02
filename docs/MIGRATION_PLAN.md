@@ -270,8 +270,8 @@ Enfoque:
 - cambios por pantalla/componente con paridad funcional y pruebas
 - no redisenar todo en un solo cambio
 
-Estado: planificada. Inicia despues de confirmar la funcionalidad de favoritos
-de TV en vivo.
+Estado: planificada. Inicia cuando cierre la migracion funcional pendiente
+(coordinacion restante y limpieza legacy), no solo al confirmar favoritos.
 
 ## Checklist de la etapa web
 
@@ -520,6 +520,9 @@ verificacion estructural del IPK y prueba en TV fisica.
     desde el corazon de la fila y usar el filtro/contador. La UI actual se
     considera tosca; se agrega la Fase 7 de rediseno de UI, no incluida en el
     plan original. No se regenero IPK.
+76. Alcance de la Fase 7 ajustado: el rediseno de UI no inicia al cerrar
+    favoritos, sino cuando termine la migracion funcional y la limpieza legacy
+    pendiente. Se continua primero con la coordinacion restante.
 
 ## Riesgos pendientes
 
