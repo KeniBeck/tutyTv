@@ -31,3 +31,11 @@ export function upsertM3uAddon(
   });
   return next;
 }
+
+export function hasAddonUrl(addons: ReadonlyArray<M3uAddon>, url: unknown): boolean {
+  return addons.some((addon) => addon.url === url);
+}
+
+export function removeAddonAt(addons: ReadonlyArray<M3uAddon>, index: number): M3uAddon[] {
+  return addons.filter((_addon, current) => current !== index);
+}

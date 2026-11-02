@@ -151,8 +151,11 @@ Completado:
   `channelCode` al paginar extraidos a Core; `Ht`, `lvRenderResults` y `Bt`
   usan wrappers con fallback legacy
 - normalizacion de categorias del portal con fallback, categoria de Addons M3U,
-  validacion HTTP(S) y alta/actualizacion de addons por URL extraidas a Core;
-  `Bt`, `Xt` y la validacion de URL usan wrappers con fallback legacy
+  validacion HTTP(S), deteccion de URL instalada, alta/actualizacion y
+  eliminacion de addons extraidas a Core; `Bt`, `Xt`, `$t` y la validacion de
+  URL usan wrappers con fallback legacy
+- etiqueta/estado de la categoria activa y scroll de la lista de canales
+  extraidos a Core; `liveUpdateLabel` y `zt` usan wrappers con fallback
 
 Pendiente:
 
@@ -470,6 +473,11 @@ verificacion estructural del IPK y prueba en TV fisica.
 71. TV en vivo: deduplicacion por `channelCode` al paginar canales extraida a
     Core; `Bt` la usa mediante `legacySelectNewLiveChannels` con fallback.
     Verificados lint, typecheck, 245 pruebas y builds web/core/webOS. No se
+    regenero IPK ni se probo en TV.
+72. TV en vivo/Addons: etiqueta/estado de categoria y scroll de lista extraidos
+    a Core; deteccion de addon instalado y eliminacion por indice agregadas a
+    `addons`. `liveUpdateLabel`, `zt` y `$t` usan wrappers con fallback.
+    Verificados lint, typecheck, 252 pruebas y builds web/core/webOS. No se
     regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes

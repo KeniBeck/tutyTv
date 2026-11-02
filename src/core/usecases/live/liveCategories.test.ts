@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_LIVE_CATEGORIES, normalizeLiveCategories } from "./liveCategories";
+import { DEFAULT_LIVE_CATEGORIES, formatLiveCategoryLabel, normalizeLiveCategories } from "./liveCategories";
 
 describe("live category normalization", () => {
   it("normalizes portal categories and appends the addon category", () => {
@@ -21,5 +21,15 @@ describe("live category normalization", () => {
       "Todos", "Deportes", "Cine y Series", "Colombia", "España", "México"
     ]);
     expect(categories.at(-1)?.isAddon).toBe(true);
+  });
+});
+
+describe("live category label", () => {
+  it("formats the category, favorites and singular/plural counts", () => {
+    expect(formatLiveCategoryLabel("Deportes", false, 1)).toBe("TV en vivo · Deportes · 1 canal");
+    expect(formatLiveCategoryLabel("Deportes", false, 8)).toBe("TV en vivo · Deportes · 8 canales");
+    expect(formatLiveCategoryLabel("Deportes", true, 2)).toBe("TV en vivo · Favoritos · 2 canales");
+    expect(formatLiveCategoryLabel("Deportes", false, 0)).toBe("TV en vivo · Deportes");
+    expect(formatLiveCategoryLabel("", false, 0)).toBe("TV en vivo · Todos");
   });
 });

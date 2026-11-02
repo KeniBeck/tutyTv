@@ -2290,6 +2290,37 @@
         }), next
     }
 
+    function legacyFormatLiveCategoryLabel(categoryName, favoritesOnly, count) {
+        var _core = window.TutyCore;
+        if (_core && _core.formatLiveCategoryLabel) return _core.formatLiveCategoryLabel(categoryName, favoritesOnly, count);
+        var unit = 1 === count ? " canal" : " canales";
+        return "TV en vivo · " + (favoritesOnly ? "Favoritos" : String(categoryName || "Todos")) + (count ? " · " + count + unit : "")
+    }
+
+    function legacyLiveListScrollTop(rowIndex, scrollTop, scrollHeight, clientHeight) {
+        var _core = window.TutyCore;
+        if (_core && _core.liveListScrollTop) return _core.liveListScrollTop(rowIndex, scrollTop, scrollHeight, clientHeight);
+        var rowTop = 120 * rowIndex,
+            next = scrollTop;
+        rowTop < next && (next = rowTop), rowTop + 100.5 > next + clientHeight && (next = rowTop + 100.5 - clientHeight);
+        return Math.max(0, Math.min(Math.max(0, scrollHeight - clientHeight), next))
+    }
+
+    function legacyHasAddonUrl(addons, url) {
+        var _core = window.TutyCore;
+        if (_core && _core.hasAddonUrl) return _core.hasAddonUrl(addons, url);
+        for (var index = 0; index < addons.length; index++)
+            if (addons[index].url === url) return !0;
+        return !1
+    }
+
+    function legacyRemoveAddonAt(addons, index) {
+        var _core = window.TutyCore;
+        if (_core && _core.removeAddonAt) return _core.removeAddonAt(addons, index);
+        var next = addons.slice();
+        return next.splice(index, 1), next
+    }
+
     function Ft(e) {
         var t = wt();
         if (!t || !t.length) return F.splice(0, F.length), Ht(!1), Rn(), void(e && e());
@@ -2396,12 +2427,7 @@
             var e = Ue.filter(function(e) {
                 return e._channel === j.channel
             })[0];
-            if (e) {
-                var t = 120 * Ue.indexOf(e),
-                    i = Math.max(0, ae.scrollHeight - ae.clientHeight),
-                    a = ae.scrollTop;
-                t < a && (a = t), t + 100.5 > a + ae.clientHeight && (a = t + 100.5 - ae.clientHeight), ae.scrollTop = Math.max(0, Math.min(i, a))
-            }
+            if (e) ae.scrollTop = legacyLiveListScrollTop(Ue.indexOf(e), ae.scrollTop, ae.scrollHeight, ae.clientHeight)
         }
     }
 
@@ -2437,9 +2463,8 @@
         var e = t("live-cat-label");
         if (!e) return;
         var i = liveCatName(),
-            a = liveFavFilter ? Ue.length : F.length,
-            unit = 1 === a ? " canal" : " canales";
-        e.textContent = "TV en vivo · " + (liveFavFilter ? "Favoritos" : i) + (a ? " · " + a + unit : "")
+            a = liveFavFilter ? Ue.length : F.length;
+        e.textContent = legacyFormatLiveCategoryLabel(i, liveFavFilter, a)
     }
 
     function lvSyncFav() {
@@ -2688,17 +2713,19 @@
     }
 
     function $t() {
-        for (var a = t("da-presets-list"), n = t("da-installed-list"), r = wt(), o = {}, s = 0; s < r.length; s++) o[r[s].url] = !0;
+        var a = t("da-presets-list"),
+            n = t("da-installed-list"),
+            r = wt();
         if (a) {
             i(a);
             for (var l = 0; l < Ct.length; l++)(function(t) {
                 var i = e("div", "da-preset-item"),
                     n = e("div", "da-preset-info");
                 n.appendChild(e("div", "da-preset-name", t.name)), n.appendChild(e("div", "da-preset-desc", t.desc)), i.appendChild(n);
-                var r = !!o[t.url],
-                    s = e("button", "da-preset-btn focusable" + (r ? " is-installed" : ""), r ? "✔ Instalado" : "+ Instalar");
+                var installed = legacyHasAddonUrl(r, t.url),
+                    s = e("button", "da-preset-btn focusable" + (installed ? " is-installed" : ""), installed ? "✔ Instalado" : "+ Instalar");
                 s._activate = function() {
-                    r || (s.textContent = "Instalando…", Xt(t, function(e, t) {
+                    installed || (s.textContent = "Instalando…", Xt(t, function(e, t) {
                         e ? (s.textContent = "Error", setTimeout(function() {
                             s.textContent = "+ Instalar"
                         }, 2e3)) : ($t(), _t && _t.isAddon && Ft())
@@ -2716,7 +2743,7 @@
                     o.appendChild(s), o.appendChild(l), a.appendChild(o);
                     var d = e("button", "da-del-btn focusable", "Eliminar");
                     d._activate = function() {
-                        r.splice(i, 1), xt(r), $t(), _t && _t.isAddon && Ft()
+                        r = legacyRemoveAddonAt(r, i), xt(r), $t(), _t && _t.isAddon && Ft()
                     }, a.appendChild(d), n.appendChild(a)
                 })(r[d], d);
             else n.appendChild(e("div", "da-installed-empty", "No hay addons personalizados instalados aún. Instala una lista recomendada arriba o escribe una URL."));
