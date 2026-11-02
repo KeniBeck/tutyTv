@@ -146,12 +146,17 @@ Completado:
 - para series sin duracion en el portal se infiere la duracion de episodios
   hermanos; en relay web y webOS se consulta `/duration/<token>` al ffmpeg, que
   reporta la duracion real de la fuente
+- TV en vivo: filtrado de canales visibles por favoritos, conservando los
+  indices originales, y busqueda de canales/categorias extraidos a Core;
+  `Ht` y `lvRenderResults` usan wrappers con fallback legacy
 
 Pendiente:
 
 - migrar progresivamente la coordinacion restante de eventos, relay, historial
   y estado de reproduccion que aun reside en `app.js`
 - migrar progresivamente las reglas de visibilidad y los focos especificos de UI
+- completar la coordinacion restante de live TV (categorias, carga y foco) y
+  addons
 
 ## Fase 4 - Integracion progresiva UI actual (primer corte completado)
 
@@ -448,6 +453,11 @@ verificacion estructural del IPK y prueba en TV fisica.
     carga de titulos, busqueda y guardado de configuracion. IPK 1.6.7
     generada y validada estructuralmente. Fase 6 cerrada; la limpieza de
     duplicaciones legacy queda como mantenimiento no bloqueante.
+69. TV en vivo: filtrado de canales visibles por favoritos, conservando los
+    indices originales, y busqueda de canales/categorias extraidos a Core
+    (`liveChannels`). `Ht` y `lvRenderResults` usan wrappers con fallback.
+    Verificados lint, typecheck, 235 pruebas y builds web/core/webOS. No se
+    regenero IPK ni se probo en TV en este incremento.
 
 ## Riesgos pendientes
 

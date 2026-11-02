@@ -2175,6 +2175,38 @@
         return i ? j.favs[t] = !0 : delete j.favs[t], X.favs = j.favs, J(W, X), e.fav = i, i
     }
 
+    function legacyFilterLiveChannels(channels, favoritesOnly, isFavorite) {
+        var _core = window.TutyCore;
+        if (_core && _core.filterLiveChannels) return _core.filterLiveChannels(channels, favoritesOnly, isFavorite);
+        for (var result = [], index = 0; index < channels.length; index++) !favoritesOnly || isFavorite(channels[index]) ? result.push({
+            channel: channels[index],
+            index: index
+        }) : 0;
+        return result
+    }
+
+    function legacyFindLiveSearchMatches(channels, categories, query) {
+        var _core = window.TutyCore;
+        if (_core && _core.findLiveSearchMatches) return _core.findLiveSearchMatches(channels, categories, query);
+        var needle = o(query),
+            channelMatches = [],
+            categoryMatches = [],
+            index = 0;
+        if (needle)
+            for (index = 0; index < categories.length && categoryMatches.length < 8; index++) o(categories[index].name || "").indexOf(needle) >= 0 && categoryMatches.push(categories[index]);
+        for (index = 0; index < channels.length && channelMatches.length < 250; index++) {
+            var channel = channels[index];
+            channel && (!needle || o(channel.name || "").indexOf(needle) >= 0) && channelMatches.push({
+                channel: channel,
+                index: index
+            })
+        }
+        return {
+            channels: channelMatches,
+            categories: categoryMatches
+        }
+    }
+
     function Ft(e) {
         var t = wt();
         if (!t || !t.length) return F.splice(0, F.length), Ht(!1), Rn(), void(e && e());
@@ -2272,16 +2304,18 @@
             var keepRow = j.focus && j.focus._channel !== void 0 && j.focus.parentNode === ae,
                 keepChannel = keepRow ? j.focus._channel : -1;
             i(ae), Ue = [];
-            var favOnly = !!t || liveFavFilter;
+            var favOnly = !!t || liveFavFilter,
+                visibleChannels = legacyFilterLiveChannels(F, favOnly, liveIsFav);
             if (F.length) {
-                for (var a = 0; a < F.length; a++) {
-                    if (favOnly && !liveIsFav(F[a])) continue;
-                    var n = e("div", "live-row focusable");
+                for (var v = 0; v < visibleChannels.length; v++) {
+                    var a = visibleChannels[v].index,
+                        channel = visibleChannels[v].channel,
+                        n = e("div", "live-row focusable");
                     n._channel = a;
                     var r = e("div", "row-icon");
-                    F[a].logo && (r.style.backgroundImage = "url(" + F[a].logo + ")", r.style.backgroundSize = "contain", r.style.backgroundRepeat = "no-repeat", r.style.backgroundPosition = "center");
+                    channel.logo && (r.style.backgroundImage = "url(" + channel.logo + ")", r.style.backgroundSize = "contain", r.style.backgroundRepeat = "no-repeat", r.style.backgroundPosition = "center");
                     var o = e("div", "row-play"),
-                        s = e("div", "row-name", F[a].name),
+                        s = e("div", "row-name", channel.name),
                         rowIndex = Ue.length;
                     n.appendChild(r), n.appendChild(o), n.appendChild(s), a === j.channel && n.classList.add("is-current"), n._activate = function(e) {
                         return function() {
@@ -2466,18 +2500,9 @@
             var sub = t("live-search-sub"),
                 q = o(liveSearchQuery),
                 cats = St && St.length ? St : [],
-                catMatches = [],
-                matches = [],
-                k = 0;
-            if (q)
-                for (k = 0; k < cats.length && catMatches.length < 8; k++) o(cats[k].name || "").indexOf(q) >= 0 && catMatches.push(cats[k]);
-            for (k = 0; k < F.length && matches.length < 250; k++) {
-                var ch = F[k];
-                ch && (!q || o(ch.name || "").indexOf(q) >= 0) && matches.push({
-                    ch: ch,
-                    idx: k
-                })
-            }
+                search = legacyFindLiveSearchMatches(F, cats, liveSearchQuery),
+                catMatches = search.categories,
+                matches = search.channels;
             if (sub) sub.textContent = q ? matches.length + (1 === matches.length ? " canal" : " canales") + " · " + catMatches.length + (1 === catMatches.length ? " categoría" : " categorías") : "Escribe para buscar entre los " + F.length + " canales de " + liveCatName();
             for (var c = 0; c < catMatches.length; c++)(function(cat) {
                 var row = e("div", "live-sr-row live-sr-cat focusable");
@@ -2494,12 +2519,12 @@
             for (var m = 0; m < matches.length; m++)(function(item) {
                 var row = e("div", "live-sr-row focusable"),
                     icon = e("div", "live-sr-icon");
-                item.ch.logo && (icon.style.backgroundImage = "url(" + item.ch.logo + ")", icon.style.backgroundSize = "contain", icon.style.backgroundRepeat = "no-repeat", icon.style.backgroundPosition = "center");
+                item.channel.logo && (icon.style.backgroundImage = "url(" + item.channel.logo + ")", icon.style.backgroundSize = "contain", icon.style.backgroundRepeat = "no-repeat", icon.style.backgroundPosition = "center");
                 row.appendChild(icon);
-                row.appendChild(e("div", "live-sr-name", item.ch.name || "Canal"));
+                row.appendChild(e("div", "live-sr-name", item.channel.name || "Canal"));
                 row.appendChild(e("div", "live-sr-badge", "EN VIVO"));
                 row._activate = function() {
-                    lvCloseSearch(!0), Vt(item.idx, !0), dr("live")
+                    lvCloseSearch(!0), Vt(item.index, !0), dr("live")
                 };
                 list.appendChild(row)
             })(matches[m]);
