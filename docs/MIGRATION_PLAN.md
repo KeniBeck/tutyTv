@@ -139,6 +139,8 @@ Completado:
   y clamp de indice extraidos a Core; `wt`, `Ft` y `Vt` usan wrappers
 - merge de detalle de catalogo y favoritos de contenidos extraidos a Core;
   `R` y `K` usan wrappers con fallback
+- solicitud de resolucion de reproduccion y aplicacion de la respuesta
+  extraidas a Core; `or` usa wrappers con fallback
 - la construccion de la URL del servicio de desarrollo y su query string se
   extrajo a Core; el transporte Luna y el fallback de servicio siguen en `q`
 - sesion/API normalizada, validacion de sesion, parametros de catalogo,
@@ -290,8 +292,18 @@ Enfoque:
 - cambios por pantalla/componente con paridad funcional y pruebas
 - no redisenar todo en un solo cambio
 
-Estado: planificada. Inicia cuando cierre la migracion funcional pendiente
-(coordinacion restante y limpieza legacy), no solo al confirmar favoritos.
+Estado: lista para iniciar tras el freeze funcional 2026-11-02. Los fallbacks
+legacy se conservan como capa de compatibilidad, no como logica activa cuando
+`TutyCore` esta presente.
+
+## Freeze funcional (2026-11-02)
+
+- cerrada la extraccion de logica de dominio pendiente: API, recordatorios,
+  catalogo, live/M3U, audio/subtitulos, progreso, reanudacion y resolucion
+- `pnpm check` con 305 pruebas y builds web/core/webOS correctos
+- los fallbacks `legacy*` se conservan como capa de compatibilidad y cobertura;
+  no se consideran un bloqueo para el rediseno de UI
+- la Fase 7 puede iniciar con cambios visuales progresivos y validacion web/TV
 
 ## Checklist de la etapa web
 
@@ -584,6 +596,12 @@ verificacion estructural del IPK y prueba en TV fisica.
     `catalogDetail`; `R` y `K` usan wrappers con fallback. Verificados lint,
     typecheck, 300 pruebas y builds web/core/webOS. No se regenero IPK ni se
     probo en TV.
+
+85. Resolucion de reproduccion extraida a Core (`playbackResolve`): peticion
+    `resolve`/`resolveSmooth` y aplicacion de metadatos/URL de respuesta; `or`
+    usa wrappers con fallback. Freeze funcional alcanzado con 305 pruebas y
+    builds web/core/webOS. Fase 7 habilitada; no se regenero IPK ni se probo en
+    TV.
 
 ## Riesgos pendientes
 

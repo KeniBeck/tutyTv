@@ -338,6 +338,8 @@ fallback sin el puente.
   en relay, duracion total, tipo de stream y eleccion de HLS.js
 - Progreso de reproduccion (`playbackProgress`): throttle de historial, total
   relay con prioridad de fuentes y objetivos de seek local/relay
+- Resolucion de reproduccion (`playbackResolve`): construccion de la peticion
+  y aplicacion de metadatos/URL de la respuesta
 - Reanudacion (`resumePlan`): decision de reanudar/reiniciar y reconstruccion
   del episodio guardado en historial
 - Reglas de ciclo de vida (`playbackLifecycle`): guardado previo al reset, base
@@ -350,7 +352,7 @@ fallback sin el puente.
 - Cableado de eventos del video y de HLS centralizado (`playbackEventWiring`)
 - Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
   estado visible, modo VOD y transicion detalle-reproductor
-- 300 pruebas automatizadas sin dependencia de televisor ni navegador
+- 305 pruebas automatizadas sin dependencia de televisor ni navegador
 - Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
   titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
 

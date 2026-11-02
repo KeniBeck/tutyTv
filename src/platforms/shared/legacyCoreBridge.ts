@@ -101,6 +101,10 @@ export {
   shouldPersistPlaybackHistory
 } from "../../core/usecases/playback/playbackProgress";
 export {
+  applyResolvedPlayback,
+  buildPlaybackResolveRequest
+} from "../../core/usecases/playback/playbackResolve";
+export {
   hasPlaybackSession,
   resolveAbortServiceBase,
   shouldLoadSeriesEpisodesBeforePlay,

@@ -901,6 +901,56 @@
         }
     }
 
+    function legacyBuildPlaybackResolveRequest(item, episode, options) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.buildPlaybackResolveRequest === "function") return _core.buildPlaybackResolveRequest(item, episode, options);
+        var resumeAt = Number(options.resumePosition) || 0,
+            request = {
+                contentId: item.id,
+                playbackMode: options.streamMode,
+                forceRelay: legacyForceRelay(options.streamMode, resumeAt),
+                trackIndex: options.trackIndex || 0,
+                audioTrack: options.audioTrack || 0
+            },
+            nextEpisode = episode;
+        if (options.isSeries) {
+            var seasonId = item.seasonId || item.id;
+            if (nextEpisode && nextEpisode.id) request.contentId = nextEpisode.id, request.seriesContentId = seasonId;
+            else {
+                if (!item.episodes || !item.episodes.length) return {
+                    request: request,
+                    episode: nextEpisode,
+                    resumePosition: resumeAt,
+                    missingEpisodes: !0
+                };
+                nextEpisode = item.episodes[0], request.contentId = nextEpisode && nextEpisode.id, request.seriesContentId = seasonId
+            }
+        }
+        return {
+            request: request,
+            episode: nextEpisode,
+            resumePosition: resumeAt,
+            missingEpisodes: !1
+        }
+    }
+
+    function legacyApplyResolvedPlayback(item, episode, response, resumeAt) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.applyResolvedPlayback === "function") return _core.applyResolvedPlayback(item, episode, response, resumeAt);
+        var target = item,
+            duration = Number(response.duration) || 0;
+        target.streamMime = response.mime || "", target.streamCodec = response.codec || "", duration > 0 ? (target.duration = duration, episode && (episode.duration = duration)) : target.duration = target.duration || 0, target.subtitles = response.subtitles || [], target.streamAudioInfo = response.audio || "", target.isHls = !!response.isHls;
+        var relayResume = legacyRelayResumeStart(String(response.proxyPath || response.url || ""), Number(resumeAt) || 0);
+        return {
+            url: relayResume.url,
+            resumePosition: relayResume.consumed ? 0 : Number(resumeAt) || 0,
+            streamInfo: {
+                selectedTrack: response.selectedTrack || {},
+                availableTracks: response.availableTracks || []
+            }
+        }
+    }
+
     function legacyFormatPlaybackTime(value) {
         var _core = window.TutyCore;
         if (_core && typeof _core.formatPlaybackTime === "function") return _core.formatPlaybackTime(value);
@@ -5414,45 +5464,37 @@
 
         function a() {
             var resumeAt = Number(j.resumePosition) || 0,
-                a = {
-                    contentId: e.id
-                };
-            a.playbackMode = j.streamMode, a.forceRelay = legacyForceRelay(j.streamMode, resumeAt), a.trackIndex = j.trackIndex || 0;
-            var n = Aa[Ja(e)];
-            if (n && !ma && (ga = Ka(n.audio)), a.audioTrack = ga || 0, S(e)) {
-                var r = j.playerEpisode,
-                    o = e.seasonId || e.id;
-                if (r && r.id) a.contentId = r.id, a.seriesContentId = o;
-                else {
-                    if (!e.episodes || !e.episodes.length) return t("");
-                    j.playerEpisode = e.episodes[0], a.contentId = e.episodes[0].id, a.seriesContentId = o
-                }
-            }
-            if (!resumeAt) j.resumePosition = 0;
+                media = Aa[Ja(e)];
+            media && !ma && (ga = Ka(media.audio));
+            var built = legacyBuildPlaybackResolveRequest(e, j.playerEpisode, {
+                streamMode: j.streamMode,
+                resumePosition: resumeAt,
+                trackIndex: j.trackIndex || 0,
+                audioTrack: ga || 0,
+                isSeries: S(e)
+            });
+            if (built.missingEpisodes) return t("");
+            j.playerEpisode = built.episode, j.resumePosition = built.resumePosition;
+            var request = built.request;
 
             function done(n, s) {
                 if (i === Bn) {
                     if (n || !s || !1 === s.returnValue) return j.resumePosition = 0, j.streamError = "No se pudo resolver el título" + (n ? ": " + n : ""), nr(j.streamError), t("");
-                    e.streamMime = s.mime || "", e.streamCodec = s.codec || "", s.duration > 0 ? (e.duration = s.duration, j.playerEpisode && (j.playerEpisode.duration = s.duration)) : e.duration = e.duration || 0, e.subtitles = s.subtitles || [], e.streamAudioInfo = s.audio || "", e.isHls = !!s.isHls;
+                    var applied = legacyApplyResolvedPlayback(e, j.playerEpisode, s, resumeAt);
                     try {
-                        window.__tutyStreamInfo = {
-                            selectedTrack: s.selectedTrack || {},
-                            availableTracks: s.availableTracks || []
-                        }
+                        window.__tutyStreamInfo = applied.streamInfo
                     } catch (e) {}
-                    var l = s.proxyPath || s.url || "",
-                        relayResume = legacyRelayResumeStart(l, resumeAt);
-                    l = relayResume.url, relayResume.consumed && (j.resumePosition = 0), t(l)
+                    j.resumePosition = applied.resumePosition, t(applied.url)
                 }
             }
 
             function resolveCall(r) {
-                q(r ? "resolveSmooth" : "resolve", a, function(e, t) {
-                    if (e && r) return a.forceRelay = !1, resolveCall(!1);
+                q(r ? "resolveSmooth" : "resolve", request, function(e, t) {
+                    if (e && r) return request.forceRelay = !1, resolveCall(!1);
                     done(e, t)
                 })
             }
-            resolveCall(a.forceRelay)
+            resolveCall(request.forceRelay)
         }
         if (legacyShouldLoadSeriesEpisodesBeforePlay(e, j.playerEpisode)) return nr("Cargando capítulos…"), void U(e, function() {
             i === Bn && a()
