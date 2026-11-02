@@ -344,6 +344,9 @@ fallback sin el puente.
   temporada con reparacion de indice de temporada desfasado
 - Aviso de siguiente episodio 7 s antes del final con avance automatico o
   cancelacion; tambien se activa al evento `ended` como respaldo
+- Historial: al abrir un titulo se asegura la carga de detalle si el item
+  en cache no la tenia; el cambio de episodio guarda el episodio anterior antes
+  de reemplazarlo
 - Reanudacion (`resumePlan`): decision de reanudar/reiniciar y reconstruccion
   del episodio guardado en historial
 - Reglas de ciclo de vida (`playbackLifecycle`): guardado previo al reset, base
@@ -356,7 +359,7 @@ fallback sin el puente.
 - Cableado de eventos del video y de HLS centralizado (`playbackEventWiring`)
 - Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
   estado visible, modo VOD y transicion detalle-reproductor
-- 310 pruebas automatizadas sin dependencia de televisor ni navegador
+- 312 pruebas automatizadas sin dependencia de televisor ni navegador
 - Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
   titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
 

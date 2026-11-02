@@ -614,6 +614,12 @@ verificacion estructural del IPK y prueba en TV fisica.
     desfasados; Cancelar desactiva el aviso para ese episodio. Verificados lint,
     typecheck, 310 pruebas y builds web/core/webOS. No se regenero IPK ni se
     probo en TV.
+88. Historial y transicion: al abrir un titulo desde historial se fuerza la
+    carga de detalle si el item del catalogo no la tenia, evitando fichas sin
+    sinopsis. El cambio de episodio guarda el historial del episodio anterior
+    antes de sustituir el item/episodio, y la transicion evita guardar dos veces.
+    Verificados lint, typecheck, 312 pruebas y builds web/core/webOS. No se
+    regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

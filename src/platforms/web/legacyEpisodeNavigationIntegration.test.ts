@@ -93,7 +93,7 @@ describe("legacy episode navigation integration", () => {
       },
       _e: null,
       t: () => ({ classList: { add() {}, remove() {} }, style: {} }),
-      mn: vi.fn(), tt: vi.fn(), dn: () => "Episodio 2",
+      mn: vi.fn(), tt: vi.fn(), dn: () => "Episodio 2", ar: vi.fn(),
       setTimeout: vi.fn(() => 1), clearTimeout: vi.fn(),
       R,
       gn,
@@ -121,7 +121,7 @@ ${nextEpisode}
     expect(item.seasons?.[2]?.id).toBe("s2");
     expect(R).toHaveBeenCalledWith(item, expect.objectContaining({ title: "Serie T2", id: "s2" }));
     expect(context.j.detailNeedsRebuild).toBe(true);
-    expect(gn).toHaveBeenCalledWith(item, { id: "s2e1" });
+    expect(gn).toHaveBeenCalledWith(item, { id: "s2e1" }, false);
   });
 
   it("passes the season item and episodes to the loader callback", () => {

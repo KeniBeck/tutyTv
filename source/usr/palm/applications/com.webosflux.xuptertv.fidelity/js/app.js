@@ -4289,7 +4289,11 @@
     function Oa(e) {
         if (!e || !e.id) return;
         for (var t = 0; t < l.length; t++)
-            if (String(l[t].id) === String(e.id)) return void ei(l[t]);
+            if (String(l[t].id) === String(e.id)) {
+                var item = l[t];
+                item._detailsLoaded || (item._portal = !0);
+                return void ei(item)
+            }
         var i = _(e, 0);
         i._portal = !0, ei(i)
     }
@@ -4657,11 +4661,11 @@
         }
     }
 
-    function gn(e, t) {
+    function gn(e, t, saveHistory) {
         if (e && t) {
-            j.playerItem = e, j.playerEpisode = t, j.detailEpisode = t, j.playerSeasonIndex = j.detailSeason || 0, ye && be && vr(), bn(e), j.episodeSwitchTimer && clearTimeout(j.episodeSwitchTimer), j.episodeSwitchSeq = (j.episodeSwitchSeq || 0) + 1;
+            !1 !== saveHistory && ar(), j.playerItem = e, j.playerEpisode = t, j.detailEpisode = t, j.playerSeasonIndex = j.detailSeason || 0, ye && be && vr(), bn(e), j.episodeSwitchTimer && clearTimeout(j.episodeSwitchTimer), j.episodeSwitchSeq = (j.episodeSwitchSeq || 0) + 1;
             var i = j.episodeSwitchSeq;
-            ar(), nr("Cambiando capítulo…"), j.episodeSwitchTimer = setTimeout(function() {
+            nr("Cambiando capítulo…"), j.episodeSwitchTimer = setTimeout(function() {
                 j.episodeSwitchTimer = null, i === j.episodeSwitchSeq && ("player" === j.screen || "detail" === j.screen) && (j.resumePosition = 0, sr(e, t))
             }, 600)
         }
@@ -4694,15 +4698,15 @@
         var item = j.playerItem;
         if (!item || !target) return;
         var seq = ++j.nextEpisodeSeq;
-        showNextEpisodeLoading(item);
-        if ("episode" === target.kind) return j.detailSeason = target.seasonIndex, j.playerSeasonIndex = target.seasonIndex, void gn(item, target.episode);
+        ar(), showNextEpisodeLoading(item);
+        if ("episode" === target.kind) return j.detailSeason = target.seasonIndex, j.playerSeasonIndex = target.seasonIndex, void gn(item, target.episode, !1);
         var seasons = sn(item),
             season = target.season;
         if (!season) return void mn();
         ln(item, season, function(episodes, detail) {
             if (seq !== j.nextEpisodeSeq || j.playerItem !== item || "player" !== j.screen) return;
             if (!episodes || !episodes.length) return void mn();
-            detail && R(item, detail), item.seasons = seasons, j.detailSeason = target.seasonIndex, j.playerSeasonIndex = target.seasonIndex, item.seasonId = season.id || item.seasonId, item.episodes = episodes, season._episodes = episodes, j.detail === item && (j.detailNeedsRebuild = !0), gn(item, episodes[0])
+            detail && R(item, detail), item.seasons = seasons, j.detailSeason = target.seasonIndex, j.playerSeasonIndex = target.seasonIndex, item.seasonId = season.id || item.seasonId, item.episodes = episodes, season._episodes = episodes, j.detail === item && (j.detailNeedsRebuild = !0), gn(item, episodes[0], !1)
         })
     }
 
