@@ -136,6 +136,9 @@ Completado:
 - recordatorios extraidos a Core: alta/baja, estado activo, throttle,
   seleccion de IDs y fusion de nuevos episodios; `reminderOn`,
   `toggleReminder` y `checkReminders` usan wrappers con fallback
+- seleccion de pagina/categoria del catalogo con fallback y relleno unico por
+  id, y rangos de episodios extraidos a Core; `I`, `Yt` e `ii` usan wrappers
+  con fallback
 - el mapeo de teclas multimedia (play, pause, stop, avance, retroceso y menu)
   se extrajo a Core y `lt` conserva toda la logica de pantalla y foco
 - el formato y parseo de duraciones, la resolucion de duracion con fallback y
@@ -540,6 +543,11 @@ verificacion estructural del IPK y prueba en TV fisica.
     `reminderOn`, `toggleReminder` y `checkReminders` usan wrappers con
     fallback. Verificados lint, typecheck, 267 pruebas y builds
     web/core/webOS. No se regenero IPK ni se probo en TV.
+
+79. Catalogo: seleccion de pagina/categoria con fallback y relleno unico por id,
+    y rangos de episodios extraidos a `catalogSelection`; `I`, `Yt` e `ii`
+    usan wrappers con fallback. Verificados lint, typecheck, 275 pruebas y
+    builds web/core/webOS. No se regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 
