@@ -104,6 +104,7 @@ export {
   applyResolvedPlayback,
   buildPlaybackResolveRequest
 } from "../../core/usecases/playback/playbackResolve";
+export { resolveNextPlaybackTarget } from "../../core/usecases/playback/playbackNext";
 export {
   hasPlaybackSession,
   resolveAbortServiceBase,

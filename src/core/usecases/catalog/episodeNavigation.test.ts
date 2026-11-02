@@ -39,5 +39,7 @@ describe("episode navigation", () => {
     expect(findEpisodeIndex(episodes, { id: "x", number: 2 })).toBe(1);
     expect(findEpisodeIndex(episodes, { id: "x", number: 9 })).toBe(-1);
     expect(findEpisodeIndex(episodes, null)).toBe(-1);
+    expect(findEpisodeIndex([{ id: "a" }, { id: "b" }], { id: "x" })).toBe(-1);
+    expect(findEpisodeIndex([{}, {}], {})).toBe(-1);
   });
 });

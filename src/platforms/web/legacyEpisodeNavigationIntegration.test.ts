@@ -12,8 +12,9 @@ const episodes = source.match(/ {4}function legacySeasonEpisodes\(item, seasonIn
 const index = source.match(/ {4}function legacyFindEpisodeIndex\(episodes, current\) \{[\s\S]*?(?= {4}function legacyNextSeasonIndex)/)?.[0];
 const next = source.match(/ {4}function legacyNextSeasonIndex\(seasons, currentIndex\) \{[\s\S]*?(?= {4}function legacyFormatEpisodeDuration)/)?.[0];
 const seasons = source.match(/ {4}function sn\(e\) \{[\s\S]*?(?= {4}function ln\(e, t, i\))/)?.[0];
-const nextEpisode = source.match(/ {4}function yn\(\) \{[\s\S]*?(?= {4}function bn\(e\))/)?.[0];
+const nextEpisode = source.match(/ {4}function showNextEpisodeLoading\(item\) \{[\s\S]*?(?= {4}function bn\(e\))/)?.[0];
 const loadSeason = source.match(/ {4}function ln\(e, t, i\) \{[\s\S]*?(?= {4}function dn)/)?.[0];
+const resolveNext = source.match(/ {4}function legacyResolveNextPlaybackTarget\([\s\S]*?(?= {4}function legacyFormatPlaybackTime)/)?.[0];
 
 const series = {
   id: "series",
@@ -55,7 +56,7 @@ describe("legacy episode navigation integration", () => {
   });
 
   it("loads the next chronological season when the current one ends", () => {
-    expect(nextEpisode).toBeTruthy();
+    expect(nextEpisode && resolveNext).toBeTruthy();
     const gn = vi.fn();
     const R = vi.fn((target: Record<string, unknown>, data: Record<string, unknown>) => {
       Object.assign(target, data);
@@ -86,12 +87,14 @@ describe("legacy episode navigation integration", () => {
         detail: item,
         playerItem: item,
         playerSeasonIndex: 1,
+        nextEpisodeSeq: 0,
         playerEpisode: { id: "e1" },
         detailNeedsRebuild: false
       },
       _e: null,
       t: () => ({ classList: { add() {}, remove() {} }, style: {} }),
-      mn: vi.fn(),
+      mn: vi.fn(), tt: vi.fn(), dn: () => "Episodio 2",
+      setTimeout: vi.fn(() => 1), clearTimeout: vi.fn(),
       R,
       gn,
       ln
@@ -102,12 +105,15 @@ ${episodes}
 ${index}
 ${next}
 ${seasons}
+${resolveNext}
 ${nextEpisode}
-({ yn })`,
+({ yn, confirmNextEpisodePrompt })`,
       context
-    ) as { yn(): void };
+    ) as { yn(): void; confirmNextEpisodePrompt(): void };
 
     runtime.yn();
+    expect(ln).not.toHaveBeenCalled();
+    runtime.confirmNextEpisodePrompt();
     expect(ln).toHaveBeenCalledWith(item, item.seasons[2], expect.any(Function));
     expect(context.j.playerSeasonIndex).toBe(2);
     expect(item.seasonId).toBe("s2");

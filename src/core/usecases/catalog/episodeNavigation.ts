@@ -59,7 +59,14 @@ export function findEpisodeIndex(episodes: EpisodeLike[], current: unknown): num
   const episode = current as EpisodeLike | null;
   for (let i = 0; i < episodes.length; i++) {
     const item = episodes[i];
-    if (episode && (item?.id === episode.id || item?.number === episode.number)) {
+    if (!episode || !item) continue;
+    const idMatches = episode.id !== undefined && episode.id !== null && item.id === episode.id;
+    const numberMatches = episode.number !== undefined
+      && episode.number !== null
+      && item.number !== undefined
+      && item.number !== null
+      && String(item.number) === String(episode.number);
+    if (idMatches || numberMatches) {
       return i;
     }
   }

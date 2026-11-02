@@ -15,6 +15,7 @@ function state(overrides: Partial<LegacyFocusVisibilityState> = {}): LegacyFocus
     filterOpen: false,
     playSettingsOpen: false,
     playSettingViewOpen: false,
+    nextEpisodeOpen: false,
     ...overrides
   };
 }
@@ -42,7 +43,8 @@ describe("legacy focus visibility", () => {
     ["resumeOpen", "#dialog-resume"],
     ["filterOpen", "#filter-panel"],
     ["playSettingsOpen", "#dialog-playsettings"],
-    ["playSettingViewOpen", "#player-playsetting-view"]
+    ["playSettingViewOpen", "#player-playsetting-view"],
+    ["nextEpisodeOpen", "#next-episode-prompt"]
   ] as const)("requires focus inside %s container", (flag, selector) => {
     expect(isLegacyFocusVisible(probe(), state({ [flag]: true }))).toBe(false);
     expect(isLegacyFocusVisible(probe({ [selector]: [] }), state({ [flag]: true }))).toBe(true);

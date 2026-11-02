@@ -2106,6 +2106,89 @@ div, section, span { outline: none; }
   font-weight: 600;
   text-shadow: 0 2px 8px rgba(0,0,0,.8);
 }
+/* Next episode/season prompt: waits 7s before advancing. */
+.next-episode-prompt {
+  display: none;
+  position: absolute;
+  left: 0; top: 0;
+  width: 1920px; height: 1080px;
+  z-index: 10;
+  -webkit-box-align: end;
+  align-items: flex-end;
+  -webkit-box-pack: end;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  padding: 0 96px 96px 0;
+  background: linear-gradient(to top, rgba(0,0,0,.62) 0%, rgba(0,0,0,0) 55%);
+}
+.next-episode-prompt.is-active { display: -webkit-box; display: flex; }
+.nep-card {
+  width: 650px;
+  box-sizing: border-box;
+  padding: 34px 38px 32px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 18px;
+  background: rgba(14,16,22,.92);
+  box-shadow: 0 18px 50px rgba(0,0,0,.55);
+}
+.nep-kicker {
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #b9bec7;
+}
+.nep-title {
+  margin-top: 8px;
+  font-size: 34px;
+  line-height: 42px;
+  font-weight: 700;
+  color: #ffffff;
+}
+.nep-count-row {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-align: baseline;
+  align-items: baseline;
+  margin-top: 16px;
+}
+.nep-count {
+  min-width: 50px;
+  font-size: 48px;
+  line-height: 52px;
+  font-weight: 700;
+  color: #e50914;
+}
+.nep-hint {
+  margin-left: 12px;
+  font-size: 20px;
+  line-height: 28px;
+  color: #aeb4bd;
+}
+.nep-actions {
+  display: -webkit-box;
+  display: flex;
+  margin-top: 26px;
+}
+.nep-btn {
+  height: 58px;
+  line-height: 58px;
+  padding: 0 28px;
+  margin-right: 14px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.12);
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.nep-btn.is-primary { background: #e50914; }
+.nep-btn.is-focused {
+  background: #ffffff;
+  color: #111318;
+  box-shadow: 0 0 0 3px #e50914;
+}
+
 /* Not in the APK: stream error / preparation feedback. */
 .player-status {
   position: absolute;

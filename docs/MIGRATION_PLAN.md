@@ -603,6 +603,13 @@ verificacion estructural del IPK y prueba en TV fisica.
     builds web/core/webOS. Fase 7 habilitada; no se regenero IPK ni se probo en
     TV.
 
+86. Corregido el fin de episodio/temporada: `findEpisodeIndex` ya no iguala
+    ids o numeros indefinidos, el indice de temporada se sincroniza al abrir
+    VOD y el siguiente objetivo se recalcula con fallback de temporada. Se
+    agrego un aviso de 7 s con botones Reproducir ahora/Cancelar y avance
+    automatico. Verificados lint, typecheck, 310 pruebas y builds
+    web/core/webOS. No se regenero IPK ni se probo en TV.
+
 ## Riesgos pendientes
 
 - monolito `app.js` con acoplamiento UI+plataforma elevado

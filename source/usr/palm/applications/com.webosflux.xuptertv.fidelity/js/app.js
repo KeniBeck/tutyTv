@@ -486,6 +486,11 @@
             playerItem: null,
             playerEpisode: null,
             playerSeasonIndex: 0,
+            nextEpisodeOpen: !1,
+            nextEpisodeTimer: null,
+            nextEpisodeTarget: null,
+            nextEpisodeSeq: 0,
+            nextEpisodeCountdown: 7,
             episodeBrowserOpen: !1,
             categoryPickerOpen: !1,
             liveCategoriesOpen: !1,
@@ -948,6 +953,35 @@
                 selectedTrack: response.selectedTrack || {},
                 availableTracks: response.availableTracks || []
             }
+        }
+    }
+
+    function legacyResolveNextPlaybackTarget(seasons, preferredSeasonIndex, fallbackSeasonIndex, currentEpisodes, currentEpisode) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolveNextPlaybackTarget === "function") return _core.resolveNextPlaybackTarget(seasons, preferredSeasonIndex, fallbackSeasonIndex, currentEpisodes, currentEpisode);
+        var seasonIndex = preferredSeasonIndex,
+            episodes = currentEpisodes,
+            episodeIndex = legacyFindEpisodeIndex(episodes, currentEpisode);
+        if (episodeIndex < 0 && fallbackSeasonIndex !== seasonIndex) {
+            var fallbackEpisodes = legacySeasonEpisodes({
+                seasons: seasons,
+                seasonId: seasons[fallbackSeasonIndex] && seasons[fallbackSeasonIndex].id,
+                episodes: []
+            }, fallbackSeasonIndex);
+            var fallbackEpisodeIndex = legacyFindEpisodeIndex(fallbackEpisodes, currentEpisode);
+            fallbackEpisodeIndex >= 0 && (seasonIndex = fallbackSeasonIndex, episodes = fallbackEpisodes, episodeIndex = fallbackEpisodeIndex)
+        }
+        if (episodeIndex < 0) return null;
+        if (episodeIndex + 1 < episodes.length) return {
+            kind: "episode",
+            seasonIndex: seasonIndex,
+            episode: episodes[episodeIndex + 1]
+        };
+        var nextIndex = legacyNextSeasonIndex(seasons, seasonIndex);
+        return nextIndex < 0 ? null : {
+            kind: "season",
+            seasonIndex: nextIndex,
+            season: seasons[nextIndex]
         }
     }
 
@@ -1687,7 +1721,8 @@
             resumeOpen: !!j.resumeOpen,
             filterOpen: !!j.filterOpen,
             playSettingsOpen: !!fa,
-            playSettingViewOpen: !!va
+            playSettingViewOpen: !!va,
+            nextEpisodeOpen: !!j.nextEpisodeOpen
         });
         if (j.episodeBrowserOpen) return !!n(element, "#player-episodes");
         if (j.categoryPickerOpen) return !!n(element, "#player-categories");
@@ -1809,7 +1844,7 @@
     function nt(e) {
         for (var i = document.querySelectorAll(".screen"), a = 0; a < i.length; a++) i[a].classList.remove("is-active");
         var n = t("screen-" + e);
-        if (n && n.classList.add("is-active"), j.screen = e, "player" !== e && j.episodeBrowserOpen && un(!0), "player" !== e && j.categoryPickerOpen && An(!0), "home" !== e && j.liveCategoriesOpen && lvCloseCats(!0), "home" !== e && j.liveSearchOpen && lvCloseSearch(!0), "player" !== e && "detail" !== e) {
+        if (n && n.classList.add("is-active"), j.screen = e, "player" !== e && j.nextEpisodeOpen && closeNextEpisodePrompt(!1), "player" !== e && j.episodeBrowserOpen && un(!0), "player" !== e && j.categoryPickerOpen && An(!0), "home" !== e && j.liveCategoriesOpen && lvCloseCats(!0), "home" !== e && j.liveSearchOpen && lvCloseSearch(!0), "player" !== e && "detail" !== e) {
             fa && _n(), va && an();
             var r = t("screen-player");
             legacyResetDetailPlayerSurface(r), ar(), wa++, Da = [], ua && (ua.innerHTML = "")
@@ -1889,11 +1924,12 @@
             i = e.key || "",
             _action = legacyNavigationAction(e),
             a = !0;
-        if ("back" === _action) return j.categoryPickerOpen ? (An(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveSearchOpen ? (lvCloseSearch(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveCategoriesOpen ? (lvCloseCats(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.episodeBrowserOpen ? (un(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : Pt ? (rt = Date.now(), Wt(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.resumeOpen ? (closeResume(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.filterOpen ? (closeFilter(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : fa ? (rt = Date.now(), _n(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : va ? (rt = Date.now(), an(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : (ot(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation()));
+        if ("back" === _action) return j.categoryPickerOpen ? (An(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveSearchOpen ? (lvCloseSearch(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveCategoriesOpen ? (lvCloseCats(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.nextEpisodeOpen ? (closeNextEpisodePrompt(!0), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.episodeBrowserOpen ? (un(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : Pt ? (rt = Date.now(), Wt(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.resumeOpen ? (closeResume(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.filterOpen ? (closeFilter(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : fa ? (rt = Date.now(), _n(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : va ? (rt = Date.now(), an(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : (ot(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation()));
         if (j.resumeOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
         if (j.filterOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
         if (j.categoryPickerOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
         if (j.liveSearchOpen || j.liveCategoriesOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
+        if (j.nextEpisodeOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
         if (j.episodeBrowserOpen) {
             var r = n(j.focus, "#pe-seasons"),
                 o = n(j.focus, "#pe-episodes");
@@ -4634,30 +4670,73 @@
         _e || (_e = t("next-episode-loading")), _e && (_e.classList.remove("is-active"), _e.style.backgroundImage = "")
     }
 
+    function showNextEpisodeLoading(item) {
+        _e || (_e = t("next-episode-loading")), _e && (_e.style.backgroundImage = item && (item.backdrop || item.landscape || item.poster) ? 'url("' + String(item.backdrop || item.landscape || item.poster).replace(/"/g, "%22") + '")' : "", _e.classList.add("is-active"))
+    }
+
+    function closeNextEpisodePrompt(restoreFocus) {
+        j.nextEpisodeOpen = !1, j.nextEpisodeTimer && (clearTimeout(j.nextEpisodeTimer), j.nextEpisodeTimer = null);
+        var prompt = t("next-episode-prompt");
+        prompt && prompt.classList.remove("is-active"), j.nextEpisodeTarget = null, restoreFocus && ye && tt(ye)
+    }
+
+    function updateNextEpisodeCountdown() {
+        var count = t("next-episode-count");
+        count && (count.textContent = String(j.nextEpisodeCountdown))
+    }
+
+    function startNextEpisode(target) {
+        var item = j.playerItem;
+        if (!item || !target) return;
+        var seq = ++j.nextEpisodeSeq;
+        showNextEpisodeLoading(item);
+        if ("episode" === target.kind) return j.detailSeason = target.seasonIndex, j.playerSeasonIndex = target.seasonIndex, void gn(item, target.episode);
+        var seasons = sn(item),
+            season = target.season;
+        if (!season) return void mn();
+        ln(item, season, function(episodes, detail) {
+            if (seq !== j.nextEpisodeSeq || j.playerItem !== item || "player" !== j.screen) return;
+            if (!episodes || !episodes.length) return void mn();
+            detail && R(item, detail), item.seasons = seasons, j.detailSeason = target.seasonIndex, j.playerSeasonIndex = target.seasonIndex, item.seasonId = season.id || item.seasonId, item.episodes = episodes, season._episodes = episodes, j.detail === item && (j.detailNeedsRebuild = !0), gn(item, episodes[0])
+        })
+    }
+
+    function confirmNextEpisodePrompt() {
+        if (!j.nextEpisodeOpen) return;
+        var target = j.nextEpisodeTarget;
+        closeNextEpisodePrompt(!1), startNextEpisode(target)
+    }
+
+    function showNextEpisodePrompt(target) {
+        if (!target || j.nextEpisodeOpen) return;
+        var prompt = t("next-episode-prompt");
+        if (!prompt) return void startNextEpisode(target);
+        j.nextEpisodeOpen = !0, j.nextEpisodeTarget = target, j.nextEpisodeCountdown = 7;
+        var item = j.playerItem,
+            kicker = t("next-episode-kicker"),
+            title = t("next-episode-title"),
+            play = t("next-episode-play"),
+            cancel = t("next-episode-cancel");
+        kicker && (kicker.textContent = "season" === target.kind ? "Siguiente temporada" : "Siguiente episodio"), title && (title.textContent = "season" === target.kind ? "Temporada " + (target.season && target.season.number || target.seasonIndex + 1) : dn(item, target.episode) || "Episodio siguiente");
+        play && (play._activate = confirmNextEpisodePrompt), cancel && (cancel._activate = function() {
+            closeNextEpisodePrompt(!0)
+        }), updateNextEpisodeCountdown(), prompt.classList.add("is-active"), play && tt(play);
+
+        function tick() {
+            if (!j.nextEpisodeOpen) return;
+            j.nextEpisodeCountdown = Math.max(0, j.nextEpisodeCountdown - 1), updateNextEpisodeCountdown(), j.nextEpisodeCountdown ? j.nextEpisodeTimer = setTimeout(tick, 1e3) : confirmNextEpisodePrompt()
+        }
+        j.nextEpisodeTimer && clearTimeout(j.nextEpisodeTimer), j.nextEpisodeTimer = setTimeout(tick, 1e3)
+    }
+
     function yn() {
-        var e = j.playerItem;
-        if (e && S(e) && "player" === j.screen) {
-            var i = legacySeasonEpisodes(e, j.playerSeasonIndex),
-                a = j.playerEpisode,
-                n = legacyFindEpisodeIndex(i, a);
-            if (!(n < 0))
-                if (function(e) {
-                        if (_e || (_e = t("next-episode-loading")), _e) {
-                            var i = e && (e.backdrop || e.landscape || e.poster) || "";
-                            _e.style.backgroundImage = i ? 'url("' + String(i).replace(/"/g, "%22") + '")' : "", _e.classList.add("is-active")
-                        }
-                    }(e), n + 1 < i.length) gn(e, i[n + 1]);
-                else {
-                    var o = sn(e),
-                        s = legacyNextSeasonIndex(o, Number(j.playerSeasonIndex) || 0),
-                        l = s >= 0 ? o[s] : null;
-                    if (l) {
-                        var d = a;
-                        ln(e, l, function(t, item) {
-                            j.playerItem === e && j.playerEpisode === d && "player" === j.screen && (t && t.length ? (item && R(e, item), e.seasons = o, j.detailSeason = s, j.playerSeasonIndex = s, e.seasonId = l.id || e.seasonId, e.episodes = t, l._episodes = t, j.detail === e && (j.detailNeedsRebuild = !0), gn(e, t[0])) : mn())
-                        })
-                    } else mn()
-                }
+        var item = j.playerItem;
+        if (item && S(item) && "player" === j.screen) {
+            var preferred = Number(j.playerSeasonIndex) || 0,
+                fallback = Number(j.detailSeason) || 0,
+                episodes = legacySeasonEpisodes(item, preferred),
+                target = legacyResolveNextPlaybackTarget(sn(item), preferred, fallback, episodes, j.playerEpisode);
+            target ? showNextEpisodePrompt(target) : mn()
         }
     }
 
@@ -5530,7 +5609,7 @@
             var currentPosition = legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn);
             currentPosition > 0 && (j.resumePosition = currentPosition)
         }
-        j.playerMode = "vod", e && j.playerItem !== e && Xa(), e && (j.playerItem = e), i && (j.playerEpisode = i), e && Wa(e), j.playerReturn = {
+        j.playerMode = "vod", e && j.playerItem !== e && Xa(), e && (j.playerItem = e), i && (j.playerEpisode = i, j.playerSeasonIndex = j.detailSeason || 0), e && Wa(e), j.playerReturn = {
             screen: "detail",
             focus: j.focus
         };
@@ -5540,7 +5619,7 @@
     }
 
     function dr(e, t, i) {
-        "vod" !== e || "detail" !== j.screen ? (ye || En(), "live" === e && Nt(), j.playerMode = e, t && j.playerItem !== t && Xa(), j.playerItem = t || null, j.playerEpisode = i || null, "vod" === e && t && Wa(t), j.playerReturn = {
+        "vod" !== e || "detail" !== j.screen ? (ye || En(), "live" === e && Nt(), j.playerMode = e, t && j.playerItem !== t && Xa(), j.playerItem = t || null, j.playerEpisode = i || null, "vod" === e && (j.playerSeasonIndex = j.detailSeason || 0, t && Wa(t)), j.playerReturn = {
             screen: j.screen,
             focus: j.focus
         }, j.channelsOpen = !1, be.classList.remove("is-active"), Ce.classList.remove("is-active"), legacyApplyPlayerModeClass(ye, "vod" === e), vr(), nt("player"), tt(ye), vr(), "vod" === e ? (Ri(), sr(j.playerItem, j.playerEpisode)) : (Pi(), ur(F[j.channel]))) : lr(t, i)

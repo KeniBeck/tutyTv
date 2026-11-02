@@ -7,6 +7,7 @@ export interface LegacyFocusVisibilityState {
   filterOpen: boolean;
   playSettingsOpen: boolean;
   playSettingViewOpen: boolean;
+  nextEpisodeOpen: boolean;
 }
 
 export interface LegacyVisibilityElement {
@@ -26,6 +27,7 @@ export function isLegacyFocusVisible(probe: LegacyVisibilityProbe, state: Legacy
   if (state.filterOpen) return !!probe.closest("#filter-panel");
   if (state.playSettingsOpen) return !!probe.closest("#dialog-playsettings");
   if (state.playSettingViewOpen) return !!probe.closest("#player-playsetting-view");
+  if (state.nextEpisodeOpen) return !!probe.closest("#next-episode-prompt");
 
   const checks: Array<[selector: string, className: string]> = [
     [".home-page", "is-current"],
