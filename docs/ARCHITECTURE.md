@@ -342,6 +342,8 @@ fallback sin el puente.
   y aplicacion de metadatos/URL de la respuesta
 - Siguiente reproduccion (`playbackNext`): seleccion de siguiente episodio o
   temporada con reparacion de indice de temporada desfasado
+- Aviso de siguiente episodio 7 s antes del final con avance automatico o
+  cancelacion; tambien se activa al evento `ended` como respaldo
 - Reanudacion (`resumePlan`): decision de reanudar/reiniciar y reconstruccion
   del episodio guardado en historial
 - Reglas de ciclo de vida (`playbackLifecycle`): guardado previo al reset, base

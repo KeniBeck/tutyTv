@@ -606,9 +606,14 @@ verificacion estructural del IPK y prueba en TV fisica.
 86. Corregido el fin de episodio/temporada: `findEpisodeIndex` ya no iguala
     ids o numeros indefinidos, el indice de temporada se sincroniza al abrir
     VOD y el siguiente objetivo se recalcula con fallback de temporada. Se
-    agrego un aviso de 7 s con botones Reproducir ahora/Cancelar y avance
-    automatico. Verificados lint, typecheck, 310 pruebas y builds
-    web/core/webOS. No se regenero IPK ni se probo en TV.
+    agrego un aviso con botones Reproducir ahora/Cancelar y avance automatico.
+    Verificados lint, typecheck, 310 pruebas y builds web/core/webOS.
+87. Aviso de siguiente episodio/temporada movido a 7 s antes del final usando
+    la duracion total disponible (`Zn`), con el evento `ended` como respaldo.
+    El calculo de temporada prioriza `item.seasonId` para evitar indices
+    desfasados; Cancelar desactiva el aviso para ese episodio. Verificados lint,
+    typecheck, 310 pruebas y builds web/core/webOS. No se regenero IPK ni se
+    probo en TV.
 
 ## Riesgos pendientes
 

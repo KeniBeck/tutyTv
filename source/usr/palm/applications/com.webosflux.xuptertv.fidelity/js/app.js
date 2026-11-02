@@ -491,6 +491,7 @@
             nextEpisodeTarget: null,
             nextEpisodeSeq: 0,
             nextEpisodeCountdown: 7,
+            nextEpisodeDismissed: !1,
             episodeBrowserOpen: !1,
             categoryPickerOpen: !1,
             liveCategoriesOpen: !1,
@@ -1924,7 +1925,7 @@
             i = e.key || "",
             _action = legacyNavigationAction(e),
             a = !0;
-        if ("back" === _action) return j.categoryPickerOpen ? (An(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveSearchOpen ? (lvCloseSearch(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveCategoriesOpen ? (lvCloseCats(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.nextEpisodeOpen ? (closeNextEpisodePrompt(!0), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.episodeBrowserOpen ? (un(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : Pt ? (rt = Date.now(), Wt(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.resumeOpen ? (closeResume(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.filterOpen ? (closeFilter(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : fa ? (rt = Date.now(), _n(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : va ? (rt = Date.now(), an(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : (ot(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation()));
+        if ("back" === _action) return j.categoryPickerOpen ? (An(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveSearchOpen ? (lvCloseSearch(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveCategoriesOpen ? (lvCloseCats(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.nextEpisodeOpen ? (cancelNextEpisodePrompt(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.episodeBrowserOpen ? (un(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : Pt ? (rt = Date.now(), Wt(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.resumeOpen ? (closeResume(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.filterOpen ? (closeFilter(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : fa ? (rt = Date.now(), _n(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : va ? (rt = Date.now(), an(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : (ot(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation()));
         if (j.resumeOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
         if (j.filterOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
         if (j.categoryPickerOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
@@ -4680,6 +4681,10 @@
         prompt && prompt.classList.remove("is-active"), j.nextEpisodeTarget = null, restoreFocus && ye && tt(ye)
     }
 
+    function cancelNextEpisodePrompt() {
+        j.nextEpisodeDismissed = !0, closeNextEpisodePrompt(!0)
+    }
+
     function updateNextEpisodeCountdown() {
         var count = t("next-episode-count");
         count && (count.textContent = String(j.nextEpisodeCountdown))
@@ -4707,20 +4712,18 @@
         closeNextEpisodePrompt(!1), startNextEpisode(target)
     }
 
-    function showNextEpisodePrompt(target) {
-        if (!target || j.nextEpisodeOpen) return;
+    function showNextEpisodePrompt(target, seconds) {
+        if (!target || j.nextEpisodeOpen || j.nextEpisodeDismissed) return;
         var prompt = t("next-episode-prompt");
         if (!prompt) return void startNextEpisode(target);
-        j.nextEpisodeOpen = !0, j.nextEpisodeTarget = target, j.nextEpisodeCountdown = 7;
+        j.nextEpisodeOpen = !0, j.nextEpisodeTarget = target, j.nextEpisodeCountdown = Math.max(1, Math.min(7, Math.ceil(Number(seconds) || 7)));
         var item = j.playerItem,
             kicker = t("next-episode-kicker"),
             title = t("next-episode-title"),
             play = t("next-episode-play"),
             cancel = t("next-episode-cancel");
         kicker && (kicker.textContent = "season" === target.kind ? "Siguiente temporada" : "Siguiente episodio"), title && (title.textContent = "season" === target.kind ? "Temporada " + (target.season && target.season.number || target.seasonIndex + 1) : dn(item, target.episode) || "Episodio siguiente");
-        play && (play._activate = confirmNextEpisodePrompt), cancel && (cancel._activate = function() {
-            closeNextEpisodePrompt(!0)
-        }), updateNextEpisodeCountdown(), prompt.classList.add("is-active"), play && tt(play);
+        play && (play._activate = confirmNextEpisodePrompt), cancel && (cancel._activate = cancelNextEpisodePrompt), updateNextEpisodeCountdown(), prompt.classList.add("is-active"), play && tt(play);
 
         function tick() {
             if (!j.nextEpisodeOpen) return;
@@ -4729,13 +4732,34 @@
         j.nextEpisodeTimer && clearTimeout(j.nextEpisodeTimer), j.nextEpisodeTimer = setTimeout(tick, 1e3)
     }
 
+    function findNextPlaybackTarget() {
+        var item = j.playerItem;
+        if (!item || !S(item) || "player" !== j.screen) return null;
+        var seasons = sn(item),
+            preferred = Number(j.playerSeasonIndex) || 0,
+            targetId = String(item.seasonId || item.id || ""),
+            fallback = Number(j.detailSeason) || 0;
+        if (seasons[preferred] && targetId && String(seasons[preferred].id || "") !== targetId)
+            for (var index = 0; index < seasons.length; index++)
+                if (String(seasons[index].id || "") === targetId) {
+                    preferred = index;
+                    break
+                }
+        var episodes = legacySeasonEpisodes(item, preferred);
+        return legacyResolveNextPlaybackTarget(seasons, preferred, fallback, episodes, j.playerEpisode)
+    }
+
+    function maybeShowNextEpisodePrompt(position, total) {
+        if (j.nextEpisodeDismissed || j.nextEpisodeOpen || "vod" !== j.playerMode || !(total > 0) || position < total - 7) return;
+        var target = findNextPlaybackTarget();
+        target && showNextEpisodePrompt(target, total - position)
+    }
+
     function yn() {
         var item = j.playerItem;
         if (item && S(item) && "player" === j.screen) {
-            var preferred = Number(j.playerSeasonIndex) || 0,
-                fallback = Number(j.detailSeason) || 0,
-                episodes = legacySeasonEpisodes(item, preferred),
-                target = legacyResolveNextPlaybackTarget(sn(item), preferred, fallback, episodes, j.playerEpisode);
+            if (j.nextEpisodeDismissed) return void mn();
+            var target = findNextPlaybackTarget();
             target ? showNextEpisodePrompt(target) : mn()
         }
     }
@@ -5337,7 +5361,7 @@
                     resumeAt = 0
                 }
             };
-            j.noHistorySave = !0, ar(), j.noHistorySave = !1, Fn = e;
+            j.noHistorySave = !0, ar(), j.noHistorySave = !1, j.nextEpisodeDismissed = !1, Fn = e;
             var a = /^(http:\/\/127\.0\.0\.1:\d+)/.exec(e);
             if (a && (Un = a[1]), /\/s\/[0-9a-f]+\.mp4/i.test(e)) {
                 Hn = e.split("?")[0];
@@ -5408,7 +5432,7 @@
                 if (we.currentTime > 0 && v(), "vod" === j.playerMode) {
                     var position = legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn),
                         total = legacyResolvePlaybackTotal(we.duration, j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0, j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0);
-                    Ei(position, total), Ba(position), Ta(position, total)
+                    Ei(position, total), Ba(position), Ta(position, total), maybeShowNextEpisodePrompt(position, Zn())
                 }
             },
                 pause: function() {
