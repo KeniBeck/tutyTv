@@ -3654,8 +3654,9 @@ div, section, span { outline: none; }
 
 /* =============================================================================
    LIVE TV SEARCH (home TV tab)
-   Reuses the VOD keyboard look on the left and lists matching channels on
-   the right.  Only channels of the selected portal column are searched.
+   Reuses the VOD keyboard look on the left and lists matching categories and
+   channels on the right.  Channels are searched inside the selected portal
+   column; choosing a category keeps the search open and reloads its channels.
    ============================================================================= */
 .live-search {
   position: absolute;

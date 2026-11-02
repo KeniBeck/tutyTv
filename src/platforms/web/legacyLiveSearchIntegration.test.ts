@@ -81,7 +81,10 @@ describe("legacy live TV search integration", () => {
       channels: [{ channel: channels[2], index: 2 }],
       categories: [categories[0]]
     });
-    expect(runtime.legacyFindLiveSearchMatches(channels, categories, "").channels).toHaveLength(3);
+    expect(runtime.legacyFindLiveSearchMatches(channels, categories, "")).toEqual({
+      channels: channels.map((channel, index) => ({ channel, index })),
+      categories
+    });
 
     const firstB = { name: "B", channelCode: "b" };
     const noCode = { name: "No code" };

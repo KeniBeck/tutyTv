@@ -11,7 +11,7 @@ const helpers = appSource.match(/ {4}function legacyNavigationAction\(e\) \{[\s\
 const stop = appSource.match(/ {4}function ar\(\) \{[\s\S]*?(?= {4}function nr\(e\))/)?.[0];
 const open = appSource.match(/ {4}function rr\(e, t\) \{[\s\S]*?(?= {4}function or\(e, t\))/)?.[0];
 const seek = appSource.match(/ {4}function Kn\(\) \{[\s\S]*?(?= {4}function Oi\(e\))/)?.[0];
-const preview = appSource.match(/ {4}function Nt\(\) \{[\s\S]*?(?= {4}function Ut\(e, t\))/)?.[0];
+const preview = appSource.match(/ {4}function Nt\(\) \{[\s\S]*?(?= {4}function Ut\(e, t(?:, complete)?\))/)?.[0];
 
 afterEach(() => vi.restoreAllMocks());
 

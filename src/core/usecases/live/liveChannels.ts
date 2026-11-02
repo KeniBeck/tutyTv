@@ -77,12 +77,10 @@ export function findLiveSearchMatches<T extends LiveChannelLike, C extends LiveC
   const channelMatches: Array<IndexedLiveChannel<T>> = [];
   const categoryMatches: C[] = [];
 
-  if (needle) {
-    for (const category of categories) {
-      if (categoryMatches.length >= categoryLimit) break;
-      if (normalizeText(category.name).indexOf(needle) !== -1) {
-        categoryMatches.push(category);
-      }
+  for (const category of categories) {
+    if (categoryMatches.length >= categoryLimit) break;
+    if (!needle || normalizeText(category.name).indexOf(needle) !== -1) {
+      categoryMatches.push(category);
     }
   }
 

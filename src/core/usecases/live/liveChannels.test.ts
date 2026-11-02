@@ -50,20 +50,20 @@ describe("live channel search", () => {
     expect(result.categories).toEqual([categories[0], categories[2]]);
   });
 
-  it("returns all channels up to the limit when the query is empty", () => {
+  it("returns all channels and parent categories when the query is empty", () => {
     expect(findLiveSearchMatches(channels, categories, "")).toEqual({
       channels: channels.map((channel, index) => ({ channel, index })),
-      categories: []
+      categories
     });
   });
 
   it("applies explicit channel and category limits", () => {
-    expect(findLiveSearchMatches(channels, categories, "", { channels: 2 })).toEqual({
+    expect(findLiveSearchMatches(channels, categories, "", { channels: 2, categories: 2 })).toEqual({
       channels: [
         { channel: channels[0], index: 0 },
         { channel: channels[1], index: 1 }
       ],
-      categories: []
+      categories: categories.slice(0, 2)
     });
     expect(findLiveSearchMatches(channels, categories, "cine", { categories: 1 }).categories).toEqual([
       categories[0]

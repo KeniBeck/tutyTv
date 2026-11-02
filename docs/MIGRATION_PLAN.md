@@ -156,6 +156,9 @@ Completado:
   URL usan wrappers con fallback legacy
 - etiqueta/estado de la categoria activa y scroll de la lista de canales
   extraidos a Core; `liveUpdateLabel` y `zt` usan wrappers con fallback
+- busqueda de TV en vivo unificada: categorias visibles desde el inicio y
+  seleccion de categoria sin cerrar el dialogo; al cambiar de categoria se
+  recargan sus canales y se conserva la busqueda abierta
 
 Pendiente:
 
@@ -479,6 +482,12 @@ verificacion estructural del IPK y prueba en TV fisica.
     `addons`. `liveUpdateLabel`, `zt` y `$t` usan wrappers con fallback.
     Verificados lint, typecheck, 252 pruebas y builds web/core/webOS. No se
     regenero IPK ni se probo en TV.
+73. Busqueda de TV en vivo unificada: las categorias se muestran desde el
+    inicio y elegir una recarga sus canales sin cerrar el dialogo de busqueda;
+    la busqueda de canales sigue en la categoria activa. `Bt`/`Ut` notifican al
+    completar la paginacion para refrescar resultados. Verificados lint,
+    typecheck, 252 pruebas y builds web/core/webOS. No se regenero IPK ni se
+    probo en TV.
 
 ## Riesgos pendientes
 

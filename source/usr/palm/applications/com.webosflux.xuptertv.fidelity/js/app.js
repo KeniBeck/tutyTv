@@ -2141,12 +2141,12 @@
         }, 220)
     }
 
-    function Ut(e, t) {
+    function Ut(e, t, complete) {
         e && (_t = e, qn(), e.isAddon ? Ft(function() {
-            t && t()
+            t && t(), complete && complete()
         }) : Bt(e.id, function() {
             t && t()
-        }))
+        }, complete))
     }
 
     /* Local live favourites survive category changes and app restarts.  Portal
@@ -2192,8 +2192,7 @@
             channelMatches = [],
             categoryMatches = [],
             index = 0;
-        if (needle)
-            for (index = 0; index < categories.length && categoryMatches.length < 8; index++) o(categories[index].name || "").indexOf(needle) >= 0 && categoryMatches.push(categories[index]);
+        for (index = 0; index < categories.length && categoryMatches.length < 8; index++)(!needle || o(categories[index].name || "").indexOf(needle) >= 0) && categoryMatches.push(categories[index]);
         for (index = 0; index < channels.length && channelMatches.length < 250; index++) {
             var channel = channels[index];
             channel && (!needle || o(channel.name || "").indexOf(needle) >= 0) && channelMatches.push({
@@ -2340,7 +2339,7 @@
         })(t[n])
     }
 
-    function Bt(e, t) {
+    function Bt(e, t, complete) {
         var i = e || 76182;
         if (!Mt || Tt !== i) {
             var a = ++It;
@@ -2368,8 +2367,8 @@
                                     St = a, Lt = !0, _t || (_t = St[0]), qn(), liveUpdateLabel(), e && e(null, St)
                                 })
                             }(), t && t(o, s)), !o && s && s.hasMore && l.length) return n++, void setTimeout(e, 25);
-                        Mt = !1, o && !kt && setTimeout(function() {
-                            a === It && Bt(i)
+                        Mt = !1, !o && complete && complete(), o && !kt && setTimeout(function() {
+                            a === It && Bt(i, null, complete)
                         }, 2500)
                     }
                 })
@@ -2519,7 +2518,7 @@
         };
         grid.appendChild(fav);
         var search = e("div", "pcat-tile focusable");
-        search.appendChild(e("div", "pcat-name", "🔍 Buscar canal"));
+        search.appendChild(e("div", "pcat-name", "🔍 Buscar canal o categoría"));
         search._special = "search";
         search._activate = function() {
             lvCloseCats(!0), lvOpenSearch()
@@ -2564,7 +2563,7 @@
     }
 
     function lvUpdateQuery() {
-        liveKbEdit && (liveSearchQuery ? (liveKbEdit.textContent = liveSearchQuery, liveKbEdit.classList.remove("is-placeholder")) : (liveKbEdit.textContent = "Buscar canal en vivo…", liveKbEdit.classList.add("is-placeholder")))
+        liveKbEdit && (liveSearchQuery ? (liveKbEdit.textContent = liveSearchQuery, liveKbEdit.classList.remove("is-placeholder")) : (liveKbEdit.textContent = "Buscar canal o categoría…", liveKbEdit.classList.add("is-placeholder")))
     }
 
     function lvRenderResults() {
@@ -2577,16 +2576,21 @@
                 search = legacyFindLiveSearchMatches(F, cats, liveSearchQuery),
                 catMatches = search.categories,
                 matches = search.channels;
-            if (sub) sub.textContent = q ? matches.length + (1 === matches.length ? " canal" : " canales") + " · " + catMatches.length + (1 === catMatches.length ? " categoría" : " categorías") : "Escribe para buscar entre los " + F.length + " canales de " + liveCatName();
+            if (sub) sub.textContent = q ? matches.length + (1 === matches.length ? " canal" : " canales") + " · " + catMatches.length + (1 === catMatches.length ? " categoría" : " categorías") : "Escribe para filtrar los " + F.length + " canales de " + liveCatName() + " o busca otra categoría";
             for (var c = 0; c < catMatches.length; c++)(function(cat) {
                 var row = e("div", "live-sr-row live-sr-cat focusable");
                 row.appendChild(e("div", "live-sr-icon live-sr-icon-cat", "TV"));
                 row.appendChild(e("div", "live-sr-name", "Categoría: " + cat.name));
                 row.appendChild(e("div", "live-sr-badge", "CATEGORÍA"));
                 row._activate = function() {
-                    lvCloseSearch(!0), liveFavFilter = !1, lvSyncFav(), ie && tt(ie), Ut(cat, function() {
-                        liveUpdateLabel(), lvFocusList()
-                    })
+                    liveFavFilter = !1, lvSyncFav(), liveSearchQuery = "", lvUpdateQuery();
+                    var focusResults = function() {
+                        lvRenderResults(), liveUpdateLabel();
+                        var list = t("live-search-list"),
+                            first = list ? list.querySelector(".live-sr-row:not(.live-sr-cat)") || list.querySelector(".live-sr-row") : null;
+                        first && tt(first)
+                    };
+                    _t && _t.id === cat.id ? (Ht(!1), focusResults()) : Ut(cat, focusResults, focusResults)
                 };
                 list.appendChild(row)
             })(catMatches[c]);
@@ -2620,7 +2624,7 @@
 
     function lvSearchGo() {
         var e = t("live-search-list"),
-            i = e ? e.querySelector(".live-sr-row") : null;
+            i = e ? e.querySelector(".live-sr-row:not(.live-sr-cat)") || e.querySelector(".live-sr-row") : null;
         i && Ye(i) && tt(i)
     }
 
