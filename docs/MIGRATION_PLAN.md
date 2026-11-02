@@ -147,8 +147,9 @@ Completado:
   hermanos; en relay web y webOS se consulta `/duration/<token>` al ffmpeg, que
   reporta la duracion real de la fuente
 - TV en vivo: filtrado de canales visibles por favoritos, conservando los
-  indices originales, y busqueda de canales/categorias extraidos a Core;
-  `Ht` y `lvRenderResults` usan wrappers con fallback legacy
+  indices originales, busqueda de canales/categorias y deduplicacion por
+  `channelCode` al paginar extraidos a Core; `Ht`, `lvRenderResults` y `Bt`
+  usan wrappers con fallback legacy
 - normalizacion de categorias del portal con fallback, categoria de Addons M3U,
   validacion HTTP(S) y alta/actualizacion de addons por URL extraidas a Core;
   `Bt`, `Xt` y la validacion de URL usan wrappers con fallback legacy
@@ -466,6 +467,10 @@ verificacion estructural del IPK y prueba en TV fisica.
     alta/actualizacion por URL extraidas a `addons`. `Bt`, `Xt` y la validacion
     de URL usan wrappers con fallback. Verificados lint, typecheck, 243 pruebas
     y builds web/core/webOS. No se regenero IPK ni se probo en TV.
+71. TV en vivo: deduplicacion por `channelCode` al paginar canales extraida a
+    Core; `Bt` la usa mediante `legacySelectNewLiveChannels` con fallback.
+    Verificados lint, typecheck, 245 pruebas y builds web/core/webOS. No se
+    regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

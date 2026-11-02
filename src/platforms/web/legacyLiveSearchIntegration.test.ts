@@ -19,6 +19,7 @@ interface Channel {
   name: string;
   logo?: string;
   favorite?: boolean;
+  channelCode?: string;
 }
 
 interface Category {
@@ -29,6 +30,7 @@ describe("legacy live TV search integration", () => {
   it("keeps live filtering and search connected to Core helpers", () => {
     expect(source).toMatch(/legacyFilterLiveChannels\(F, favOnly, liveIsFav\)/);
     expect(source).toMatch(/legacyFindLiveSearchMatches\(F, cats, liveSearchQuery\)/);
+    expect(source).toMatch(/legacySelectNewLiveChannels\(F, l\)/);
     expect(source).toMatch(/item\.channel\.logo/);
     expect(source).toMatch(/Vt\(item\.index, !0\)/);
   });
@@ -36,7 +38,7 @@ describe("legacy live TV search integration", () => {
   it.each([true, false])("preserves favorites, indexes, accents and category search (core available: %s)", (withCore) => {
     expect(snippet).toBeTruthy();
     const runtime = runInNewContext(
-      `${snippet}\n({ legacyFilterLiveChannels, legacyFindLiveSearchMatches })`,
+      `${snippet}\n({ legacyFilterLiveChannels, legacyFindLiveSearchMatches, legacySelectNewLiveChannels })`,
       { window: { TutyCore: withCore ? core : undefined } }
     ) as {
       legacyFilterLiveChannels(
@@ -52,6 +54,7 @@ describe("legacy live TV search integration", () => {
         channels: Array<{ channel: Channel; index: number }>;
         categories: Category[];
       };
+      legacySelectNewLiveChannels(current: Channel[], incoming: Channel[]): Channel[];
     };
 
     const channels: Channel[] = [
@@ -79,5 +82,12 @@ describe("legacy live TV search integration", () => {
       categories: [categories[0]]
     });
     expect(runtime.legacyFindLiveSearchMatches(channels, categories, "").channels).toHaveLength(3);
+
+    const firstB = { name: "B", channelCode: "b" };
+    const noCode = { name: "No code" };
+    expect(runtime.legacySelectNewLiveChannels(
+      [{ name: "A", channelCode: "a" }],
+      [firstB, { name: "A duplicate", channelCode: "a" }, { name: "B duplicate", channelCode: "b" }, noCode]
+    )).toEqual([firstB, noCode]);
   });
 });

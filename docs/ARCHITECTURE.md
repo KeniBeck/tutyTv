@@ -300,8 +300,9 @@ fallback sin el puente.
 - Filtro por categoria/genero (`filterMatches`), paridad con `app.js`
 - Claves y estado de favoritos en vivo (`liveFavorites`)
 - Busqueda en historial y validacion de episodios (`history`)
-- TV en vivo: filtrado de canales visibles por favoritos, conservando indices, y
-  busqueda de canales/categorias con normalizacion compartida (`liveChannels`)
+- TV en vivo: filtrado de canales visibles por favoritos, conservando indices,
+  deduplicacion por `channelCode` al paginar y busqueda de canales/categorias
+  con normalizacion compartida (`liveChannels`)
 - Normalizacion de categorias del portal, fallback de categorias y entrada de
   Addons M3U (`liveCategories`)
 - Addons M3U: validacion HTTP(S) y alta/actualizacion por URL (`addons`)
@@ -327,7 +328,7 @@ fallback sin el puente.
 - Cableado de eventos del video y de HLS centralizado (`playbackEventWiring`)
 - Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
   estado visible, modo VOD y transicion detalle-reproductor
-- 243 pruebas automatizadas sin dependencia de televisor ni navegador
+- 245 pruebas automatizadas sin dependencia de televisor ni navegador
 - Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
   titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
 

@@ -2207,6 +2207,19 @@
         }
     }
 
+    function legacySelectNewLiveChannels(current, incoming) {
+        var _core = window.TutyCore;
+        if (_core && _core.selectNewLiveChannels) return _core.selectNewLiveChannels(current, incoming);
+        for (var seen = {}, result = [], index = 0; index < current.length; index++) current[index] && current[index].channelCode && (seen[current[index].channelCode] = !0);
+        for (index = 0; index < incoming.length; index++) {
+            var channel = incoming[index];
+            if (!channel) continue;
+            if (channel.channelCode && seen[channel.channelCode]) continue;
+            channel.channelCode && (seen[channel.channelCode] = !0), result.push(channel)
+        }
+        return result
+    }
+
     function legacyNormalizeLiveCategories(categories) {
         var _core = window.TutyCore;
         if (_core && _core.normalizeLiveCategories) return _core.normalizeLiveCategories(categories);
@@ -2312,10 +2325,9 @@
                     if (a === It) {
                         var l = s && s.channels ? s.channels : [];
                         if (!o && l.length) {
-                            for (var d = {}, c = 0; c < F.length; c++) F[c] && F[c].channelCode && (d[F[c].channelCode] = !0);
-                            for (var p = 0; p < l.length; p++) {
-                                var u = l[p];
-                                !u || u.channelCode && d[u.channelCode] || (u.channelCode && (d[u.channelCode] = !0), u.fav = liveIsFav(u), F.push(u))
+                            for (var d = legacySelectNewLiveChannels(F, l), p = 0; p < d.length; p++) {
+                                var u = d[p];
+                                u.fav = liveIsFav(u), F.push(u)
                             }
                             kt = !0, Ht(!1), Rn(), j.channel >= F.length && (j.channel = 0), F[j.channel] && ee && (ee.textContent = F[j.channel].name), "player" === j.screen && "live" === j.playerMode ? vr() : Rt(F[j.channel])
                         }

@@ -35,6 +35,36 @@ export function filterLiveChannels<T>(
   return result;
 }
 
+export interface LiveChannelCode {
+  channelCode?: unknown;
+}
+
+export function selectNewLiveChannels<T extends LiveChannelCode>(
+  current: ReadonlyArray<T | null | undefined>,
+  incoming: ReadonlyArray<T | null | undefined>
+): T[] {
+  const seen: Record<string, true> = {};
+  const result: T[] = [];
+
+  for (const channel of current) {
+    if (channel && channel.channelCode) {
+      seen[String(channel.channelCode)] = true;
+    }
+  }
+
+  for (const channel of incoming) {
+    if (!channel) continue;
+    if (channel.channelCode) {
+      const code = String(channel.channelCode);
+      if (seen[code]) continue;
+      seen[code] = true;
+    }
+    result.push(channel);
+  }
+
+  return result;
+}
+
 export function findLiveSearchMatches<T extends LiveChannelLike, C extends LiveCategoryLike>(
   channels: ReadonlyArray<T>,
   categories: ReadonlyArray<C>,
