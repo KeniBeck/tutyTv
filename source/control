@@ -3,7 +3,7 @@ Version: 1.6.6
 Section: misc
 Priority: optional
 Architecture: all
-Installed-Size: 37851901
+Installed-Size: 37854132
 Maintainer: N/A <nobody@example.com>
 Description: This is a webOS application.
 webOS-Package-Format-Version: 2
