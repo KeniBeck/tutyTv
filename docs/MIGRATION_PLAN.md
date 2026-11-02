@@ -249,6 +249,30 @@ fisica: navegacion/control remoto, catalogo, carga de titulos, busqueda,
 guardado de configuracion y transicion episodio->temporada->episodio OK. La
 limpieza de duplicaciones legacy queda como mantenimiento no bloqueante.
 
+## Fase 7 - Rediseno de UI (planificada, post-migracion)
+
+Objetivo:
+
+- reemplazar progresivamente la UI actual por una interfaz mas moderna sin
+  cambiar funcionalidad, IDs, datos guardados ni navegacion remota
+
+Alcance inicial:
+
+- tokens de diseno: color, tipografia, espaciado, radios, sombras y foco
+- shell/navegacion, home TV, hero/bento, catalogos, detalle, reproductor e
+  infobar, busqueda, filtros, addons y ajustes
+- estados de foco, carga y transiciones consistentes
+- conservar 1920x1080, rendimiento webOS y control remoto
+
+Enfoque:
+
+- primero web, luego build webOS e IPK
+- cambios por pantalla/componente con paridad funcional y pruebas
+- no redisenar todo en un solo cambio
+
+Estado: planificada. Inicia despues de confirmar la funcionalidad de favoritos
+de TV en vivo.
+
 ## Checklist de la etapa web
 
 1. `pnpm run lint`
@@ -492,6 +516,10 @@ verificacion estructural del IPK y prueba en TV fisica.
     accesible con flecha derecha y activable con OK; el filtro de favoritos y su
     contador siguen sobre la categoria activa. Verificados lint, typecheck, 252
     pruebas y builds webOS/web. No se regenero IPK ni se probo en TV.
+75. Favoritos de TV en vivo confirmados funcionales en web: marcar/desmarcar
+    desde el corazon de la fila y usar el filtro/contador. La UI actual se
+    considera tosca; se agrega la Fase 7 de rediseno de UI, no incluida en el
+    plan original. No se regenero IPK.
 
 ## Riesgos pendientes
 
