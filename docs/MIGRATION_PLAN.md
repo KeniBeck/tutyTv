@@ -629,7 +629,13 @@ verificacion estructural del IPK y prueba en TV fisica.
     la siguiente entrada si repite el numero actual. Historial sin coincidencia
     exacta ahora busca por titulo normalizado y, si tampoco esta en el catalogo
     cargado, consulta el servicio de busqueda. Verificados lint, typecheck, 315
-    pruebas y builds web/core/webOS. No se regenero IPK ni se probo en TV.
+    pruebas y builds web/core/webOS.
+91. Series cuyo id raiz no existe en la lista de temporadas: se resuelve la
+    temporada real por `seasonId` guardado, id raiz o numero del titulo
+    (`Temp.1`, `T2`, etc.) y se sincroniza `item.seasonId` antes de calcular el
+    siguiente episodio. Corrige casos como Round 6 Temp.1 / Goodbye Dear Wife.
+    Verificados lint, typecheck, 318 pruebas y builds web/core/webOS. No se
+    regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

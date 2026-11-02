@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findEpisodeIndex, nextSeasonIndex, seasonEpisodes, seasonList } from "./episodeNavigation";
+import { findEpisodeIndex, nextSeasonIndex, resolveDetailSeason, seasonEpisodes, seasonList } from "./episodeNavigation";
 
 describe("episode navigation", () => {
   it("falls back to a synthetic season when the item has none", () => {
@@ -44,5 +44,28 @@ describe("episode navigation", () => {
     expect(findEpisodeIndex(episodes, null)).toBe(-1);
     expect(findEpisodeIndex([{ id: "a" }, { id: "b" }], { id: "x" })).toBe(-1);
     expect(findEpisodeIndex([{}, {}], {})).toBe(-1);
+  });
+});
+
+describe("detail season resolution", () => {
+  const seasons = [
+    { id: "s1", number: 1 },
+    { id: "s2", number: 2 },
+    { id: "s3", number: 3 }
+  ];
+
+  it("prefers an existing season id and then a matching root id", () => {
+    expect(resolveDetailSeason(seasons, "root", "s2", "Serie")).toEqual({ seasonIndex: 1, seasonId: "s2" });
+    expect(resolveDetailSeason(seasons, "s3", "root", "Serie")).toEqual({ seasonIndex: 2, seasonId: "s3" });
+  });
+
+  it("uses the season number in the title when the root id is not in the season list", () => {
+    expect(resolveDetailSeason(seasons, "root", "root", "Round 6 Temp.2")).toEqual({ seasonIndex: 1, seasonId: "s2" });
+    expect(resolveDetailSeason(seasons, "root", "root", "Round 6 T3")).toEqual({ seasonIndex: 2, seasonId: "s3" });
+  });
+
+  it("falls back to the first season", () => {
+    expect(resolveDetailSeason(seasons, "root", "root", "Round 6")).toEqual({ seasonIndex: 0, seasonId: "s1" });
+    expect(resolveDetailSeason([], "root", "root", "Round 6")).toEqual({ seasonIndex: 0 });
   });
 });

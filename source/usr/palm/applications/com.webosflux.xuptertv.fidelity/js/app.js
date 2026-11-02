@@ -375,11 +375,8 @@
                     }]
                 }
                 if (e.seasons && e.seasons.length) {
-                    for (var r = 0, o = 0; o < e.seasons.length; o++)
-                        if (e.seasons[o].id === e.id) {
-                            r = o;
-                            break
-                        } j.detailSeason = r
+                    var resolvedSeason = legacyResolveDetailSeason(e.seasons, e.id, e.seasonId, e.title || e.alias);
+                    j.detailSeason = resolvedSeason.seasonIndex, resolvedSeason.seasonId && (e.seasonId = resolvedSeason.seasonId)
                 }
                 e.episodes && e.episodes.length && !j.detailEpisode && (j.detailEpisode = e.episodes[0]), qa(e), e._detailsLoaded = !0
             }
@@ -983,6 +980,41 @@
             kind: "season",
             seasonIndex: nextIndex,
             season: seasons[nextIndex]
+        }
+    }
+
+    function legacyResolveDetailSeason(seasons, itemId, currentSeasonId, title) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolveDetailSeason === "function") return _core.resolveDetailSeason(seasons, itemId, currentSeasonId, title);
+        if (!seasons || !seasons.length) return {
+            seasonIndex: 0
+        };
+        var currentId = currentSeasonId ? String(currentSeasonId) : "",
+            rootId = itemId ? String(itemId) : "",
+            index = 0;
+        if (currentId)
+            for (index = 0; index < seasons.length; index++)
+                if (String(seasons[index].id || "") === currentId) return {
+                    seasonIndex: index,
+                    seasonId: seasons[index].id
+                };
+        if (rootId)
+            for (index = 0; index < seasons.length; index++)
+                if (String(seasons[index].id || "") === rootId) return {
+                    seasonIndex: index,
+                    seasonId: seasons[index].id
+                };
+        var match = /(?:temp(?:orada)?|season|t)\s*\.?\s*(\d+)/i.exec(String(title || "").replace(/-/g, " ")),
+            number = match ? parseInt(match[1], 10) : 0;
+        if (number > 0)
+            for (index = 0; index < seasons.length; index++)
+                if (Number(seasons[index].number) === number) return {
+                    seasonIndex: index,
+                    seasonId: seasons[index].id
+                };
+        return {
+            seasonIndex: 0,
+            seasonId: seasons[0].id
         }
     }
 
@@ -3262,12 +3294,11 @@
         if (j.detail = e, j.detailReturn = {
                 screen: j.screen,
                 focus: j.focus
-            }, j.detailRange = 0, j.detailSeason = 0, j.detailEpisode = null, j.playerEpisode = null, e.seasons && e.seasons.length)
-            for (var i = 0; i < e.seasons.length; i++)
-                if (e.seasons[i].id === e.id) {
-                    j.detailSeason = i;
-                    break
-                } e.episodes && e.episodes.length && (j.detailEpisode = e.episodes[0]), qa(e), Xa(), Wa(e), Qa(e), ti(e), nt("detail"), ye || En();
+            }, j.detailRange = 0, j.detailSeason = 0, j.detailEpisode = null, j.playerEpisode = null, e.seasons && e.seasons.length) {
+            var resolvedSeason = legacyResolveDetailSeason(e.seasons, e.id, e.seasonId, e.title || e.alias);
+            j.detailSeason = resolvedSeason.seasonIndex, resolvedSeason.seasonId && (e.seasonId = resolvedSeason.seasonId)
+        }
+        e.episodes && e.episodes.length && (j.detailEpisode = e.episodes[0]), qa(e), Xa(), Wa(e), Qa(e), ti(e), nt("detail"), ye || En();
         var a = t("screen-player");
         a && (a.classList.add("is-mini"), a.classList.add("is-active"));
         var n = oe ? oe.querySelector(".focusable") : null;

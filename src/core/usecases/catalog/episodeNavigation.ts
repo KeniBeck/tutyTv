@@ -20,7 +20,7 @@ export function seasonList(item: unknown): SeasonLike[] {
 export function seasonEpisodes(item: unknown, seasonIndex: number): EpisodeLike[] {
   const value = item as {
     id?: string;
-    seasonId?: string;
+    seasonId?: string | undefined;
     episodes?: EpisodeLike[];
   } | null;
   const seasons = seasonList(value);
@@ -77,4 +77,45 @@ export function findEpisodeIndex(episodes: EpisodeLike[], current: unknown): num
     }
   }
   return -1;
+}
+
+export interface DetailSeasonResolution {
+  seasonIndex: number;
+  seasonId?: string | undefined;
+}
+
+export function resolveDetailSeason(
+  seasons: ReadonlyArray<SeasonLike>,
+  itemId: unknown,
+  currentSeasonId: unknown,
+  title: unknown
+): DetailSeasonResolution {
+  if (!seasons.length) return { seasonIndex: 0 };
+
+  const currentId = currentSeasonId ? String(currentSeasonId) : "";
+  const rootId = itemId ? String(itemId) : "";
+  for (let index = 0; index < seasons.length; index++) {
+    if (currentId && String(seasons[index]?.id || "") === currentId) {
+      return { seasonIndex: index, seasonId: seasons[index]?.id };
+    }
+  }
+  if (rootId) {
+    for (let index = 0; index < seasons.length; index++) {
+      if (String(seasons[index]?.id || "") === rootId) {
+        return { seasonIndex: index, seasonId: seasons[index]?.id };
+      }
+    }
+  }
+
+  const titleMatch = /(?:temp(?:orada)?|season|t)\s*\.?\s*(\d+)/i.exec(String(title || "").replace(/-/g, " "));
+  const titleNumber = titleMatch ? parseInt(titleMatch[1] || "", 10) : 0;
+  if (titleNumber > 0) {
+    for (let index = 0; index < seasons.length; index++) {
+      if (Number(seasons[index]?.number) === titleNumber) {
+        return { seasonIndex: index, seasonId: seasons[index]?.id };
+      }
+    }
+  }
+
+  return { seasonIndex: 0, seasonId: seasons[0]?.id };
 }

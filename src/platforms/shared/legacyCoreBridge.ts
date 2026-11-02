@@ -49,7 +49,7 @@ export { groupCatalogSeries, mergePortalRoots } from "../../core/usecases/catalo
 export { combineSearchResults, findLocalSearchMatches } from "../../core/usecases/catalog/catalogSearch";
 export { buildEpisodeRanges, filterCatalogCategory, selectCatalogPage } from "../../core/usecases/catalog/catalogSelection";
 export { mergeCatalogDetail, toggleCatalogFavorite } from "../../core/usecases/catalog/catalogDetail";
-export { findEpisodeIndex, nextSeasonIndex, seasonEpisodes, seasonList } from "../../core/usecases/catalog/episodeNavigation";
+export { findEpisodeIndex, nextSeasonIndex, resolveDetailSeason, seasonEpisodes, seasonList } from "../../core/usecases/catalog/episodeNavigation";
 export {
   isLiveFavorite,
   liveFavKey,
