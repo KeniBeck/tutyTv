@@ -8,10 +8,11 @@ const source = readFileSync(new URL(
   import.meta.url
 ), "utf8");
 const save = source.match(/ {4}function Ta\(e, t, i\) \{[\s\S]*?(?= {4}function qa\(e\) \{)/)?.[0];
+const shouldPersist = source.match(/ {4}function legacyShouldPersistPlaybackHistory\([\s\S]*?(?= {4}function legacyResolvePlaybackTotalWithRelay)/)?.[0];
 
 describe("legacy playback history", () => {
   it.each([true, false])("preserves history data, deduplication, limit and throttling (core available: %s)", (withCore) => {
-    expect(save).toBeDefined();
+    expect(save && shouldPersist).toBeDefined();
     let now = 100_000;
     const writes = vi.fn();
     const item = { id: 7, title: "Series", poster: "poster.jpg", duration: 90 };
@@ -27,7 +28,7 @@ describe("legacy playback history", () => {
       j, X: profile, W: "xuper_local_profile_v1", La: 0,
       Date: { now: () => now }, J: writes, S: () => true
     };
-    const runtime = runInNewContext(`${save}\n({ Ta })`, scope) as { Ta(position: number, duration: number, force: boolean): void };
+    const runtime = runInNewContext(`${shouldPersist}\n${save}\n({ Ta })`, scope) as { Ta(position: number, duration: number, force: boolean): void };
     runtime.Ta(2, 100, false);
     expect(writes).not.toHaveBeenCalled();
     runtime.Ta(10.9, 0, false);

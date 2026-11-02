@@ -45,6 +45,8 @@ function createRuntime(withCore: boolean, isTv: boolean, hlsEnabled: boolean) {
   const exposedCore = {
     ...core,
     limitSeekPosition: vi.fn(core.limitSeekPosition),
+    localSeekTarget: vi.fn(core.localSeekTarget),
+    relaySeekTarget: vi.fn(core.relaySeekTarget),
     handleHlsError: vi.fn(core.handleHlsError),
     selectNativeRetry: vi.fn(core.selectNativeRetry),
     isRelayStreamMode: vi.fn(core.isRelayStreamMode),
@@ -171,7 +173,7 @@ describe("legacy player integration", () => {
     local.scope.Vn = 20;
     local.runtime.Kn();
     expect(local.video.currentTime).toBe(119);
-    expect(local.exposedCore.limitSeekPosition).toHaveBeenCalledTimes(withCore ? 3 : 0);
+    expect(local.exposedCore.localSeekTarget).toHaveBeenCalledTimes(withCore ? 3 : 0);
 
     const relay = createRuntime(withCore, false, false);
     relay.j.playerItem.isHls = false;
@@ -181,7 +183,7 @@ describe("legacy player integration", () => {
     relay.scope.Vn = 20;
     relay.runtime.Kn();
     expect(relay.scope.Fn).toBe("http://127.0.0.1:8787/s/ab12.mp4?start=98");
-    expect(relay.exposedCore.limitSeekPosition).toHaveBeenCalledTimes(withCore ? 1 : 0);
+    expect(relay.exposedCore.relaySeekTarget).toHaveBeenCalledTimes(withCore ? 1 : 0);
   });
 
   it.each([true, false])("preserves direct MP4 and local seek (core available: %s)", (withCore) => {

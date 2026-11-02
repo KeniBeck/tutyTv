@@ -814,6 +814,70 @@
         return ranges
     }
 
+    function legacyShouldPersistPlaybackHistory(position, itemId, now, lastSavedAt, force) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.shouldPersistPlaybackHistory === "function") return _core.shouldPersistPlaybackHistory(position, itemId, now, lastSavedAt, force);
+        return !!(itemId && position >= 3 && (force || !(now - lastSavedAt < 15e3)))
+    }
+
+    function legacyResolvePlaybackTotalWithRelay(input) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolvePlaybackTotalWithRelay === "function") return _core.resolvePlaybackTotalWithRelay(input);
+        var video = Number(input.videoDuration) || 0;
+        if (input.hasRelay) {
+            if (input.probedDuration > 0) return input.probedDuration;
+            var meta = input.episodeDuration || input.itemDuration || input.inferredDuration;
+            return meta || (isFinite(video) && video > 0 ? input.relayBase + video : 0)
+        }
+        var total = isFinite(video) && video > 0 ? video : 0;
+        return total || (total = input.episodeDuration) || (total = input.itemDuration) || (total = input.inferredDuration) || 0
+    }
+
+    function legacyRelaySeekTarget(relayBase, currentTime, pendingDelta, duration) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.relaySeekTarget === "function") return _core.relaySeekTarget(relayBase, currentTime, pendingDelta, duration);
+        var target = Math.max(0, (Number(relayBase) || 0) + (Number(currentTime) || 0) + (Number(pendingDelta) || 0));
+        return Math.floor(legacyLimitSeek(target, Number(duration) || 0, !0))
+    }
+
+    function legacyLocalSeekTarget(currentTime, pendingDelta, duration) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.localSeekTarget === "function") return _core.localSeekTarget(currentTime, pendingDelta, duration);
+        return legacyLimitSeek((Number(currentTime) || 0) + (Number(pendingDelta) || 0), Number(duration) || 0, !1)
+    }
+
+    function legacyResolveResumePlan(history, currentEpisode, episodeCount, itemIsSeries, episodeExists) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolveResumePlan === "function") return _core.resolveResumePlan(history, currentEpisode, episodeCount, itemIsSeries, episodeExists);
+        var position = history ? Number(history.position) || 0 : 0,
+            duration = history ? Number(history.duration) || 0 : 0,
+            isSeries = !!(history && ("boolean" == typeof history.series ? history.series : itemIsSeries)),
+            mismatchReset = !1;
+        episodeCount > 1 && history && history.episodeId && currentEpisode && String(history.episodeId) !== String(currentEpisode.id) && episodeExists && (position = 0, mismatchReset = !0);
+        return {
+            position: position,
+            duration: duration,
+            isSeries: isSeries,
+            episodeCount: episodeCount,
+            mismatchReset: mismatchReset,
+            shouldPrompt: position > 2
+        }
+    }
+
+    function legacyResolveHistoryEpisode(history, episodes) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolveHistoryEpisode === "function") return _core.resolveHistoryEpisode(history, episodes);
+        if (!history || !history.episodeId) return null;
+        for (var index = 0; index < episodes.length; index++)
+            if (String(episodes[index].id) === String(history.episodeId)) return episodes[index];
+        return {
+            id: history.episodeId,
+            number: history.episodeNumber,
+            title: history.episodeTitle || "",
+            duration: history.duration || 0
+        }
+    }
+
     function legacyFormatPlaybackTime(value) {
         var _core = window.TutyCore;
         if (_core && typeof _core.formatPlaybackTime === "function") return _core.formatPlaybackTime(value);
@@ -3140,15 +3204,15 @@
     function startDetail(item) {
         item._detailPlaybackHandled = !0;
         var hist = findHistory(item),
-            pos = hist ? Number(hist.position) || 0 : 0,
-            dur = hist ? Number(hist.duration) || 0 : 0;
+            plan = legacyResolveResumePlan(hist, j.detailEpisode, item && item.episodes ? item.episodes.length : 0, S(item), hist && hist.episodeId ? episodeIdExists(item, hist.episodeId) : !1),
+            pos = plan.position,
+            dur = plan.duration,
+            isSeries = plan.isSeries,
+            epLen = plan.episodeCount,
+            mismatchReset = plan.mismatchReset;
         j.resumePosition = 0;
-        var isSeries = !!(hist && (typeof hist.series === "boolean" ? hist.series : S(item))),
-            epLen = item && item.episodes ? item.episodes.length : 0,
-            mismatchReset = !1;
-        if (epLen > 1 && hist && hist.episodeId && j.detailEpisode && String(hist.episodeId) !== String(j.detailEpisode.id) && episodeIdExists(item, hist.episodeId)) pos = 0, mismatchReset = !0;
-        window.TUTYTV_WEB && window.console && console.log("[TUTYTV] resume", item && item.id, "pos", hist && hist.position, "dur", dur, "series", isSeries, "eps", epLen, "histEp", hist && hist.episodeId, "curEp", j.detailEpisode && j.detailEpisode.id, "reset", mismatchReset, "show", pos > 2);
-        if (pos > 2) {
+        window.TUTYTV_WEB && window.console && console.log("[TUTYTV] resume", item && item.id, "pos", hist && hist.position, "dur", dur, "series", isSeries, "eps", epLen, "histEp", hist && hist.episodeId, "curEp", j.detailEpisode && j.detailEpisode.id, "reset", mismatchReset, "show", plan.shouldPrompt);
+        if (plan.shouldPrompt) {
             ar();
             try {
                 askResume(item, j.detailEpisode, pos, dur, function(cont) {
@@ -4014,12 +4078,11 @@
     }
 
     function Ta(e, t, i) {
-        var a = j.playerItem;
-        if (!j.noHistorySave && a && a.id && !(e < 3)) {
-            var n = Date.now();
-            if (i || !(n - La < 15e3)) {
-                La = n;
-                var _core = window.TutyCore,
+        var a = j.playerItem,
+            n = Date.now();
+        if (!j.noHistorySave && legacyShouldPersistPlaybackHistory(e, a && a.id, n, La, i)) {
+            La = n;
+            var _core = window.TutyCore,
                     _seriesId = String(a._seriesId || a.id),
                     _seasonId = String(a.seasonId || a.id);
                 if (_core && typeof _core.updatePlaybackHistory === "function") {
@@ -4049,7 +4112,6 @@
                         String(entry.id) !== o && entrySeries !== _seriesId && s.push(entry)
                     }
                 X.history = s, J(W, X)
-            }
         }
     }
     function qa(e) {
@@ -4082,18 +4144,8 @@
             }
         }
         t.seriesId && (e._seriesId = t.seriesId), t.title && (e.title = t.title), t.poster && (e.poster = t.poster), t.id && (e.id = t.id);
-        var episode = null;
-        for (var a = 0; a < (e.episodes || []).length; a++)
-            if (String(e.episodes[a].id) === String(t.episodeId)) {
-                episode = e.episodes[a];
-                break
-            }
-        episode || (episode = {
-            id: t.episodeId,
-            number: t.episodeNumber,
-            title: t.episodeTitle || "",
-            duration: t.duration || 0
-        }), j.detailEpisode = episode, j.playerEpisode = episode
+        var episode = legacyResolveHistoryEpisode(t, e.episodes || []);
+        j.detailEpisode = episode, j.playerEpisode = episode
     }
 
     function Oa(e) {
@@ -4972,20 +5024,14 @@
             if (Hn) {
                 if (Gn) return void(Vn = 0);
                 Gn = !0;
-                var e = zn + (we.currentTime || 0),
-                    t = Math.max(0, e + Vn);
-                Vn = 0;
                 var i = j.playerItem && j.playerItem.duration || we.duration || 0;
-                zn = Math.floor(legacyLimitSeek(t, i, !0));
-                Qe = zn;
+                zn = legacyRelaySeekTarget(zn, we.currentTime || 0, Vn, i);
+                Vn = 0, Qe = zn;
                 var a = Hn + "?start=" + zn;
                 return Jn = setTimeout(Qn, legacyPlaybackTiming().relaySeekResetMs), void rr(a)
             }
-            var n = (we.currentTime || 0) + Vn;
-            Vn = 0;
-            var r = we.duration || 0;
-            n = legacyLimitSeek(n, r, !1);
-            Qe = n;
+            var n = legacyLocalSeekTarget(we.currentTime || 0, Vn, we.duration || 0);
+            Vn = 0, Qe = n;
             try {
                 legacySeekVideo(we, n)
             } catch (e) {}
@@ -5003,14 +5049,19 @@
     }
 
     function Zn() {
-        if (Hn) {
-            if (Hd > 0) return Hd;
-            var meta = (j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0) || (j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0) || legacyInferEpisodeDuration(j.playerItem && j.playerItem.episodes, j.playerEpisode);
-            if (meta) return meta;
-            return we && isFinite(we.duration) && we.duration > 0 ? zn + we.duration : 0
-        }
-        var e = we && isFinite(we.duration) && we.duration > 0 ? we.duration : 0;
-        return !e && j.playerEpisode && j.playerEpisode.duration && (e = Mi(j.playerEpisode.duration)), !e && j.playerItem && j.playerItem.duration && (e = Mi(j.playerItem.duration)), !e && (e = legacyInferEpisodeDuration(j.playerItem && j.playerItem.episodes, j.playerEpisode)), e || 0
+        var video = we && isFinite(we.duration) && we.duration > 0 ? we.duration : 0,
+            episode = j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0,
+            item = j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0,
+            inferred = legacyInferEpisodeDuration(j.playerItem && j.playerItem.episodes, j.playerEpisode);
+        return legacyResolvePlaybackTotalWithRelay({
+            hasRelay: !!Hn,
+            relayBase: zn,
+            probedDuration: Hd,
+            videoDuration: video,
+            episodeDuration: episode,
+            itemDuration: item,
+            inferredDuration: inferred
+        })
     }
 
     function probeRelayDuration(source) {

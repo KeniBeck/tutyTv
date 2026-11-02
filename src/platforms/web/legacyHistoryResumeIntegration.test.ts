@@ -7,10 +7,11 @@ const source = readFileSync(new URL(
   import.meta.url
 ), "utf8");
 const resume = source.match(/ {4}function qa\(e\) \{[\s\S]*?(?= {4}function Oa\(e\))/)?.[0];
+const historyEpisode = source.match(/ {4}function legacyResolveHistoryEpisode\([\s\S]*?(?= {4}function legacyFormatPlaybackTime\()/)?.[0];
 
 describe("legacy history resume", () => {
   it("loads the saved season and resumes its episode", () => {
-    expect(resume).toBeDefined();
+    expect(resume && historyEpisode).toBeDefined();
     const item = {
       id: "s1",
       title: "Serie T1",
@@ -32,8 +33,8 @@ describe("legacy history resume", () => {
       screen: "detail", detail: item, playerEpisode: null as unknown,
       detailEpisode: null as unknown, detailSeason: 0
     };
-    const runtime = runInNewContext(`${resume}\n({ qa })`, {
-      findHistory: () => entry, Ea: null, j, ln, ti
+    const runtime = runInNewContext(`${historyEpisode}\n${resume}\n({ qa })`, {
+      window: {}, findHistory: () => entry, Ea: null, j, ln, ti
     }) as { qa(item: unknown): void };
 
     runtime.qa(item);
@@ -50,14 +51,14 @@ describe("legacy history resume", () => {
   });
 
   it("does not fall back to an unrelated history entry", () => {
-    expect(resume).toBeDefined();
+    expect(resume && historyEpisode).toBeDefined();
     const item = { id: "movie", title: "Película buscada", episodes: [] };
     const j = {
       screen: "detail", detail: item, playerEpisode: null as unknown,
       detailEpisode: null as unknown, detailSeason: 0
     };
-    const runtime = runInNewContext(`${resume}\n({ qa })`, {
-      findHistory: () => null,
+    const runtime = runInNewContext(`${historyEpisode}\n${resume}\n({ qa })`, {
+      window: {}, findHistory: () => null,
       Ea: { id: "series", title: "Otra serie", episodeId: "e1" },
       j, ln: vi.fn(), ti: vi.fn()
     }) as { qa(item: unknown): void };
@@ -70,15 +71,15 @@ describe("legacy history resume", () => {
   });
 
   it("keeps the old episode lookup when history has no season", () => {
-    expect(resume).toBeDefined();
+    expect(resume && historyEpisode).toBeDefined();
     const item = { id: "s1", episodes: [{ id: "e1", number: 1 }] };
     const entry = { id: "s1", episodeId: "e1", episodeNumber: 1 };
     const j = {
       screen: "player", detail: null, playerEpisode: null as unknown,
       detailEpisode: null as unknown, detailSeason: 0
     };
-    const runtime = runInNewContext(`${resume}\n({ qa })`, {
-      findHistory: () => entry, Ea: null, j, ln: vi.fn(), ti: vi.fn()
+    const runtime = runInNewContext(`${historyEpisode}\n${resume}\n({ qa })`, {
+      window: {}, findHistory: () => entry, Ea: null, j, ln: vi.fn(), ti: vi.fn()
     }) as { qa(item: unknown): void };
 
     runtime.qa(item);

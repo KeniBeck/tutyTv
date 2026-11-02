@@ -131,6 +131,10 @@ Completado:
 - seleccion de pista de audio, normalizacion/orden de subtitulos, eleccion de
   subtitulo y etiquetas de idioma extraidas a Core; `Ka`, `Ya`, `Za`, `Ln` y
   `Mn` usan Core con fallback
+- progreso de reproduccion extraido a Core: throttle de historial, total relay
+  y objetivos de seek; `Ta`, `Zn` y `Kn` usan wrappers con fallback
+- plan de reanudacion y reconstruccion del episodio desde historial extraidos a
+  Core; `startDetail` y `qa` usan wrappers con fallback
 - la construccion de la URL del servicio de desarrollo y su query string se
   extrajo a Core; el transporte Luna y el fallback de servicio siguen en `q`
 - sesion/API normalizada, validacion de sesion, parametros de catalogo,
@@ -557,6 +561,16 @@ verificacion estructural del IPK y prueba en TV fisica.
     etiquetas de idioma. `Ka`, `Ya`, `Za`, `Ln` y `Mn` usan Core con fallback.
     Verificados lint, typecheck, 279 pruebas y builds web/core/webOS. No se
     regenero IPK ni se probo en TV.
+
+81. Progreso de reproduccion extraido a Core (`playbackProgress`): throttle de
+    historial, total relay con prioridad de fuentes y objetivos de seek
+    local/relay. `Ta`, `Zn` y `Kn` usan wrappers con fallback. Verificados lint,
+    typecheck, 290 pruebas y builds web/core/webOS. No se regenero IPK ni se
+    probo en TV.
+82. Reanudacion extraida a Core (`resumePlan`): decision de reanudar/reiniciar
+    y reconstruccion del episodio desde historial. `startDetail` y `qa` usan
+    wrappers con fallback. Verificados lint, typecheck, 290 pruebas y builds
+    web/core/webOS. No se regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

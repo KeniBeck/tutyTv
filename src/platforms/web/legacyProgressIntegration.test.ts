@@ -16,6 +16,7 @@ const display = source.match(/ {4}function ki\(e\) \{[\s\S]*?(?= {4}function Mi\
 const parseLegacy = source.match(/ {4}function Mi\(e\) \{[\s\S]*?(?= {4}var Ii = null;)/)?.[0];
 const progress = source.match(/ {4}function Ei\(e, t\) \{[\s\S]*?(?= {4}function qi\(e\))/)?.[0];
 const total = source.match(/ {4}function Zn\(\) \{[\s\S]*?(?= {4}function er\(e\))/)?.[0];
+const progressHelpers = source.match(/ {4}function legacyShouldPersistPlaybackHistory\([\s\S]*?(?= {4}function legacyFormatPlaybackTime)/)?.[0];
 const scrub = source.match(/ {4}function ir\(e\) \{[\s\S]*?(?= {4}function ar\(\))/)?.[0];
 const probe = source.match(/ {4}function probeRelayDuration\(source\) \{[\s\S]*?(?= {4}function er\(e\))/)?.[0];
 
@@ -25,7 +26,7 @@ function element() {
 
 describe("legacy playback progress", () => {
   it.each([true, false])("uses the absolute relay duration for the seek bar (core available: %s)", (withCore) => {
-    expect(format && parse && infer && percent && resolve && display && parseLegacy && progress && total).toBeTruthy();
+    expect(format && parse && infer && percent && resolve && display && parseLegacy && progress && total && progressHelpers).toBeTruthy();
     const Ie = element();
     const Te = element();
     const qe = element();
@@ -39,7 +40,7 @@ describe("legacy playback progress", () => {
       r: (value: number) => value < 10 ? `0${value}` : String(value)
     };
     const runtime = runInNewContext(
-      `${format}\n${parse}\n${infer}\n${percent}\n${resolve}\n${display}\n${parseLegacy}\n${total}\n${progress}\n({ Ei, Zn })`,
+      `${format}\n${parse}\n${infer}\n${percent}\n${resolve}\n${display}\n${parseLegacy}\n${progressHelpers}\n${total}\n${progress}\n({ Ei, Zn })`,
       context
     ) as { Ei(position: number, duration: number): void; Zn(): number };
 

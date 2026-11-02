@@ -36,6 +36,7 @@ export {
   splitTrackCodes
 } from "../../core/usecases/playback/mediaTracks";
 export { findHistoryEntry, episodeIdExists } from "../../core/usecases/catalog/history";
+export { resolveHistoryEpisode, resolveResumePlan } from "../../core/usecases/playback/resumePlan";
 export { episodeDisplayTitle, formatEpisodeDuration } from "../../core/usecases/catalog/episodeDisplay";
 export {
   extractCatalogItems,
@@ -87,6 +88,12 @@ export {
   resolvePlaybackTotal,
   shouldUseHls
 } from "../../core/usecases/playback/playbackSession";
+export {
+  localSeekTarget,
+  relaySeekTarget,
+  resolvePlaybackTotalWithRelay,
+  shouldPersistPlaybackHistory
+} from "../../core/usecases/playback/playbackProgress";
 export {
   hasPlaybackSession,
   resolveAbortServiceBase,
