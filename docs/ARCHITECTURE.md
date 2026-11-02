@@ -221,7 +221,7 @@ Vite, solo en desarrollo (`pnpm dev`):
 Node (`source/web/server.js`), en desarrollo y produccion:
 
 - sesion Magis, proxy HLS, relay ffmpeg y rutas de API del portal
-- relay web: `/duration/<token>` sondea ffmpeg y expone la duracion real de la fuente
+- relay web y servicio webOS: `/duration/<token>` sondea ffmpeg y expone la duracion real de la fuente
 - inyeccion de globals de produccion y servido estatico de `dist/web`
 - sigue siendo el backend de `pnpm start:web`; no se elimino ninguna ruta
 

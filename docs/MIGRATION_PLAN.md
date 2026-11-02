@@ -144,8 +144,8 @@ Completado:
 - la barra enfocada solicita el seek automaticamente (sin OK final); OK solo
   sale del modo de ajuste
 - para series sin duracion en el portal se infiere la duracion de episodios
-  hermanos; en relay web se consulta `/duration/<token>` al ffmpeg, que reporta
-  la duracion real de la fuente
+  hermanos; en relay web y webOS se consulta `/duration/<token>` al ffmpeg, que
+  reporta la duracion real de la fuente
 
 Pendiente:
 
@@ -229,9 +229,9 @@ Condicion de salida:
 - prueba en TV fisica de navegacion, persistencia y reproduccion
 - retirar duplicaciones legacy solo cuando no tengan dependencias activas
 
-Estado: pendiente. El IPK se genera y valida estructuralmente, pero falta la
-prueba en TV fisica y completar la paridad del endpoint de duracion en el
-servicio webOS.
+Estado: pendiente. El IPK se genera y valida estructuralmente y el endpoint de
+duracion ya esta implementado en el servicio webOS; falta la prueba en TV
+fisica.
 
 ## Checklist de la etapa web
 
@@ -437,6 +437,11 @@ verificacion estructural del IPK y prueba en TV fisica.
     cerrada. `pnpm check` con 226 pruebas; IPK 1.6.6 generado y validado
     estructuralmente. Pendiente Fase 6: instalacion/prueba en TV fisica,
     control remoto, persistencia y paridad del endpoint de duracion webOS.
+
+67. Servicio webOS: agregado `/duration/<token>` con sonda ffmpeg de 15 s,
+    cache de duracion por sesion y parseo de `Duration:` durante el stream.
+    Sesion desconocida responde `{"duration":0}`. Validado `node --check`,
+    endpoint smoke e IPK 1.6.6 regenerado y validado estructuralmente.
 
 ## Riesgos pendientes
 

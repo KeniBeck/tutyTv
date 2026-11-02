@@ -51,8 +51,42 @@ function register(e, r) {
         url: e.url,
         headers: e.headers || {},
         audio: r.audio || 0,
-        hevc: !!r.hevc
+        hevc: !!r.hevc,
+        duration: 0,
+        probing: !1
     }, "http://" + HOST + ":" + PORT + "/s/" + t + ".mp4"
+}
+
+function probeDuration(session) {
+    if (!session || session.duration > 0 || session.probing) return;
+    session.probing = !0;
+    resolveForFfmpeg(session, function(input) {
+        var h = splitHeaders(input.headers),
+            args = ["-hide_banner", "-loglevel", "info", "-nostdin"];
+        /^https?:\/\//i.test(input.url) && (args.push("-rw_timeout", "15000000"), h.ua && args.push("-user_agent", h.ua), h.rest && args.push("-headers", h.rest)), args.push("-i", input.url);
+        var ff = spawn(FFMPEG, args, {
+                stdio: ["ignore", "ignore", "pipe"]
+            }),
+            text = "",
+            done = !1;
+
+        function finish() {
+            done || (done = !0, session.probing = !1, function() {
+                try {
+                    ff.kill("SIGKILL")
+                } catch (e) {}
+            }())
+        }
+        ff.stderr.on("data", function(chunk) {
+            text += String(chunk);
+            var match = /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(text);
+            match && (session.duration = 3600 * parseInt(match[1], 10) + 60 * parseInt(match[2], 10) + parseFloat(match[3]), finish())
+        }), ff.on("error", function() {
+            session.probing = !1
+        }), ff.on("close", function() {
+            session.probing = !1
+        }), setTimeout(finish, 15e3)
+    })
 }
 
 function buildArgs(e, r, t) {
@@ -99,6 +133,20 @@ var server = http.createServer(function(e, r) {
         "Content-Type": "text/plain",
         "Access-Control-Allow-Origin": "*"
     }), r.end("aborted");
+    var durationMatch = /^\/duration\/([0-9a-f]+)$/.exec(t.pathname || "");
+    if (durationMatch) {
+        var durationSession = sessions[durationMatch[1]];
+        durationSession && !durationSession.duration && probeDuration(durationSession);
+        var body = JSON.stringify({
+            duration: durationSession ? durationSession.duration : 0
+        });
+        return r.writeHead(200, {
+            "Content-Type": "application/json; charset=utf-8",
+            "Content-Length": Buffer.byteLength(body),
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "no-store"
+        }), r.end(body)
+    }
     var o = /^\/s\/([0-9a-f]+)\.mp4$/.exec(t.pathname || ""),
         n = o && sessions[o[1]];
     if (!n) return r.writeHead(404, {
@@ -124,7 +172,9 @@ var server = http.createServer(function(e, r) {
                 "Access-Control-Allow-Origin": "*"
             }), o = !0), r.end()
         }), t.stderr.on("data", function(e) {
-            log("ffmpeg:", String(e).trim())
+            var text = String(e),
+                match = /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(text);
+            match && (n.duration = 3600 * parseInt(match[1], 10) + 60 * parseInt(match[2], 10) + parseFloat(match[3])), log("ffmpeg:", text.trim())
         }), t.stdout.on("data", function(e) {
             o || (r.writeHead(200, {
                 "Content-Type": "video/mp4",
