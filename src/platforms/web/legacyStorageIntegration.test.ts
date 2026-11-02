@@ -9,6 +9,7 @@ const appSource = readFileSync(new URL(
 ), "utf8");
 const helpers = appSource.match(/ {4}function G\(e, t\) \{[\s\S]*?(?= {4}function Q\(\))/)?.[0];
 const addons = appSource.match(/ {4}function wt\(\) \{[\s\S]*?(?= {4}var St = \[)/)?.[0];
+const initialAddons = appSource.match(/ {4}function legacySelectInitialAddons\([\s\S]*?(?= {4}function legacyPrepareAddonChannels)/)?.[0];
 
 function memoryStorage(): Storage {
   const data = new Map<string, string>();
@@ -56,14 +57,14 @@ describe("legacy storage integration", () => {
   });
 
   it.each([true, false])("routes M3U addons through G/J (core available: %s)", (withCore) => {
-    expect(helpers && addons).toBeTruthy();
+    expect(helpers && addons && initialAddons).toBeTruthy();
     const localStorage = memoryStorage();
     const window = { localStorage, TutyCore: withCore ? { storage } : undefined };
     vi.stubGlobal("window", window);
     const readSpy = vi.spyOn(storage, "read");
     const writeSpy = vi.spyOn(storage, "write");
     const defaultAddon = { id: "default", url: "https://example.com/default.m3u" };
-    const legacy = runInNewContext(`${helpers}\n${addons}\n({ wt, xt })`, {
+    const legacy = runInNewContext(`${helpers}\n${initialAddons}\n${addons}\n({ wt, xt })`, {
       window, localStorage, Ct: [defaultAddon]
     }) as {
       wt(): Array<{ url: string }>;

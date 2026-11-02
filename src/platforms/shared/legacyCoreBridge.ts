@@ -48,6 +48,7 @@ export {
 export { groupCatalogSeries, mergePortalRoots } from "../../core/usecases/catalog/catalogGrouping";
 export { combineSearchResults, findLocalSearchMatches } from "../../core/usecases/catalog/catalogSearch";
 export { buildEpisodeRanges, filterCatalogCategory, selectCatalogPage } from "../../core/usecases/catalog/catalogSelection";
+export { mergeCatalogDetail, toggleCatalogFavorite } from "../../core/usecases/catalog/catalogDetail";
 export { findEpisodeIndex, nextSeasonIndex, seasonEpisodes, seasonList } from "../../core/usecases/catalog/episodeNavigation";
 export {
   isLiveFavorite,
@@ -55,6 +56,11 @@ export {
   toggleLiveFavorite
 } from "../../core/usecases/favorites/liveFavorites";
 export { filterLiveChannels, findLiveSearchMatches, selectNewLiveChannels } from "../../core/usecases/live/liveChannels";
+export {
+  clampLiveChannelIndex,
+  prepareAddonChannels,
+  selectInitialAddons
+} from "../../core/usecases/live/liveLoading";
 export { formatLiveCategoryLabel, normalizeLiveCategories } from "../../core/usecases/live/liveCategories";
 export { hasAddonUrl, isM3uAddonUrl, removeAddonAt, upsertM3uAddon } from "../../core/usecases/live/addons";
 export { liveListScrollTop } from "../../core/usecases/live/liveFocus";

@@ -353,11 +353,7 @@
     }
 
     function R(e, t) {
-        var i = e && e._seriesGroup ? e.id : null,
-            a = e && e._seriesGroup ? e._seriesTitle : null,
-            n = _(t, e.id);
-        for (var r in n) Object.prototype.hasOwnProperty.call(n, r) && "—" !== n[r] && "" !== n[r] && "Sin sinopsis disponible." !== n[r] && (e[r] = n[r]);
-        null !== i && (e.id = i, e.title = a, e.alias = a, e.seasons = e._catalogSeasons || e.seasons)
+        return legacyMergeCatalogDetail(e, t)
     }
 
     function U(e, t) {
@@ -875,6 +871,33 @@
             number: history.episodeNumber,
             title: history.episodeTitle || "",
             duration: history.duration || 0
+        }
+    }
+
+    function legacyMergeCatalogDetail(item, detail) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.mergeCatalogDetail === "function") return _core.mergeCatalogDetail(item, detail);
+        var seriesId = item && item._seriesGroup ? item.id : null,
+            seriesTitle = item && item._seriesGroup ? item._seriesTitle : null,
+            normalized = _(detail, item && item.id);
+        for (var key in normalized) Object.prototype.hasOwnProperty.call(normalized, key) && "—" !== normalized[key] && "" !== normalized[key] && "Sin sinopsis disponible." !== normalized[key] && (item[key] = normalized[key]);
+        return null !== seriesId && (item.id = seriesId, item.title = seriesTitle, item.alias = seriesTitle, item.seasons = item._catalogSeasons || item.seasons), item
+    }
+
+    function legacyToggleCatalogFavorite(favorites, itemId) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.toggleCatalogFavorite === "function") return _core.toggleCatalogFavorite(favorites, itemId);
+        if (!itemId) return {
+            favorites: favorites,
+            active: !1
+        };
+        var id = String(itemId),
+            active = !favorites[id],
+            next = {};
+        for (var key in favorites) next[key] = favorites[key];
+        return active ? next[id] = !0 : delete next[id], {
+            favorites: next,
+            active: active
         }
     }
 
@@ -1493,9 +1516,8 @@
 
     function K(e) {
         if (!e || !e.id) return !1;
-        var t = String(e.id),
-            i = !j.favs[t];
-        return i ? j.favs[t] = !0 : delete j.favs[t], X.favs = j.favs, J(W, X), i
+        var result = legacyToggleCatalogFavorite(j.favs, e.id);
+        return j.favs = result.favorites, X.favs = j.favs, J(W, X), result.active
     }
 
     function reminderOn(e) {
@@ -2265,11 +2287,9 @@
     }];
 
     function wt() {
-        var e = G("xuper_m3u_addons", null);
-        if (Array.isArray(e) && e.length) return e;
-        var t = [Ct[0]];
-        J("xuper_m3u_addons", t);
-        return t
+        var e = G("xuper_m3u_addons", null),
+            result = legacySelectInitialAddons(e, Ct);
+        return result.persist && J("xuper_m3u_addons", result.addons), result.addons
     }
 
     function xt(e) {
@@ -2420,6 +2440,36 @@
         }
     }
 
+    function legacySelectInitialAddons(stored, presets) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.selectInitialAddons === "function") return _core.selectInitialAddons(stored, presets);
+        return Array.isArray(stored) && stored.length ? {
+            addons: stored,
+            persist: !1
+        } : {
+            addons: presets.length ? [presets[0]] : [],
+            persist: !0
+        }
+    }
+
+    function legacyPrepareAddonChannels(channels, isFavorite) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.prepareAddonChannels === "function") return _core.prepareAddonChannels(channels, isFavorite);
+        for (var prepared = [], index = 0; index < channels.length; index++) {
+            var channel = channels[index],
+                copy = {};
+            for (var key in channel) copy[key] = channel[key];
+            copy.index = index + 1, copy.fav = isFavorite(channel), prepared.push(copy)
+        }
+        return prepared
+    }
+
+    function legacyClampLiveChannelIndex(index, length) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.clampLiveChannelIndex === "function") return _core.clampLiveChannelIndex(index, length);
+        return index < 0 && (index = 0), index > length - 1 && (index = length - 1), index
+    }
+
     function legacySelectNewLiveChannels(current, incoming) {
         var _core = window.TutyCore;
         if (_core && _core.selectNewLiveChannels) return _core.selectNewLiveChannels(current, incoming);
@@ -2545,8 +2595,9 @@
                 if (n && n.channels && n.channels.length)
                     for (var r = 0; r < n.channels.length; r++) i.push(n.channels[r]);
                 if (--a <= 0) {
+                    var ready = legacyPrepareAddonChannels(i, liveIsFav);
                     nr(""), F.splice(0, F.length);
-                    for (var o = 0; o < i.length; o++) i[o].index = o + 1, i[o].fav = liveIsFav(i[o]), F.push(i[o]);
+                    for (var o = 0; o < ready.length; o++) F.push(ready[o]);
                     j.channel = 0, Ht(!1), Rn(), F[0] && ee && (ee.textContent = F[0].name), "player" === j.screen && "live" === j.playerMode && (vr(), ur(F[0], !0)), e && e()
                 }
             })
@@ -2670,7 +2721,7 @@
     }
 
     function Vt(e, t) {
-        e < 0 && (e = 0), e > F.length - 1 && (e = F.length - 1), j.channel = e;
+        e = legacyClampLiveChannelIndex(e, F.length), j.channel = e;
         for (var i = 0; i < Ue.length; i++) Ue[i].classList.toggle("is-current", Ue[i]._channel === e);
         F[e] && ee && (ee.textContent = F[e].name), zt(), "player" === j.screen ? (! function() {
             if (!ye) return;

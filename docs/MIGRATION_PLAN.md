@@ -135,6 +135,10 @@ Completado:
   y objetivos de seek; `Ta`, `Zn` y `Kn` usan wrappers con fallback
 - plan de reanudacion y reconstruccion del episodio desde historial extraidos a
   Core; `startDetail` y `qa` usan wrappers con fallback
+- carga live/M3U: seleccion inicial de addons, numeracion/favoritos de canales
+  y clamp de indice extraidos a Core; `wt`, `Ft` y `Vt` usan wrappers
+- merge de detalle de catalogo y favoritos de contenidos extraidos a Core;
+  `R` y `K` usan wrappers con fallback
 - la construccion de la URL del servicio de desarrollo y su query string se
   extrajo a Core; el transporte Luna y el fallback de servicio siguen en `q`
 - sesion/API normalizada, validacion de sesion, parametros de catalogo,
@@ -571,6 +575,15 @@ verificacion estructural del IPK y prueba en TV fisica.
     y reconstruccion del episodio desde historial. `startDetail` y `qa` usan
     wrappers con fallback. Verificados lint, typecheck, 290 pruebas y builds
     web/core/webOS. No se regenero IPK ni se probo en TV.
+
+83. Carga live/M3U extraida a Core (`liveLoading`): seleccion inicial de
+    addons, numeracion/favoritos de canales y clamp de indice. `wt`, `Ft` y
+    `Vt` usan wrappers con fallback. Verificados lint, typecheck, 300 pruebas
+    y builds web/core/webOS. No se regenero IPK ni se probo en TV.
+84. Catalogo: merge de detalle y favoritos de contenidos extraidos a
+    `catalogDetail`; `R` y `K` usan wrappers con fallback. Verificados lint,
+    typecheck, 300 pruebas y builds web/core/webOS. No se regenero IPK ni se
+    probo en TV.
 
 ## Riesgos pendientes
 

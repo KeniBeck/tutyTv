@@ -310,6 +310,8 @@ fallback sin el puente.
   flecha derecha, y filtro/contador de favoritos sobre la categoria activa
 - Normalizacion de categorias del portal, fallback de categorias, entrada de
   Addons M3U y etiqueta/estado de la categoria activa (`liveCategories`)
+- Carga live: seleccion inicial de addons, numeracion/favoritos de canales M3U
+  y clamp de indice de canal (`liveLoading`)
 - Scroll de la lista de canales al cambiar de fila (`liveFocus`)
 - Addons M3U: validacion HTTP(S), deteccion de URL instalada,
   alta/actualizacion y eliminacion por indice (`addons`)
@@ -331,6 +333,7 @@ fallback sin el puente.
   deduplicados por id (`catalogSearch`)
 - Seleccion de pagina/categoria del catalogo, fallback con relleno unico por id
   y rangos de episodios (`catalogSelection`)
+- Merge de detalle del catalogo y favoritos de contenidos (`catalogDetail`)
 - Decisiones del ciclo de reproduccion (`playbackSession`): posicion absoluta
   en relay, duracion total, tipo de stream y eleccion de HLS.js
 - Progreso de reproduccion (`playbackProgress`): throttle de historial, total
@@ -347,7 +350,7 @@ fallback sin el puente.
 - Cableado de eventos del video y de HLS centralizado (`playbackEventWiring`)
 - Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
   estado visible, modo VOD y transicion detalle-reproductor
-- 290 pruebas automatizadas sin dependencia de televisor ni navegador
+- 300 pruebas automatizadas sin dependencia de televisor ni navegador
 - Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
   titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
 
