@@ -4294,6 +4294,14 @@
                 item._detailsLoaded || (item._portal = !0);
                 return void ei(item)
             }
+        var title = o(e.title || "");
+        if (title)
+            for (var index = 0; index < l.length; index++)
+                if (o(l[index].title || "") === title || o(l[index].alias || "") === title) {
+                    var matched = l[index];
+                    matched._detailsLoaded || (matched._portal = !0);
+                    return void ei(matched)
+                }
         var i = _(e, 0);
         i._portal = !0, ei(i)
     }
@@ -4698,13 +4706,22 @@
         var item = j.playerItem;
         if (!item || !target) return;
         var seq = ++j.nextEpisodeSeq;
-        ar(), showNextEpisodeLoading(item);
+        window.TUTYTV_WEB && window.console && console.log("[TUTYTV] next target", {
+            kind: target.kind,
+            seasonIndex: target.seasonIndex,
+            seasonId: target.season && target.season.id,
+            episodeId: target.episode && target.episode.id
+        }), ar(), showNextEpisodeLoading(item);
         if ("episode" === target.kind) return j.detailSeason = target.seasonIndex, j.playerSeasonIndex = target.seasonIndex, void gn(item, target.episode, !1);
         var seasons = sn(item),
             season = target.season;
         if (!season) return void mn();
         ln(item, season, function(episodes, detail) {
             if (seq !== j.nextEpisodeSeq || j.playerItem !== item || "player" !== j.screen) return;
+            window.TUTYTV_WEB && window.console && console.log("[TUTYTV] next season loaded", {
+                seasonId: season.id,
+                episodes: episodes && episodes.length
+            });
             if (!episodes || !episodes.length) return void mn();
             detail && R(item, detail), item.seasons = seasons, j.detailSeason = target.seasonIndex, j.playerSeasonIndex = target.seasonIndex, item.seasonId = season.id || item.seasonId, item.episodes = episodes, season._episodes = episodes, j.detail === item && (j.detailNeedsRebuild = !0), gn(item, episodes[0], !1)
         })
@@ -4750,7 +4767,20 @@
                     break
                 }
         var episodes = legacySeasonEpisodes(item, preferred);
-        return legacyResolveNextPlaybackTarget(seasons, preferred, fallback, episodes, j.playerEpisode)
+        if (legacyFindEpisodeIndex(episodes, j.playerEpisode) < 0 && fallback !== preferred) {
+            var fallbackEpisodes = legacySeasonEpisodes(item, fallback);
+            legacyFindEpisodeIndex(fallbackEpisodes, j.playerEpisode) >= 0 && (preferred = fallback, episodes = fallbackEpisodes)
+        }
+        var target = legacyResolveNextPlaybackTarget(seasons, preferred, fallback, episodes, j.playerEpisode);
+        window.TUTYTV_WEB && window.console && !target && console.log("[TUTYTV] next target not found", {
+            item: item && item.id,
+            seasonId: item && item.seasonId,
+            preferred: preferred,
+            fallback: fallback,
+            episodes: episodes.length,
+            episode: j.playerEpisode && j.playerEpisode.id
+        });
+        return target
     }
 
     function maybeShowNextEpisodePrompt(position, total) {

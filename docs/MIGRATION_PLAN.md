@@ -618,8 +618,13 @@ verificacion estructural del IPK y prueba en TV fisica.
     carga de detalle si el item del catalogo no la tenia, evitando fichas sin
     sinopsis. El cambio de episodio guarda el historial del episodio anterior
     antes de sustituir el item/episodio, y la transicion evita guardar dos veces.
-    Verificados lint, typecheck, 312 pruebas y builds web/core/webOS. No se
-    regenero IPK ni se probo en TV.
+    Verificados lint, typecheck, 312 pruebas y builds web/core/webOS.
+89. Historial antiguo: si el id guardado ya no existe en el catalogo, se busca
+    por titulo/alias normalizado antes de abrir la ficha. Transicion de
+    temporada: se prueba el indice alterno de `detailSeason` si el episodio no
+    aparece en la temporada preferida, y se agregan logs web de objetivo/season
+    cargada. Verificados lint, typecheck, 313 pruebas y builds web/core/webOS.
+    No se regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 
