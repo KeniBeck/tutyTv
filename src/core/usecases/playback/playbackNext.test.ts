@@ -17,6 +17,15 @@ describe("next playback target", () => {
       .toEqual({ kind: "season", seasonIndex: 1, season: seasons[1] });
   });
 
+  it("advances to a following season even when the API repeats the number", () => {
+    const duplicate = [
+      { id: "s1", number: 1, _episodes: [{ id: "e1" }, { id: "e2" }] },
+      { id: "s2", number: 1, _episodes: [{ id: "e3" }] }
+    ];
+    expect(resolveNextPlaybackTarget(duplicate, 0, 0, duplicate[0]!._episodes as Array<{ id: string }>, { id: "e2" }))
+      .toEqual({ kind: "season", seasonIndex: 1, season: duplicate[1] });
+  });
+
   it("repairs a stale season index from the fallback season", () => {
     expect(resolveNextPlaybackTarget(seasons, 0, 1, seasons[0]!._episodes as Array<{ id: string }>, { id: "e3" }))
       .toEqual({ kind: "episode", seasonIndex: 1, episode: { id: "e4" } });

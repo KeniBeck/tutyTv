@@ -43,6 +43,11 @@ export function nextSeasonIndex(seasons: SeasonLike[], currentIndex: number): nu
     return currentIndex + 1 < seasons.length ? currentIndex + 1 : -1;
   }
 
+  const nextArray = seasons[currentIndex + 1];
+  if (nextArray && Number(nextArray.number) === currentNumber) {
+    return currentIndex + 1;
+  }
+
   let bestIndex = -1;
   let bestNumber = Infinity;
   for (let i = 0; i < seasons.length; i++) {
@@ -52,7 +57,8 @@ export function nextSeasonIndex(seasons: SeasonLike[], currentIndex: number): nu
       bestNumber = number;
     }
   }
-  return bestIndex;
+  if (bestIndex >= 0) return bestIndex;
+  return currentIndex + 1 < seasons.length ? currentIndex + 1 : -1;
 }
 
 export function findEpisodeIndex(episodes: EpisodeLike[], current: unknown): number {

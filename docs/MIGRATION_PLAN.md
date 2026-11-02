@@ -624,7 +624,12 @@ verificacion estructural del IPK y prueba en TV fisica.
     temporada: se prueba el indice alterno de `detailSeason` si el episodio no
     aparece en la temporada preferida, y se agregan logs web de objetivo/season
     cargada. Verificados lint, typecheck, 313 pruebas y builds web/core/webOS.
-    No se regenero IPK ni se probo en TV.
+90. La API puede devolver temporadas distintas con el mismo numero. Se agrego
+    fallback por orden de temporadas cuando no hay un numero mayor y se prefiere
+    la siguiente entrada si repite el numero actual. Historial sin coincidencia
+    exacta ahora busca por titulo normalizado y, si tampoco esta en el catalogo
+    cargado, consulta el servicio de busqueda. Verificados lint, typecheck, 315
+    pruebas y builds web/core/webOS. No se regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

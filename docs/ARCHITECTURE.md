@@ -341,7 +341,8 @@ fallback sin el puente.
 - Resolucion de reproduccion (`playbackResolve`): construccion de la peticion
   y aplicacion de metadatos/URL de la respuesta
 - Siguiente reproduccion (`playbackNext`): seleccion de siguiente episodio o
-  temporada con reparacion de indice de temporada desfasado
+  temporada con reparacion de indice de temporada desfasado y fallback por
+  orden cuando la API repite el numero de temporada
 - Aviso de siguiente episodio 7 s antes del final con avance automatico o
   cancelacion; tambien se activa al evento `ended` como respaldo
 - Historial: al abrir un titulo se asegura la carga de detalle si el item
@@ -359,7 +360,7 @@ fallback sin el puente.
 - Cableado de eventos del video y de HLS centralizado (`playbackEventWiring`)
 - Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
   estado visible, modo VOD y transicion detalle-reproductor
-- 312 pruebas automatizadas sin dependencia de televisor ni navegador
+- 315 pruebas automatizadas sin dependencia de televisor ni navegador
 - Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
   titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
 

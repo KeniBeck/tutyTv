@@ -15,7 +15,7 @@ describe("legacy history opening", () => {
     const entry = { id: "movie", title: "Película", poster: "poster.jpg" };
     const ei = vi.fn();
     const runtime = runInNewContext(`${open}\n({ Oa })`, {
-      l: [catalogItem], _: (item: unknown) => item, ei,
+      l: [catalogItem], _: (item: unknown) => item, ei, window: { TUTYTV_WEB: false },
       o: (value: unknown) => String(value || "").toLowerCase()
     }) as { Oa(item: unknown): void };
 
@@ -29,7 +29,7 @@ describe("legacy history opening", () => {
     const matched: Record<string, unknown> = { id: "new-id", title: "Película Vieja", _detailsLoaded: false };
     const ei = vi.fn();
     const runtime = runInNewContext(`${open}\n({ Oa })`, {
-      l: [matched], _: (item: unknown) => item, ei,
+      l: [matched], _: (item: unknown) => item, ei, window: { TUTYTV_WEB: false },
       o: (value: unknown) => String(value || "").toLowerCase()
     }) as { Oa(item: unknown): void };
 
@@ -38,12 +38,32 @@ describe("legacy history opening", () => {
     expect(ei).toHaveBeenCalledWith(matched);
   });
 
+  it("uses the search service when an old history title is not in the loaded catalog", () => {
+    expect(open).toBeTruthy();
+    const found: Record<string, unknown> = { id: "new-id", title: "Título Viejo" };
+    const ei = vi.fn();
+    const runtime = runInNewContext(`${open}\n({ Oa })`, {
+      l: [],
+      _: (item: unknown) => item,
+      ei,
+      o: (value: unknown) => String(value || "").toLowerCase(),
+      window: { TUTYTV_WEB: false },
+      C: () => ({}),
+      g: () => [found],
+      q: (_method: string, _params: unknown, callback: (err: null, data: object) => void) => callback(null, {})
+    }) as { Oa(item: unknown): void };
+
+    runtime.Oa({ id: "old-id", title: "Título Viejo" });
+    expect(found._portal).toBe(true);
+    expect(ei).toHaveBeenCalledWith(found);
+  });
+
   it("opens a normalized history item as a portal detail when it is not in the catalog", () => {
     expect(open).toBeTruthy();
     const ei = vi.fn();
     const normalized: Record<string, unknown> = { id: "external", title: "Externo" };
     const runtime = runInNewContext(`${open}\n({ Oa })`, {
-      l: [], _: () => normalized, ei,
+      l: [], _: () => normalized, ei, window: { TUTYTV_WEB: false },
       o: (value: unknown) => String(value || "").toLowerCase()
     }) as { Oa(item: unknown): void };
 

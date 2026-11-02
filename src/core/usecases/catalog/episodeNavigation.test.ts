@@ -31,6 +31,9 @@ describe("episode navigation", () => {
     expect(nextSeasonIndex(seasons, 9)).toBe(-1);
     expect(nextSeasonIndex([{ number: 1 }, { number: 2 }], 0)).toBe(1);
     expect(nextSeasonIndex([{}, {}], 0)).toBe(1);
+    expect(nextSeasonIndex([{ number: 1 }, { number: 1 }], 0)).toBe(1);
+    expect(nextSeasonIndex([{ number: 1 }, { number: 1 }, { number: 2 }], 0)).toBe(1);
+    expect(nextSeasonIndex([{ number: 1 }, { number: 1 }, { number: 2 }], 1)).toBe(2);
   });
 
   it("finds the current episode by id or number", () => {

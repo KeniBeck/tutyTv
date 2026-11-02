@@ -4294,16 +4294,51 @@
                 item._detailsLoaded || (item._portal = !0);
                 return void ei(item)
             }
-        var title = o(e.title || "");
+        var title = o(e.title || "").replace(/[^a-z0-9]+/g, "");
         if (title)
-            for (var index = 0; index < l.length; index++)
-                if (o(l[index].title || "") === title || o(l[index].alias || "") === title) {
+            for (var index = 0; index < l.length; index++) {
+                var candidateTitle = o(l[index].title || "").replace(/[^a-z0-9]+/g, ""),
+                    candidateAlias = o(l[index].alias || "").replace(/[^a-z0-9]+/g, "");
+                if (candidateTitle === title || candidateAlias === title) {
                     var matched = l[index];
+                    window.TUTYTV_WEB && window.console && console.log("[TUTYTV] history title match", {
+                        historyId: e.id,
+                        title: e.title,
+                        matchedId: matched.id
+                    });
                     matched._detailsLoaded || (matched._portal = !0);
                     return void ei(matched)
                 }
-        var i = _(e, 0);
-        i._portal = !0, ei(i)
+            }
+        window.TUTYTV_WEB && window.console && console.log("[TUTYTV] history title not matched", {
+            historyId: e.id,
+            title: e.title
+        });
+        var openFallback = function() {
+            var i = _(e, 0);
+            i._portal = !0, ei(i)
+        };
+        if (e.title) try {
+            return void q("search", C("search", e.title), function(err, response) {
+                if (!err) {
+                    var results = g(response),
+                        normalizedTitle = o(e.title || "").replace(/[^a-z0-9]+/g, "");
+                    for (var index = 0; index < results.length; index++) {
+                        var result = results[index],
+                            resultTitle = o(result.title || "").replace(/[^a-z0-9]+/g, "");
+                        if (resultTitle === normalizedTitle) {
+                            var found = _(result, 0);
+                            return found._portal = !0, window.TUTYTV_WEB && window.console && console.log("[TUTYTV] history search match", {
+                                historyId: e.id,
+                                matchedId: found.id
+                            }), void ei(found)
+                        }
+                    }
+                }
+                openFallback()
+            })
+        } catch (err) {}
+        openFallback()
     }
     var Da = [],
         Aa = {},
