@@ -488,6 +488,10 @@ verificacion estructural del IPK y prueba en TV fisica.
     completar la paginacion para refrescar resultados. Verificados lint,
     typecheck, 252 pruebas y builds web/core/webOS. No se regenero IPK ni se
     probo en TV.
+74. Favoritos de TV en vivo: agregado corazon por fila en la lista de canales,
+    accesible con flecha derecha y activable con OK; el filtro de favoritos y su
+    contador siguen sobre la categoria activa. Verificados lint, typecheck, 252
+    pruebas y builds webOS/web. No se regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

@@ -2395,19 +2395,44 @@
                     channel.logo && (r.style.backgroundImage = "url(" + channel.logo + ")", r.style.backgroundSize = "contain", r.style.backgroundRepeat = "no-repeat", r.style.backgroundPosition = "center");
                     var o = e("div", "row-play"),
                         s = e("div", "row-name", channel.name),
-                        rowIndex = Ue.length;
-                    n.appendChild(r), n.appendChild(o), n.appendChild(s), a === j.channel && n.classList.add("is-current"), n._activate = function(e) {
+                        rowIndex = Ue.length,
+                        favBtn = e("div", "live-row-fav focusable" + (liveIsFav(channel) ? " is-fav" : ""), "♥");
+                    favBtn._channel = a, n._favBtn = favBtn, favBtn._activate = function(channel, heart, index) {
+                        return function() {
+                            liveToggleFav(channel);
+                            var favorite = liveIsFav(channel);
+                            if (heart.classList.toggle("is-fav", favorite), liveFavFilter && !favorite) {
+                                Ht(!0);
+                                for (var next = null, k = 0; k < Ue.length; k++)
+                                    if (Ue[k]._channel >= index) {
+                                        next = Ue[k];
+                                        break
+                                    }
+                                next = next || Ue[0], next ? tt(next) : lvFocusList()
+                            }
+                        }
+                    }(channel, favBtn, a), favBtn._onMove = function(row, index) {
+                        return function(action) {
+                            if ("left" === action) return tt(row), !0;
+                            if ("up" === action || "down" === action) {
+                                var target = Ue["up" === action ? index - 1 : index + 1];
+                                return target && target._favBtn ? (tt(target._favBtn), !0) : !0
+                            }
+                            return !0
+                        }
+                    }(n, rowIndex), n.appendChild(r), n.appendChild(o), n.appendChild(s), n.appendChild(favBtn), a === j.channel && n.classList.add("is-current"), n._activate = function(e) {
                         return function() {
                             Vt(e, !0), dr("live")
                         }
-                    }(a), n._onMove = function(e) {
+                    }(a), n._onMove = function(e, row) {
                         return function(t) {
                             if ("left" === t) return ie ? tt(ie) : Re[0] && tt(Re[0]), !0;
+                            if ("right" === t) return row._favBtn ? (tt(row._favBtn), !0) : !1;
                             if ("up" === t) return e > 0 && Ue[e - 1] ? (tt(Ue[e - 1]), !0) : liveFastAll ? (tt(liveFastAll), !0) : !1;
                             if ("down" === t) return e < Ue.length - 1 && Ue[e + 1] ? (tt(Ue[e + 1]), !0) : !1;
                             return !1
                         }
-                    }(rowIndex), ae.appendChild(n), Ue.push(n)
+                    }(rowIndex, n), ae.appendChild(n), Ue.push(n)
                 }
                 !Ue.length && favOnly && ae.appendChild(e("div", "live-list-status", "No tienes canales favoritos en esta categoría")), F[j.channel] && ee && (ee.textContent = F[j.channel].name), zt()
             } else ae.appendChild(e("div", "live-list-status", kt ? favOnly ? "No tienes canales favoritos" : "No se encontraron canales" : "Cargando canales…"));

@@ -306,6 +306,8 @@ fallback sin el puente.
 - Busqueda de TV en vivo unificada: las categorias aparecen desde el inicio y
   elegir una recarga sus canales sin cerrar la busqueda; la busqueda de canales
   sigue acotada a la categoria activa para no descargar todo el portal
+- Favoritos de TV en vivo: corazon por canal en la lista, accesible con la
+  flecha derecha, y filtro/contador de favoritos sobre la categoria activa
 - Normalizacion de categorias del portal, fallback de categorias, entrada de
   Addons M3U y etiqueta/estado de la categoria activa (`liveCategories`)
 - Scroll de la lista de canales al cambiar de fila (`liveFocus`)
