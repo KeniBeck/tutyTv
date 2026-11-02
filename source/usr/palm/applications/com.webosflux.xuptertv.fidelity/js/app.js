@@ -244,20 +244,7 @@
     }
 
     function I(e, t, i) {
-        var a, n = [];
-        if (e)
-            for (a = 0; a < l.length; a++) {
-                -1 !== o(l[a].category || "").split(",").indexOf(e) && n.push(l[a])
-            }
-        if (n.length || (n = l.slice(i, i + t)), n.length || (n = l.slice(0, t)), n.length < t && l.length) {
-            var r = {};
-            for (a = 0; a < n.length; a++) r[String(n[a].id)] = !0;
-            for (var s = 0; n.length < t && s < 2 * l.length;) {
-                var d = l[s % l.length];
-                s++, r[String(d.id)] || (n.push(d), r[String(d.id)] = !0)
-            }
-        }
-        return n
+        return legacySelectCatalogPage(l, e, t, i)
     }
 
     function T() {
@@ -781,6 +768,50 @@
             reminder: next,
             increased: increased
         }
+    }
+
+    function legacySelectCatalogPage(items, category, limit, offset) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.selectCatalogPage === "function") return _core.selectCatalogPage(items, category, limit, offset);
+        var key = o(category),
+            selected = [],
+            index;
+        if (key)
+            for (index = 0; index < items.length; index++) -1 !== o(items[index].category || "").split(",").indexOf(key) && selected.push(items[index]);
+        if (selected.length || (selected = items.slice(offset, offset + limit)), selected.length || (selected = items.slice(0, limit)), selected.length < limit && items.length) {
+            var seen = {};
+            for (index = 0; index < selected.length; index++) seen[String(selected[index].id)] = !0;
+            for (var guard = 0; selected.length < limit && guard < 2 * items.length;) {
+                var item = items[guard % items.length];
+                guard++, seen[String(item.id)] || (selected.push(item), seen[String(item.id)] = !0)
+            }
+        }
+        return selected
+    }
+
+    function legacyFilterCatalogCategory(items, category) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.filterCatalogCategory === "function") return _core.filterCatalogCategory(items, category);
+        var key = o(category),
+            selected = [],
+            index;
+        if (key)
+            for (index = 0; index < items.length; index++) {
+                var item = items[index],
+                    kind = o(item.kind || "");
+                (-1 !== o(item.category || "").split(",").indexOf(key) || kind && -1 !== kind.indexOf(key)) && selected.push(item)
+            }
+        return selected.length ? selected : items.slice()
+    }
+
+    function legacyBuildEpisodeRanges(total) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.buildEpisodeRanges === "function") return _core.buildEpisodeRanges(total);
+        for (var ranges = [], start = 0; start < total; start += 20) ranges.push({
+            start: start,
+            end: Math.min(total, start + 20)
+        });
+        return ranges
     }
 
     function legacyFormatPlaybackTime(value) {
@@ -2999,12 +3030,7 @@
     }
 
     function Yt(e) {
-        var t, i = [];
-        if (e)
-            for (t = 0; t < l.length; t++) {
-                (-1 !== o(l[t].category || "").split(",").indexOf(e) || l[t].kind && -1 !== o(l[t].kind).indexOf(e)) && i.push(l[t])
-            }
-        return i.length ? i : l
+        return legacyFilterCatalogCategory(l, e)
     }
 
     function Zt(t, i, n, r) {
@@ -3340,11 +3366,7 @@
     }
 
     function ii(e) {
-        for (var t = [], i = 0; i < e; i += 20) t.push({
-            start: i,
-            end: Math.min(e, i + 20)
-        });
-        return t
+        return legacyBuildEpisodeRanges(e)
     }
 
     function ai(e, t) {

@@ -329,6 +329,8 @@ fallback sin el puente.
   (`catalogGrouping`)
 - Busqueda local por titulo/alias y combinacion con resultados del portal,
   deduplicados por id (`catalogSearch`)
+- Seleccion de pagina/categoria del catalogo, fallback con relleno unico por id
+  y rangos de episodios (`catalogSelection`)
 - Decisiones del ciclo de reproduccion (`playbackSession`): posicion absoluta
   en relay, duracion total, tipo de stream y eleccion de HLS.js
 - Reglas de ciclo de vida (`playbackLifecycle`): guardado previo al reset, base
@@ -339,7 +341,7 @@ fallback sin el puente.
 - Cableado de eventos del video y de HLS centralizado (`playbackEventWiring`)
 - Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
   estado visible, modo VOD y transicion detalle-reproductor
-- 267 pruebas automatizadas sin dependencia de televisor ni navegador
+- 275 pruebas automatizadas sin dependencia de televisor ni navegador
 - Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
   titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
 

@@ -38,6 +38,7 @@ export {
 } from "../../core/usecases/catalog/catalogNormalization";
 export { groupCatalogSeries, mergePortalRoots } from "../../core/usecases/catalog/catalogGrouping";
 export { combineSearchResults, findLocalSearchMatches } from "../../core/usecases/catalog/catalogSearch";
+export { buildEpisodeRanges, filterCatalogCategory, selectCatalogPage } from "../../core/usecases/catalog/catalogSelection";
 export { findEpisodeIndex, nextSeasonIndex, seasonEpisodes, seasonList } from "../../core/usecases/catalog/episodeNavigation";
 export {
   isLiveFavorite,
