@@ -52,6 +52,13 @@ export { isLegacyFocusVisible } from "../../core/usecases/ui/focusVisibility";
 export { computeLegacyScrollAdjustment } from "../../core/usecases/ui/focusScroll";
 export { ensureViewerProfile } from "../../core/usecases/storage/viewerProfile";
 export { buildDevServiceUrl, buildQueryString } from "../../core/usecases/api/serviceRequest";
+export {
+  buildServiceParams,
+  describeServiceError,
+  hasApiSession,
+  normalizeApiSession,
+  resolveServiceUrl
+} from "../../core/usecases/api/apiSession";
 export { mapLegacyMediaKey } from "../../core/usecases/input/mediaKeys";
 export { formatPlaybackTime, inferEpisodeDuration, parsePlaybackDuration, playbackPercent, resolvePlaybackDuration } from "../../core/usecases/playback/duration";
 export { findSubtitleCue, parseSubtitleCues, parseSubtitleTimestamp } from "../../core/usecases/playback/subtitles";

@@ -86,6 +86,8 @@
     }
 
     function m(e) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolveServiceUrl === "function") return _core.resolveServiceUrl(p, e);
         var t = p[e + "Url"];
         if (t) return String(t);
         var i = String(p.baseUrl || "").replace(/\/$/, ""),
@@ -94,6 +96,8 @@
     }
 
     function y() {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.normalizeApiSession === "function") return _core.normalizeApiSession(p.session);
         var e = p.session || {};
         return {
             userId: String(e.userId || ""),
@@ -105,11 +109,15 @@
     }
 
     function b() {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.hasApiSession === "function") return _core.hasApiSession(y());
         var e = y();
         return !!(e.userId && e.userToken && e.portalCode)
     }
 
     function C(e, t) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.buildServiceParams === "function") return _core.buildServiceParams(e, t, y());
         var i = y();
         return "catalog" === e ? {
             userId: i.userId,
@@ -344,12 +352,7 @@
                     var e = m("catalog");
                     "xuper" !== p.mode || b() ? e ? (v.loading = !0, L(e, function(e, t) {
                         v.loading = !1;
-                        var i = function(e) {
-                            if (!e || "object" != typeof e) return "";
-                            var t = e.returnCode || e.code || e.errorCode || "",
-                                i = e.errorMessage || e.message || e.msg || "";
-                            return t || i ? (t ? String(t) + ": " : "") + (i ? String(i) : "La API rechazó la petición") : ""
-                        }(t);
+                        var i = legacyDescribeServiceError(t);
                         if (e || i || !M(g(t), "api")) {
                             var a = e || i || "La API no devolvió películas";
                             P("bundled-fallback", a) || (v.error = a)
@@ -653,6 +656,73 @@
         if (_core && typeof _core.mapLegacyMediaKey === "function") return _core.mapLegacyMediaKey(code, key);
         var name = key || "";
         return 415 === code || "MediaPlay" === name || "Play" === name ? "play" : 19 === code || "MediaPause" === name || "Pause" === name ? "pause" : 10252 === code || "MediaPlayPause" === name ? "playpause" : 417 === code || "MediaFastForward" === name || "FastForward" === name ? "forward" : 412 === code || "MediaRewind" === name || "Rewind" === name ? "rewind" : 413 === code || "MediaStop" === name || "Stop" === name ? "stop" : 457 === code || 93 === code || 467 === code || "Menu" === name || "ContextMenu" === name ? "menu" : null
+    }
+
+    function legacyNormalizeApiSession(session) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.normalizeApiSession === "function") return _core.normalizeApiSession(session);
+        var source = session || {};
+        return {
+            userId: String(source.userId || ""),
+            userToken: String(source.userToken || ""),
+            portalCode: String(source.portalCode || ""),
+            homePageCode: String(source.homePageCode || ""),
+            version: String(source.version || "4.34.4")
+        }
+    }
+
+    function legacyHasApiSession(session) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.hasApiSession === "function") return _core.hasApiSession(session);
+        var normalized = legacyNormalizeApiSession(session);
+        return !!(normalized.userId && normalized.userToken && normalized.portalCode)
+    }
+
+    function legacyBuildServiceParams(kind, value, session) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.buildServiceParams === "function") return _core.buildServiceParams(kind, value, session);
+        var normalized = legacyNormalizeApiSession(session);
+        return "catalog" === kind ? {
+            userId: normalized.userId,
+            userToken: normalized.userToken,
+            portalCode: normalized.portalCode,
+            homePageCode: normalized.homePageCode,
+            version: normalized.version
+        } : "search" === kind ? {
+            userToken: normalized.userToken,
+            userId: normalized.userId,
+            portalCode: normalized.portalCode,
+            columnId: "",
+            value: value || "",
+            type: "",
+            pageSize: 20,
+            pageNum: 1,
+            filter: ""
+        } : {
+            userToken: normalized.userToken,
+            userId: normalized.userId,
+            portalCode: normalized.portalCode,
+            programId: value
+        }
+    }
+
+    function legacyResolveServiceUrl(config, method) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolveServiceUrl === "function") return _core.resolveServiceUrl(config, method);
+        var explicit = config[method + "Url"];
+        if (explicit) return String(explicit);
+        var base = String(config.baseUrl || "").replace(/\/$/, ""),
+            path = String(config[method + "Path"] || "");
+        return base && path ? base + ("/" === path.charAt(0) ? path : "/" + path) : ""
+    }
+
+    function legacyDescribeServiceError(payload) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.describeServiceError === "function") return _core.describeServiceError(payload);
+        if (!payload || "object" != typeof payload) return "";
+        var code = payload.returnCode || payload.code || payload.errorCode || "",
+            message = payload.errorMessage || payload.message || payload.msg || "";
+        return !code && !message ? "" : (code ? String(code) + ": " : "") + (message ? String(message) : "La API rechazó la petición")
     }
 
     function legacyFormatPlaybackTime(value) {

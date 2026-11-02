@@ -313,6 +313,8 @@ fallback sin el puente.
 - Scroll de la lista de canales al cambiar de fila (`liveFocus`)
 - Addons M3U: validacion HTTP(S), deteccion de URL instalada,
   alta/actualizacion y eliminacion por indice (`addons`)
+- API: normalizacion de sesion, validacion, parametros de servicio, resolucion
+  de URL y descripcion de errores (`apiSession`)
 - Adaptador JSON de almacenamiento (`createJsonStorageAdapter`) con
   implementaciones Web y webOS
 - Puente IIFE `tuty-core.js` integrado en el runtime legacy con fallback
@@ -335,7 +337,7 @@ fallback sin el puente.
 - Cableado de eventos del video y de HLS centralizado (`playbackEventWiring`)
 - Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
   estado visible, modo VOD y transicion detalle-reproductor
-- 252 pruebas automatizadas sin dependencia de televisor ni navegador
+- 260 pruebas automatizadas sin dependencia de televisor ni navegador
 - Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
   titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
 
