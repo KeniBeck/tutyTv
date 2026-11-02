@@ -338,10 +338,12 @@ fallback sin el puente.
   (incluye blob HLS) y reutilizacion de sesion
 - Temporizacion del reproductor (`playbackTiming`): aviso de buffer, debounce de
   seek, heartbeat de historial, reset relay y retardo de resolucion live
+- Audio/subtitulos: seleccion de pista de audio, normalizacion y orden de
+  subtitulos, eleccion de subtitulo y etiquetas de idioma (`mediaTracks`)
 - Cableado de eventos del video y de HLS centralizado (`playbackEventWiring`)
 - Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
   estado visible, modo VOD y transicion detalle-reproductor
-- 275 pruebas automatizadas sin dependencia de televisor ni navegador
+- 279 pruebas automatizadas sin dependencia de televisor ni navegador
 - Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
   titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
 

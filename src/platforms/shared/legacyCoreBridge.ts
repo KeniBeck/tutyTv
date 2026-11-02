@@ -27,6 +27,14 @@ export {
   matchesLanguagePreference,
   selectTrackIndexByCodeOrPreference
 } from "../../core/usecases/playback/languagePreference";
+export {
+  chooseSubtitleTrack,
+  describeLanguageLabel,
+  normalizeSubtitleTracks,
+  parseAudioTracks,
+  selectAudioTrackIndex,
+  splitTrackCodes
+} from "../../core/usecases/playback/mediaTracks";
 export { findHistoryEntry, episodeIdExists } from "../../core/usecases/catalog/history";
 export { episodeDisplayTitle, formatEpisodeDuration } from "../../core/usecases/catalog/episodeDisplay";
 export {

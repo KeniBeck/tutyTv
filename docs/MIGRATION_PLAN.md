@@ -128,6 +128,9 @@ Completado:
 - el dialogo Ajuste de reproducir ahora persiste idioma de audio, subtitulos,
   tamano y estilo mediante `Q()`, conservando el codigo de pista exacto
   (`audioCode`/`subCode`) y la preferencia es/pt/en como respaldo
+- seleccion de pista de audio, normalizacion/orden de subtitulos, eleccion de
+  subtitulo y etiquetas de idioma extraidas a Core; `Ka`, `Ya`, `Za`, `Ln` y
+  `Mn` usan Core con fallback
 - la construccion de la URL del servicio de desarrollo y su query string se
   extrajo a Core; el transporte Luna y el fallback de servicio siguen en `q`
 - sesion/API normalizada, validacion de sesion, parametros de catalogo,
@@ -548,6 +551,12 @@ verificacion estructural del IPK y prueba en TV fisica.
     y rangos de episodios extraidos a `catalogSelection`; `I`, `Yt` e `ii`
     usan wrappers con fallback. Verificados lint, typecheck, 275 pruebas y
     builds web/core/webOS. No se regenero IPK ni se probo en TV.
+
+80. Audio/subtitulos extraidos a Core (`mediaTracks`): seleccion de pista de
+    audio, normalizacion y orden de subtitulos, eleccion de subtitulo y
+    etiquetas de idioma. `Ka`, `Ya`, `Za`, `Ln` y `Mn` usan Core con fallback.
+    Verificados lint, typecheck, 279 pruebas y builds web/core/webOS. No se
+    regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

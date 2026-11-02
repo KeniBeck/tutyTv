@@ -66,7 +66,9 @@ describe("legacy playback preferences", () => {
     expect(selectTrack && language && audioIndex && subtitles && subtitlePick).toBeTruthy();
     const exposedCore = {
       ...core,
-      selectTrackIndexByCodeOrPreference: vi.fn(core.selectTrackIndexByCodeOrPreference)
+      selectAudioTrackIndex: vi.fn(core.selectAudioTrackIndex),
+      normalizeSubtitleTracks: vi.fn(core.normalizeSubtitleTracks),
+      chooseSubtitleTrack: vi.fn(core.chooseSubtitleTrack)
     };
     const j = {
       playback: { audio: 0, audioCode: "", subLang: 0, subCode: "", subtitle: true }
@@ -108,6 +110,8 @@ describe("legacy playback preferences", () => {
     expect(context.ba).toBe(false);
     expect(context.ya).toBeNull();
     expect(ua).toHaveBeenLastCalledWith(null);
-    expect(exposedCore.selectTrackIndexByCodeOrPreference).toHaveBeenCalledTimes(withCore ? 7 : 0);
+    expect(exposedCore.selectAudioTrackIndex).toHaveBeenCalledTimes(withCore ? 5 : 0);
+    expect(exposedCore.normalizeSubtitleTracks).toHaveBeenCalledTimes(withCore ? 3 : 0);
+    expect(exposedCore.chooseSubtitleTrack).toHaveBeenCalledTimes(withCore ? 2 : 0);
   });
 });

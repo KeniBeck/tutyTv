@@ -4198,6 +4198,8 @@
     }
 
     function Ka(e) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.selectAudioTrackIndex === "function") return _core.selectAudioTrackIndex(e, j.playback.audioCode, j.playback.audio);
         var t = (e || "").split(/[,\/]/).map(function(code) {
                 return String(code).trim()
             }),
@@ -4206,6 +4208,8 @@
     }
 
     function Ya(e) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.normalizeSubtitleTracks === "function") return _core.normalizeSubtitleTracks(e);
         for (var t = [], i = e && e.subtitles || [], a = 0; a < i.length; a++) t.push({
             lang: i[a].lang,
             url: i[a].url,
@@ -4233,10 +4237,14 @@
             if (!j.playback.subtitle) return ba = !1, ya = null, void Ua(null);
             if (!t.length) return ba = !1, ya = null, void Ua(null);
             ba = !0;
-            var n = legacySelectTrackIndex(t.map(function(item) {
-                return item.lang || ""
-            }), j.playback.subCode, j.playback.subLang);
-            ya = n >= 0 ? t[n] : t[0], Ua(ya)
+            var _core = window.TutyCore,
+                _chosen = _core && typeof _core.chooseSubtitleTrack === "function" ? _core.chooseSubtitleTrack(t, j.playback.subCode, j.playback.subLang) : function() {
+                    var n = legacySelectTrackIndex(t.map(function(item) {
+                        return item.lang || ""
+                    }), j.playback.subCode, j.playback.subLang);
+                    return n >= 0 ? t[n] : t[0]
+                }();
+            ya = _chosen, Ua(ya)
         }
     }
 
@@ -4557,17 +4565,18 @@
             i(aa);
             var t = Aa[Ja(Ha())];
             t && !ma && (ga = Ka(t.audio));
-            var a = function(e) {
-                for (var t = [], i = (e && e.audio || "").split(/[,\/]/), a = 0; a < i.length; a++) {
-                    var n = i[a].trim();
-                    n && t.push({
-                        index: a,
-                        code: n,
-                        label: Mn(n)
-                    })
-                }
-                return t
-            }(t);
+            var _core = window.TutyCore,
+                a = _core && typeof _core.parseAudioTracks === "function" ? _core.parseAudioTracks(t && t.audio) : function(e) {
+                    for (var t = [], i = (e && e.audio || "").split(/[,\/]/), a = 0; a < i.length; a++) {
+                        var n = i[a].trim();
+                        n && t.push({
+                            index: a,
+                            code: n,
+                            label: Mn(n)
+                        })
+                    }
+                    return t
+                }(t);
             a.length || (a = [{
                 index: ga || 0,
                 label: "Español"
@@ -4613,6 +4622,8 @@
     }
 
     function Mn(e) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.describeLanguageLabel === "function") return _core.describeLanguageLabel(e);
         var t = (e || "").toLowerCase().trim().split(/[-_]/)[0];
         return /^(spa|esp|es|castellano|latino)$/.test(t) ? "Español" : /^(eng|ing|en)$/.test(t) ? "Inglés" : /^(jpn|jap|ja)$/.test(t) ? "Japonés" : /^(kor|cor|ko)$/.test(t) ? "Coreano" : /^(por|pt)$/.test(t) ? "Portugués" : /^(fra|fre|fr|franc)$/.test(t) ? "Francés" : /^(ita|it)$/.test(t) ? "Italiano" : /^(deu|ger|de)$/.test(t) ? "Alemán" : /^(chi|zho|zh)$/.test(t) ? "Chino" : t ? t.charAt(0).toUpperCase() + t.slice(1) : "Pista"
     }
