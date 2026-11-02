@@ -229,9 +229,10 @@ Condicion de salida:
 - prueba en TV fisica de navegacion, persistencia y reproduccion
 - retirar duplicaciones legacy solo cuando no tengan dependencias activas
 
-Estado: pendiente. El IPK se genera y valida estructuralmente y el endpoint de
-duracion ya esta implementado en el servicio webOS; falta la prueba en TV
-fisica.
+Estado: completada (2026-11-02). La IPK 1.6.7 fue instalada y validada en TV
+fisica: navegacion/control remoto, catalogo, carga de titulos, busqueda,
+guardado de configuracion y transicion episodio->temporada->episodio OK. La
+limpieza de duplicaciones legacy queda como mantenimiento no bloqueante.
 
 ## Checklist de la etapa web
 
@@ -442,6 +443,11 @@ verificacion estructural del IPK y prueba en TV fisica.
     cache de duracion por sesion y parseo de `Duration:` durante el stream.
     Sesion desconocida responde `{"duration":0}`. Validado `node --check`,
     endpoint smoke e IPK 1.6.6 regenerado y validado estructuralmente.
+68. Validacion fisica webOS 1.6.7: instalacion correcta y flujos confirmados
+    por el usuario: transicion episodio->temporada->episodio, catalogo,
+    carga de titulos, busqueda y guardado de configuracion. IPK 1.6.7
+    generada y validada estructuralmente. Fase 6 cerrada; la limpieza de
+    duplicaciones legacy queda como mantenimiento no bloqueante.
 
 ## Riesgos pendientes
 

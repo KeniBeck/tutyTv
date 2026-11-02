@@ -323,6 +323,8 @@ fallback sin el puente.
 - Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
   estado visible, modo VOD y transicion detalle-reproductor
 - 226 pruebas automatizadas sin dependencia de televisor ni navegador
+- Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
+  titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
 
 ## 9. Modulos pendientes prioritarios
 
