@@ -1,9 +1,9 @@
 Package: com.webosflux.xuptertv.fidelity
-Version: 1.6.9
+Version: 1.6.10
 Section: misc
 Priority: optional
 Architecture: all
-Installed-Size: 37892622
+Installed-Size: 37893852
 Maintainer: N/A <nobody@example.com>
 Description: This is a webOS application.
 webOS-Package-Format-Version: 2
