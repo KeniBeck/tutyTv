@@ -65,7 +65,7 @@
         }
     }
     c("Destacado", 5, 1), c("Película", 7, 2), c("Serie", 7, 3), c("Gratis", 5, 4), c("Infantil", 8, 5), c("UHD", 4, 6), c("Extra", 4, 7);
-    var p = window.XUPERTV_API || {},
+    var p = window.TUTYTV_API || {},
         u = /[?&]service=([^&]+)/.exec(window.location.search || "");
     u && (p.devServiceUrl = decodeURIComponent(u[1]));
     var v = {
@@ -82,16 +82,7 @@
         h = ["featured", "movies", "series", "anime", "kids", "free"];
 
     function g(e) {
-        if ("[object Array]" === Object.prototype.toString.call(e)) return e;
-        if (!e) return [];
-        for (var t = ["items", "movies", "results", "recommendList", "movieList", "totalMovieList", "programList", "data"], i = 0; i < t.length; i++) {
-            if ("[object Array]" === Object.prototype.toString.call(e[t[i]])) return e[t[i]];
-            if (e[t[i]] && "object" == typeof e[t[i]]) {
-                var a = g(e[t[i]]);
-                if (a.length) return a
-            }
-        }
-        return []
+        return legacyExtractCatalogItems(e)
     }
 
     function m(e) {
@@ -153,47 +144,11 @@
     }
 
     function S(e) {
-        return !!e && ("teleplay" === e.type || "series" === e.type || "serie" === e.kind || e.category && -1 !== e.category.indexOf("serie") || e.episodes && e.episodes.length > 0 || e.seasons && e.seasons.length > 0 || e.volumeCount && parseInt(e.volumeCount, 10) > 1)
+        return legacyIsSeriesLike(e)
     }
 
     function _(e, t) {
-        var i = (e = e || {}).genres || e.genre || [];
-        "string" == typeof i && (i = i.split(",")), "[object Array]" !== Object.prototype.toString.call(i) && (i = []);
-        for (var a = [], n = 0; n < i.length; n++) a.push("string" == typeof i[n] ? i[n] : i[n].name || "");
-        var r = e.duration || e.runtime || e.runtimeMinutes || "";
-        "number" == typeof r && (r = Math.floor(r / 60) + " h " + r % 60 + " min");
-        var s = x(e.type || e.programType, ""),
-            l = "teleplay" === s || "series" === s || "serie" === o(x(e.kind || "", "")) || -1 !== o(x(e.category || "", "")).indexOf("serie") || e.episodes && e.episodes.length > 0 || e.seasons && e.seasons.length > 0 || e.volumeCount && parseInt(e.volumeCount, 10) > 1 || e.volumnCount && parseInt(e.volumnCount, 10) > 1;
-        return {
-            id: x(e.id || e.vodId || e.programId || e.program_id || e.tmdb_id, "api-" + t),
-            title: x(e.title || e.name || e.programName || e.programTitle || e.original_title, "Sin título"),
-            category: o(x(e.category || e.section || e.collection || e.homeSection, "")),
-            score: x(e.score || e.vote_average || e.rating || e.movieRate || e.programScore, "—"),
-            year: x(e.year || e.release_year || e.programYear || (e.releaseDate || e.releaseTime || e.release_date || "").slice(0, 4), "—"),
-            duration: x(r, "—"),
-            genres: a.length ? a : ["Sin clasificar"],
-            director: x(e.director, "—"),
-            actors: x(e.actors || e.actorDisplay || e.cast, "—"),
-            synopsis: x(e.synopsis || e.overview || e.description || e.programUpdateContent, "Sin sinopsis disponible."),
-            kind: l ? "serie" : x(e.kind || e.media_type, "película"),
-            poster: w(e.posterUrl || e.poster_url || e.poster || e.poster_path || e.image || e.imageUrl || e.cover || e.coverUrl || e.programPoster || e.programImage),
-            landscape: w(e.landscapeUrl || e.landscape_url || e.landscape || e.wideImage || e.bannerImage),
-            backdrop: w(e.backdropUrl || e.backdrop_url || e.backdrop || e.backdrop_path),
-            streamUrl: e.streamUrl || e.stream_url || "",
-            type: s || (l ? "teleplay" : "movie"),
-            row: x(e.row, ""),
-            alias: x(e.alias, ""),
-            country: x(e.country || e.originalCountry, ""),
-            releaseDate: x(e.releaseDate || e.releaseTime, ""),
-            tagline: x(e.tagline || e.viewPoint, ""),
-            volumeCount: parseInt(e.volumeCount || e.volumnCount, 10) || 0,
-            updateCount: parseInt(e.updateCount, 10) || 0,
-            episodes: e.episodes || [],
-            seasons: e.seasons || [],
-            moreAudio: void 0 !== e.moreAudio ? e.moreAudio : 0,
-            moreSubtitle: void 0 !== e.moreSubtitle ? e.moreSubtitle : 0,
-            _portal: !0 === e.portal || !0 === e._portal || p && "portal" === p.mode && String(e.id || "").length > 10
-        }
+        return legacyNormalizeCatalogItem(e, t)
     }
 
     function L(e, t, i) {
@@ -229,15 +184,7 @@
     }
 
     function k(e) {
-        if (!e || !S(e)) return null;
-        var t = String(e.title || e.alias || "").replace(/\s+/g, " ").replace(/^\s+|\s+$/g, ""),
-            i = /^(.*?)(?:\s*[-–:|]?\s*(?:temporada|season)\s*(\d+)|\s*[-–:|]?\s*[st]\s*0?(\d+))\s*$/i.exec(t);
-        if (!i || !i[1]) return null;
-        var a = parseInt(i[2] || i[3], 10);
-        return !a || a > 99 ? null : {
-            title: i[1].replace(/\s+$/, ""),
-            number: a
-        }
+        return legacyParseSeriesSeasonTitle(e)
     }
 
     function M(e, i, a) {
@@ -250,41 +197,7 @@
             var u = r[String(p.id)];
             u && (u.episodes && (p.episodes = u.episodes), u.seasons && (p.seasons = u.seasons), u._detailsLoaded && (p._detailsLoaded = !0), !p.streamUrl && u.streamUrl && (p.streamUrl = u.streamUrl)), d.push(p)
         }
-        for (var f = function(e) {
-                for (var t = {}, i = [], a = 0; a < e.length; a++) {
-                    var n = k(e[a]);
-                    n ? (t[r = o(n.title)] || (t[r] = {
-                        title: n.title,
-                        items: []
-                    }), t[r].items.push({
-                        item: e[a],
-                        number: n.number
-                    })) : i.push(e[a])
-                }
-                for (var r in t)
-                    if (t.hasOwnProperty(r)) {
-                        var s = t[r];
-                        if (s.items.length < 2) i.push(s.items[0].item);
-                        else {
-                            s.items.sort(function(e, t) {
-                                return e.number - t.number
-                            });
-                            var l = s.items[0].item,
-                                d = {};
-                            l._catalogSeasons = [], l._seriesGroup = !0, l._seriesTitle = s.title, l.title = s.title, l.alias = s.title, l.seasons = [];
-                            for (var c = 0; c < s.items.length; c++) {
-                                for (var p = s.items[c], u = String(p.item.category || "").split(","), v = 0; v < u.length; v++) u[v] && (d[u[v]] = !0);
-                                var f = {
-                                    id: p.item.id,
-                                    number: p.number,
-                                    title: s.title
-                                };
-                                l._catalogSeasons.push(f), l.seasons.push(f)
-                            }
-                            l.category = Object.keys(d).join(","), i.push(l)
-                        }
-                    } return i
-            }(d), h = 0; h < f.length; h++) l.push(f[h]);
+        for (var f = legacyGroupCatalogSeries(d), h = 0; h < f.length; h++) l.push(f[h]);
         if (j.detail) {
             for (var g = !1, m = 0; m < l.length; m++)
                 if (String(l[m].id) === String(j.detail.id)) {
@@ -340,7 +253,7 @@
     }
 
     function T() {
-        var e = window.XUPERTV_CATALOG;
+        var e = window.TUTYTV_CATALOG;
         return e ? g(e) : []
     }
 
@@ -373,7 +286,7 @@
         function r(e, t) {
             n || (n = !0, i(e, t))
         }
-        if (E() && window.PalmServiceBridge) try {
+        if (legacyCanUseLuna()) try {
             return window.webOS.service.request("luna://" + a, {
                 method: e,
                 parameters: t || {},
@@ -382,55 +295,20 @@
                     r(null, e)
                 },
                 onFailure: function(e) {
-                    r(e && e.errorText || "Error del servicio XuperTV", null)
+                    r(e && e.errorText || "Error del servicio TutyTV", null)
                 }
             }), !0
         } catch (e) {
             if (!p.devServiceUrl) return r("Error comunicando con el servicio: " + (e.message || e), null), !1
         }
-        return p.devServiceUrl ? (L(String(p.devServiceUrl).replace(/\/$/, "") + "/" + e + "?" + function(e) {
-            var t = [];
-            for (var i in e) Object.prototype.hasOwnProperty.call(e, i) && t.push(encodeURIComponent(i) + "=" + encodeURIComponent(e[i]));
-            return t.join("&")
-        }(t || {}), function(e, t) {
+        return p.devServiceUrl ? (L(legacyDevServiceUrl(p.devServiceUrl, e, t || {}), function(e, t) {
             r(e, t)
-        }, null), !0) : (r("El servicio XuperTV no está disponible", null), !1)
+        }, null), !0) : (r("El servicio TutyTV no está disponible", null), !1)
     }
 
     function O(e) {
-        var t = {},
-            i = [],
-            a = {};
-
-        function n(e) {
-            if (e && e.id) {
-                var n = String(e.id);
-                if (t[n]) {
-                    var r = t[n];
-                    for (var o in e) Object.prototype.hasOwnProperty.call(e, o) && "" !== e[o] && "—" !== e[o] && null !== e[o] && void 0 !== e[o] && (r[o] = e[o])
-                } else t[n] = e, i.push(n);
-                var s = String(e.category || "").split(",");
-                a[n] = a[n] || {};
-                for (var l = 0; l < s.length; l++) s[l] && (a[n][s[l]] = !0)
-            }
-        }
-        for (var r = 0; r < h.length; r++)
-            for (var o = e[h[r]] || [], s = 0; s < o.length; s++) o[s].portal = !0, n(o[s]);
-        if (i.length) {
-            for (var l = [], d = 0; d < i.length; d++) {
-                var c = t[i[d]];
-                c.category = Object.keys(a[i[d]]).join(","), l.push(c)
-            }
-            for (var p = function() {
-                    for (var e = T(), t = [], i = 0; i < e.length; i++)
-                        if (e[i] && e[i].streamUrl) {
-                            var a = {};
-                            for (var n in e[i]) Object.prototype.hasOwnProperty.call(e[i], n) && (a[n] = e[i][n]);
-                            a.category = "demo", a.portal = !1, t.push(a)
-                        } return t
-                }(), u = 0; u < p.length; u++) l.push(p[u]);
-            l.length && M(l, "portal", !0)
-        }
+        var merged = legacyMergePortalRoots(e, h, T());
+        merged.length && M(merged, "portal", !0)
     }
 
     function D() {
@@ -451,7 +329,7 @@
     }
 
     function A() {
-        var e, t = (e = window.XUPERTV_PORTAL) ? g(e) : [];
+        var e, t = (e = window.TUTYTV_PORTAL) ? g(e) : [];
         t.length && M(t, "portal-snapshot", !0), !1 !== p.refresh ? D() : t.length || (v.error = "Sin snapshot del portal")
     }
 
@@ -479,7 +357,7 @@
                     }, "xuper" === p.mode ? {
                         method: "POST",
                         body: C("catalog")
-                    } : null)) : p.useBundledCatalog ? P("bundled", null) : v.error = "Falta baseUrl/catalogUrl del catálogo autorizado" : v.error = "Falta la sesión XuperTV (userId, userToken y portalCode)"
+                    } : null)) : p.useBundledCatalog ? P("bundled", null) : v.error = "Falta baseUrl/catalogUrl del catálogo autorizado" : v.error = "Falta la sesión TutyTV (userId, userToken y portalCode)"
                 } else P("bundled", null);
         else A()
     }
@@ -648,7 +526,9 @@
                 streamMode: "normal",
                 screen: 0,
                 audio: 0,
+                audioCode: "",
                 subLang: 0,
+                subCode: "",
                 size: 0,
                 style: 0,
                 subtitle: !0
@@ -667,6 +547,8 @@
         };
 
     function G(e, t) {
+        var _core = window.TutyCore;
+        if (_core && _core.storage && typeof _core.storage.read === "function") return _core.storage.read(e, t);
         try {
             var i = localStorage.getItem(e);
             return i ? JSON.parse(i) : t
@@ -676,9 +558,710 @@
     }
 
     function J(e, t) {
+        var _core = window.TutyCore;
+        if (_core && _core.storage && typeof _core.storage.write === "function") return _core.storage.write(e, t);
         try {
             localStorage.setItem(e, JSON.stringify(t))
         } catch (e) {}
+    }
+
+    function legacyNavigationAction(e) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.mapLegacyKeyToAction === "function") return _core.mapLegacyKeyToAction(e);
+        var code = e.keyCode || e.which, key = e.key || "";
+        return 461 === code || 27 === code || 8 === code || "Back" === key || "GoBack" === key || "Escape" === key ? "back" : 37 === code ? "left" : 38 === code ? "up" : 39 === code ? "right" : 40 === code ? "down" : 13 === code || 32 === code ? "enter" : null
+    }
+
+    function legacyNativeTvPlayback() {
+        var _core = window.TutyCore, agent = navigator.userAgent || "";
+        if (_core && _core.platform && typeof _core.platform.prefersNativeTvPlayback === "function") return _core.platform.prefersNativeTvPlayback(agent);
+        return /webOS|SmartTV|Large Screen/i.test(agent)
+    }
+
+    function legacyPauseVideo(video) {
+        var _core = window.TutyCore;
+        if (_core && _core.player && typeof _core.player.pause === "function") return _core.player.pause(video);
+        return video.pause()
+    }
+
+    function legacyPlayVideo(video) {
+        var _core = window.TutyCore;
+        if (_core && _core.player && typeof _core.player.play === "function") return _core.player.play(video);
+        return video.play()
+    }
+
+    function legacySeekVideo(video, seconds) {
+        var _core = window.TutyCore;
+        if (_core && _core.player && typeof _core.player.seekTo === "function") return _core.player.seekTo(video, seconds);
+        video.currentTime = seconds
+    }
+
+    function legacySetVideoSource(video, url) {
+        var _core = window.TutyCore;
+        if (_core && _core.player && typeof _core.player.setSource === "function") return _core.player.setSource(video, url);
+        video.src = url
+    }
+
+    function legacyLoadVideo(video) {
+        var _core = window.TutyCore;
+        if (_core && _core.player && typeof _core.player.reload === "function") return _core.player.reload(video);
+        return video.load()
+    }
+
+    function legacyLoadHls(video, hls, url) {
+        var _core = window.TutyCore;
+        if (_core && _core.player && typeof _core.player.loadHls === "function") return _core.player.loadHls(video, hls, url);
+        hls.loadSource(url), hls.attachMedia(video)
+    }
+
+    function legacyLimitSeek(position, duration, relay) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.limitSeekPosition === "function") return _core.limitSeekPosition(position, duration, relay);
+        if (relay) return duration > 0 && position > duration - 2 ? Math.max(0, duration - 2) : position;
+        return position < 0 && (position = 0), duration > 0 && position > duration - 1 && (position = duration - 1), position
+    }
+
+    function legacyNativeRetry(code, mode, streamMode, hls, nativeHls, hasItem) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.selectNativeRetry === "function") return _core.selectNativeRetry(code, mode, streamMode, hls, nativeHls, hasItem);
+        return 4 === code && "live" === mode && hls && !nativeHls ? "native-hls" : 4 === code && "vod" === mode && "normal" === streamMode && hasItem ? "compatible-vod" : null
+    }
+
+    function legacyEnsureViewerProfile(base, stored, now) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.ensureViewerProfile === "function") return _core.ensureViewerProfile(base, stored, now);
+        if (stored && stored.id) return (stored.history && stored.history.length) || (stored.history = []), {
+            profile: stored,
+            created: !1
+        };
+        return base.id = "TV-" + String(now).slice(-8), base.createdAt = now, (base.history && base.history.length) || (base.history = []), {
+            profile: base,
+            created: !0
+        }
+    }
+
+    function legacyMergePlaybackPreferences(current, stored) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.mergePlaybackPreferences === "function") return _core.mergePlaybackPreferences(current, stored);
+        if (stored)
+            for (var k in current) current.hasOwnProperty(k) && void 0 !== stored[k] && (current[k] = stored[k]);
+        return current
+    }
+
+    function legacyMediaKey(code, key) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.mapLegacyMediaKey === "function") return _core.mapLegacyMediaKey(code, key);
+        var name = key || "";
+        return 415 === code || "MediaPlay" === name || "Play" === name ? "play" : 19 === code || "MediaPause" === name || "Pause" === name ? "pause" : 10252 === code || "MediaPlayPause" === name ? "playpause" : 417 === code || "MediaFastForward" === name || "FastForward" === name ? "forward" : 412 === code || "MediaRewind" === name || "Rewind" === name ? "rewind" : 413 === code || "MediaStop" === name || "Stop" === name ? "stop" : 457 === code || 93 === code || 467 === code || "Menu" === name || "ContextMenu" === name ? "menu" : null
+    }
+
+    function legacyFormatPlaybackTime(value) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.formatPlaybackTime === "function") return _core.formatPlaybackTime(value);
+        var total = Math.max(0, Math.floor(value || 0)),
+            h = Math.floor(total / 3600),
+            m = Math.floor(total % 3600 / 60),
+            s = total % 60;
+        return r(h) + ":" + r(m) + ":" + r(s)
+    }
+
+    function legacyParsePlaybackDuration(value) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.parsePlaybackDuration === "function") return _core.parsePlaybackDuration(value);
+        if ("number" == typeof value && isFinite(value) && value > 0) return value;
+        if ("string" != typeof value) return 0;
+        var text = value.trim();
+        if (!text || "—" === text || "-" === text) return 0;
+        var hours = text.match(/(\d+)\s*h(?:our|ora|s)?/i),
+            minutes = text.match(/(\d+)\s*m(?:in|uto|s)?/i),
+            seconds = text.match(/(\d+)\s*s(?:ec|eg)?/i);
+        if (hours || minutes || seconds) return 3600 * (hours ? parseInt(hours[1], 10) : 0) + 60 * (minutes ? parseInt(minutes[1], 10) : 0) + (seconds ? parseInt(seconds[1], 10) : 0);
+        if (-1 !== text.indexOf(":")) {
+            var parts = text.split(":");
+            if (2 === parts.length) {
+                var first = Number(parts[0]),
+                    second = Number(parts[1]);
+                if (isFinite(first) && isFinite(second) && first >= 0 && second >= 0) return 60 * first + second
+            } else if (3 === parts.length) {
+                first = Number(parts[0]), second = Number(parts[1]);
+                var third = Number(parts[2]);
+                if (isFinite(first) && isFinite(second) && isFinite(third) && first >= 0 && second >= 0 && third >= 0) return 3600 * first + 60 * second + third
+            }
+        }
+        var direct = Number(text);
+        return isFinite(direct) && direct > 0 ? direct : 0
+    }
+
+    function legacyRelayDurationEndpoint(url) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.relayDurationEndpoint === "function") return _core.relayDurationEndpoint(url);
+        var match = /^(https?:\/\/[^\/]+)\/s\/([0-9a-fA-F]+)\.mp4(?:[?#].*)?$/.exec(String(url || ""));
+        return match ? match[1] + "/duration/" + match[2] : null
+    }
+
+    function legacyInferEpisodeDuration(episodes, current) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.inferEpisodeDuration === "function") return _core.inferEpisodeDuration(episodes, current);
+        var counts = {},
+            best = 0,
+            bestCount = 0,
+            list = episodes || [];
+        for (var i = 0; i < list.length; i++) {
+            var episode = list[i];
+            if (!episode || episode === current) continue;
+            var parsed = Mi(episode.duration);
+            parsed > 0 && (counts[parsed] = (counts[parsed] || 0) + 1)
+        }
+        for (var duration in counts)
+            if (Object.prototype.hasOwnProperty.call(counts, duration)) {
+                var value = Number(duration),
+                    count = counts[duration];
+                (count > bestCount || count === bestCount && value > best) && (best = value, bestCount = count)
+            }
+        return best
+    }
+
+    function legacyPlaybackPercent(value, total) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.playbackPercent === "function") return _core.playbackPercent(value, total);
+        return total > 0 ? Math.min(100, Math.max(0, value / total * 100)) : 0
+    }
+
+    function legacyParseSubtitleTimestamp(value) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.parseSubtitleTimestamp === "function") return _core.parseSubtitleTimestamp(value);
+        var parts = String(value || "").replace(",", ".").split(":");
+        return 3 === parts.length ? 3600 * parseFloat(parts[0]) + 60 * parseFloat(parts[1]) + parseFloat(parts[2]) : 0
+    }
+
+    function legacyParseSubtitleCues(source) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.parseSubtitleCues === "function") return _core.parseSubtitleCues(source);
+        if (!source) return [];
+        for (var blocks = String(source).replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n\n"), cues = [], i = 0; i < blocks.length; i++) {
+            var lines = blocks[i].trim().split("\n");
+            if (lines.length >= 2) {
+                var timeIndex = -1 !== (lines[0] || "").indexOf("--\x3e") ? 0 : 1,
+                    timeLine = lines[timeIndex] || "";
+                if (-1 !== timeLine.indexOf("--\x3e")) {
+                    var parts = timeLine.split("--\x3e"),
+                        start = legacyParseSubtitleTimestamp(parts[0] && parts[0].trim()),
+                        end = legacyParseSubtitleTimestamp(parts[1] && parts[1].trim()),
+                        textLines = 0 === timeIndex ? lines.slice(1) : lines.slice(2),
+                        text = textLines.join("<br>").replace(/<font[^>]*>/gi, "").replace(/<\/font>/gi, "").trim();
+                    text && cues.push({
+                        start: start,
+                        end: end,
+                        text: text
+                    })
+                }
+            }
+        }
+        return cues
+    }
+
+    function legacyFindSubtitleCue(cues, time) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.findSubtitleCue === "function") return _core.findSubtitleCue(cues, time);
+        for (var i = 0, list = cues || []; i < list.length; i++)
+            if (time >= list[i].start && time <= list[i].end) return list[i];
+        return null
+    }
+
+    function legacyEpisodeDisplayTitle(series, episode, index) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.episodeDisplayTitle === "function") return _core.episodeDisplayTitle(series, episode, index);
+        var item = episode || {},
+            number = void 0 !== item.number && null !== item.number ? item.number : index + 1,
+            name = String(item.title || item.name || "").trim(),
+            seriesTitle = String(series && series.title || "").trim().replace(/[\s\-–_]*[TtSs]\d+$/, "");
+        seriesTitle && 0 === name.indexOf(seriesTitle) && (name = name.substring(seriesTitle.length)), name = name.replace(/^[\s\-–_:.]+/, "").trim();
+        (!name || /^(?:[TtSs]?\d+[\s\-–_.:]*)+$/.test(name)) && (name = "Episodio " + number);
+        return name
+    }
+
+    function legacySeasonList(item) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.seasonList === "function") return _core.seasonList(item);
+        var value = item || {};
+        return value.seasons && value.seasons.length ? value.seasons : [{
+            id: value.id || "",
+            number: 1
+        }]
+    }
+
+    function legacySeasonEpisodes(item, seasonIndex) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.seasonEpisodes === "function") return _core.seasonEpisodes(item, seasonIndex);
+        var value = item || {},
+            seasons = legacySeasonList(value),
+            season = seasons[seasonIndex] || seasons[0];
+        return season ? season.id === (value.seasonId || value.id) && value.episodes && value.episodes.length ? value.episodes : season._episodes || [] : []
+    }
+
+    function legacyFindEpisodeIndex(episodes, current) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.findEpisodeIndex === "function") return _core.findEpisodeIndex(episodes, current);
+        for (var i = 0, list = episodes || []; i < list.length; i++)
+            if (current && (list[i].id === current.id || list[i].number === current.number)) return i;
+        return -1
+    }
+
+    function legacyNextSeasonIndex(seasons, currentIndex) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.nextSeasonIndex === "function") return _core.nextSeasonIndex(seasons, currentIndex);
+        var list = seasons || [],
+            current = list[currentIndex],
+            currentNumber = Number(current && current.number);
+        if (!isFinite(currentNumber)) return currentIndex + 1 < list.length ? currentIndex + 1 : -1;
+        for (var bestIndex = -1, bestNumber = Infinity, i = 0; i < list.length; i++) {
+            var number = Number(list[i] && list[i].number);
+            isFinite(number) && number > currentNumber && number < bestNumber && (bestIndex = i, bestNumber = number)
+        }
+        return bestIndex
+    }
+
+    function legacyFormatEpisodeDuration(value) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.formatEpisodeDuration === "function") return _core.formatEpisodeDuration(value);
+        var text = String(value || "").trim(),
+            match = /^(\d+):(\d+)(?::(\d+))?$/.exec(text);
+        return match ? match[3] ? (parseInt(match[1], 10) || 0) + " h " + (parseInt(match[2], 10) || 0) + " min" : (parseInt(match[1], 10) || 0) + " min" : text
+    }
+
+    function legacyIsSeriesLike(item) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.isSeriesLike === "function") return _core.isSeriesLike(item);
+        var e = item;
+        return !!e && ("teleplay" === e.type || "series" === e.type || "serie" === e.kind || e.category && -1 !== e.category.indexOf("serie") || e.episodes && e.episodes.length > 0 || e.seasons && e.seasons.length > 0 || e.volumeCount && parseInt(e.volumeCount, 10) > 1)
+    }
+
+    function legacyParseSeriesSeasonTitle(item) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.parseSeriesSeasonTitle === "function") return _core.parseSeriesSeasonTitle(item);
+        var e = item;
+        if (!e || !legacyIsSeriesLike(e)) return null;
+        var t = String(e.title || e.alias || "").replace(/\s+/g, " ").replace(/^\s+|\s+$/g, ""),
+            i = /^(.*?)(?:\s*[-–:|]?\s*(?:temporada|season)\s*(\d+)|\s*[-–:|]?\s*[st]\s*0?(\d+))\s*$/i.exec(t);
+        if (!i || !i[1]) return null;
+        var a = parseInt(i[2] || i[3], 10);
+        return !a || a > 99 ? null : {
+            title: i[1].replace(/\s+$/, ""),
+            number: a
+        }
+    }
+
+    function legacyExtractCatalogItems(payload) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.extractCatalogItems === "function") return _core.extractCatalogItems(payload);
+        var e = payload;
+        if ("[object Array]" === Object.prototype.toString.call(e)) return e;
+        if (!e) return [];
+        for (var t = ["items", "movies", "results", "recommendList", "movieList", "totalMovieList", "programList", "data"], i = 0; i < t.length; i++) {
+            if ("[object Array]" === Object.prototype.toString.call(e[t[i]])) return e[t[i]];
+            if (e[t[i]] && "object" == typeof e[t[i]]) {
+                var a = legacyExtractCatalogItems(e[t[i]]);
+                if (a.length) return a
+            }
+        }
+        return []
+    }
+
+    function legacyNormalizeCatalogItem(item, index) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.normalizeCatalogItem === "function") return _core.normalizeCatalogItem(item, index, {
+            imageBaseUrl: p ? p.imageBaseUrl : "",
+            portalMode: !!(p && "portal" === p.mode)
+        });
+        var e = item,
+            t = index,
+            i = (e = e || {}).genres || e.genre || [];
+        "string" == typeof i && (i = i.split(",")), "[object Array]" !== Object.prototype.toString.call(i) && (i = []);
+        for (var a = [], n = 0; n < i.length; n++) a.push("string" == typeof i[n] ? i[n] : i[n].name || "");
+        var r = e.duration || e.runtime || e.runtimeMinutes || "";
+        "number" == typeof r && (r = Math.floor(r / 60) + " h " + r % 60 + " min");
+        var s = x(e.type || e.programType, ""),
+            l = "teleplay" === s || "series" === s || "serie" === o(x(e.kind || "", "")) || -1 !== o(x(e.category || "", "")).indexOf("serie") || e.episodes && e.episodes.length > 0 || e.seasons && e.seasons.length > 0 || e.volumeCount && parseInt(e.volumeCount, 10) > 1 || e.volumnCount && parseInt(e.volumnCount, 10) > 1;
+        return {
+            id: x(e.id || e.vodId || e.programId || e.program_id || e.tmdb_id, "api-" + t),
+            title: x(e.title || e.name || e.programName || e.programTitle || e.original_title, "Sin título"),
+            category: o(x(e.category || e.section || e.collection || e.homeSection, "")),
+            score: x(e.score || e.vote_average || e.rating || e.movieRate || e.programScore, "—"),
+            year: x(e.year || e.release_year || e.programYear || (e.releaseDate || e.releaseTime || e.release_date || "").slice(0, 4), "—"),
+            duration: x(r, "—"),
+            genres: a.length ? a : ["Sin clasificar"],
+            director: x(e.director, "—"),
+            actors: x(e.actors || e.actorDisplay || e.cast, "—"),
+            synopsis: x(e.synopsis || e.overview || e.description || e.programUpdateContent, "Sin sinopsis disponible."),
+            kind: l ? "serie" : x(e.kind || e.media_type, "película"),
+            poster: w(e.posterUrl || e.poster_url || e.poster || e.poster_path || e.image || e.imageUrl || e.cover || e.coverUrl || e.programPoster || e.programImage),
+            landscape: w(e.landscapeUrl || e.landscape_url || e.landscape || e.wideImage || e.bannerImage),
+            backdrop: w(e.backdropUrl || e.backdrop_url || e.backdrop || e.backdrop_path),
+            streamUrl: e.streamUrl || e.stream_url || "",
+            type: s || (l ? "teleplay" : "movie"),
+            row: x(e.row, ""),
+            alias: x(e.alias, ""),
+            country: x(e.country || e.originalCountry, ""),
+            releaseDate: x(e.releaseDate || e.releaseTime, ""),
+            tagline: x(e.tagline || e.viewPoint, ""),
+            volumeCount: parseInt(e.volumeCount || e.volumnCount, 10) || 0,
+            updateCount: parseInt(e.updateCount, 10) || 0,
+            episodes: e.episodes || [],
+            seasons: e.seasons || [],
+            moreAudio: void 0 !== e.moreAudio ? e.moreAudio : 0,
+            moreSubtitle: void 0 !== e.moreSubtitle ? e.moreSubtitle : 0,
+            _portal: !0 === e.portal || !0 === e._portal || p && "portal" === p.mode && String(e.id || "").length > 10
+        }
+    }
+
+    function legacyGroupCatalogSeries(items) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.groupCatalogSeries === "function") return _core.groupCatalogSeries(items);
+        for (var e = items, t = {}, i = [], a = 0; a < e.length; a++) {
+            var n = k(e[a]);
+            if (n) {
+                var key = o(n.title);
+                t[key] || (t[key] = {
+                    title: n.title,
+                    items: []
+                }), t[key].items.push({
+                    item: e[a],
+                    number: n.number
+                })
+            } else i.push(e[a])
+        }
+        for (var name in t)
+            if (t.hasOwnProperty(name)) {
+                var s = t[name];
+                if (s.items.length < 2) i.push(s.items[0].item);
+                else {
+                    s.items.sort(function(e, t) {
+                        return e.number - t.number
+                    });
+                    var l = s.items[0].item,
+                        d = {};
+                    l._catalogSeasons = [], l._seriesGroup = !0, l._seriesTitle = s.title, l.title = s.title, l.alias = s.title, l.seasons = [];
+                    for (var c = 0; c < s.items.length; c++) {
+                        for (var p = s.items[c], u = String(p.item.category || "").split(","), v = 0; v < u.length; v++) u[v] && (d[u[v]] = !0);
+                        var f = {
+                            id: p.item.id,
+                            number: p.number,
+                            title: s.title
+                        };
+                        l._catalogSeasons.push(f), l.seasons.push(f)
+                    }
+                    l.category = Object.keys(d).join(","), i.push(l)
+                }
+            } return i
+    }
+
+    function legacyMergePortalRoots(roots, rootKeys, bundled) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.mergePortalRoots === "function") return _core.mergePortalRoots(roots, rootKeys, bundled);
+        var e = roots,
+            t = {},
+            i = [],
+            a = {};
+
+        function n(item) {
+            if (item && item.id) {
+                var id = String(item.id);
+                if (t[id]) {
+                    var target = t[id];
+                    for (var key in item) Object.prototype.hasOwnProperty.call(item, key) && "" !== item[key] && "—" !== item[key] && null !== item[key] && void 0 !== item[key] && (target[key] = item[key])
+                } else t[id] = item, i.push(id);
+                var categories = String(item.category || "").split(",");
+                a[id] = a[id] || {};
+                for (var c = 0; c < categories.length; c++) categories[c] && (a[id][categories[c]] = !0)
+            }
+        }
+        for (var r = 0; r < rootKeys.length; r++)
+            for (var items = e[rootKeys[r]] || [], s = 0; s < items.length; s++) items[s].portal = !0, n(items[s]);
+        if (!i.length) return [];
+        for (var l = [], d = 0; d < i.length; d++) {
+            var item = t[i[d]];
+            item.category = Object.keys(a[i[d]]).join(","), l.push(item)
+        }
+        for (var b = 0; b < bundled.length; b++) {
+            var source = bundled[b];
+            if (source && source.streamUrl) {
+                var copy = {};
+                for (var key in source) Object.prototype.hasOwnProperty.call(source, key) && (copy[key] = source[key]);
+                copy.category = "demo", copy.portal = !1, l.push(copy)
+            }
+        }
+        return l
+    }
+
+    function legacyFindLocalSearchMatches(items, query) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.findLocalSearchMatches === "function") return _core.findLocalSearchMatches(items, query);
+        var t = o(String(query || "").trim());
+        if (!t) return [];
+        for (var i = [], a = 0; a < items.length; a++) {
+            var n = o(items[a].title || ""),
+                r = items[a].alias ? o(items[a].alias) : "";
+            (-1 !== n.indexOf(t) || r && -1 !== r.indexOf(t)) && i.push(items[a])
+        }
+        return i
+    }
+
+    function legacyCombineSearchResults(localItems, remoteItems, normalizeRemote) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.combineSearchResults === "function") return _core.combineSearchResults(localItems, remoteItems, normalizeRemote);
+        for (var a = localItems.slice(), n = {}, r = 0; r < a.length; r++) n[String(a[r].id)] = !0;
+        for (var o = 0; o < remoteItems.length; o++) {
+            var l = normalizeRemote(remoteItems[o], a.length + 1);
+            n[String(l.id)] || (n[String(l.id)] = !0, a.push(l))
+        }
+        return a
+    }
+
+    function legacyResolvePlaybackDuration(candidates, series, position) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolvePlaybackDuration === "function") return _core.resolvePlaybackDuration(candidates, series, position);
+        for (var i = 0; i < candidates.length; i++) {
+            var parsed = Mi(candidates[i]);
+            if (parsed) return parsed
+        }
+        var fallback = series ? 2700 : 6300;
+        return position > fallback && (fallback = Math.round(1.15 * position)), fallback
+    }
+
+    function legacyCurrentPlaybackPosition(currentTime, relay, relayBase) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.currentPlaybackPosition === "function") return _core.currentPlaybackPosition(currentTime, relay, relayBase);
+        var current = Number(currentTime) || 0;
+        return relay ? (Number(relayBase) || 0) + current : current
+    }
+
+    function legacyResolvePlaybackTotal(videoDuration, episodeDuration, itemDuration) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolvePlaybackTotal === "function") return _core.resolvePlaybackTotal(videoDuration, episodeDuration, itemDuration);
+        var video = Number(videoDuration) || 0;
+        if (isFinite(video) && video > 0) return video;
+        return Number(episodeDuration) || Number(itemDuration) || 0
+    }
+
+    function legacyDescribePlaybackStream(url, mime, itemIsHls) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.describePlaybackStream === "function") return _core.describePlaybackStream(url, mime, itemIsHls);
+        var source = String(url || ""),
+            streamMime = String(mime || ""),
+            isHls = -1 !== source.indexOf(".m3u8") || -1 !== streamMime.indexOf("mpegurl") || !!itemIsHls;
+        return {
+            isHls: isHls,
+            contentType: isHls ? "application/vnd.apple.mpegurl" : -1 !== source.indexOf(".mp4") || -1 !== streamMime.indexOf("mp4") ? "video/mp4" : "video/mp2t"
+        }
+    }
+
+    function legacyShouldUseHls(isHls, nativeHls, nativeTv, hlsSupported) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.shouldUseHls === "function") return _core.shouldUseHls(isHls, nativeHls, nativeTv, hlsSupported);
+        return !!(isHls && !nativeHls && !nativeTv && hlsSupported)
+    }
+
+    function legacyShouldSaveHistoryBeforeReset(mode, hasVideo) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.shouldSaveHistoryBeforeReset === "function") return _core.shouldSaveHistoryBeforeReset(mode, hasVideo);
+        return "vod" === mode && !!hasVideo
+    }
+
+    function legacyResolveAbortServiceBase(directBase, streamUrl) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolveAbortServiceBase === "function") return _core.resolveAbortServiceBase(directBase, streamUrl);
+        if (directBase) return String(directBase);
+        if (!streamUrl || -1 === String(streamUrl).indexOf("127.0.0.1")) return "";
+        var match = /^(http:\/\/127\.0\.0\.1:\d+)/.exec(String(streamUrl));
+        return match ? match[1] : ""
+    }
+
+    function legacyShouldLoadSeriesEpisodesBeforePlay(item, episode) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.shouldLoadSeriesEpisodesBeforePlay === "function") return _core.shouldLoadSeriesEpisodesBeforePlay(item, episode);
+        return !!item && legacyIsSeriesLike(item) && !episode && (!item.episodes || !item.episodes.length) && !item._detailsLoaded
+    }
+
+    function legacyShouldReusePlaybackSession(screen, hasSource, sameItem, sameEpisode) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.shouldReusePlaybackSession === "function") return _core.shouldReusePlaybackSession(screen, hasSource, sameItem, sameEpisode);
+        return "detail" === screen && !!hasSource && !!sameItem && !!sameEpisode
+    }
+
+    function legacyHasPlaybackSession(source, currentSource, streamUrl, streamError) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.hasPlaybackSession === "function") return _core.hasPlaybackSession(source, currentSource, streamUrl, streamError);
+        return !streamError && !!(source || currentSource || streamUrl)
+    }
+
+    function legacyPlaybackTiming() {
+        var _core = window.TutyCore;
+        if (_core && _core.playbackTiming) return _core.playbackTiming;
+        return {
+            bufferNoticeMs: 700,
+            seekCommitMs: 800,
+            liveResolveMs: 180,
+            historyTickMs: 500,
+            relaySeekResetMs: 12e3
+        }
+    }
+
+    function legacyShouldReportBuffering(streamError, hasVideo, paused, readyState) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.shouldReportBuffering === "function") return _core.shouldReportBuffering(streamError, hasVideo, paused, readyState);
+        return !streamError && !!hasVideo && !paused && (Number(readyState) || 0) < 3
+    }
+
+    function legacyShouldTickPlayback(screen, mode, hasVideo, paused) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.shouldTickPlayback === "function") return _core.shouldTickPlayback(screen, mode, hasVideo, paused);
+        return "player" === screen && "vod" === mode && !!hasVideo && !paused
+    }
+
+    function legacyResolveLiveResolveDelay(immediate) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resolveLiveResolveDelay === "function") return _core.resolveLiveResolveDelay(immediate);
+        return immediate ? 0 : 180
+    }
+
+    function legacyWirePlaybackVideoEvents(target, handlers) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.wirePlaybackVideoEvents === "function") return _core.wirePlaybackVideoEvents(target, handlers);
+        for (var events = ["error", "loadeddata", "canplay", "loadedmetadata", "durationchange", "playing", "ended", "timeupdate", "pause", "play", "waiting", "stalled", "seeking", "seeked", "progress"], i = 0; i < events.length; i++) target["on" + events[i]] = handlers[events[i]]
+    }
+
+    function legacyWireHlsPlaybackEvents(hls, events, onError, onManifestParsed) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.wireHlsPlaybackEvents === "function") return _core.wireHlsPlaybackEvents(hls, events, onError, onManifestParsed);
+        hls.on(events.ERROR, onError), hls.on(events.MANIFEST_PARSED, onManifestParsed)
+    }
+
+    function legacyApplyPlaybackSurface(video, poster, active) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.applyPlaybackSurface === "function") return _core.applyPlaybackSurface(video, poster, active);
+        video && video.classList && (active ? video.classList.add("is-active") : video.classList.remove("is-active")), poster && poster.style && (poster.style.display = active ? "none" : "block")
+    }
+
+    function legacyApplyPlayerStatus(element, message) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.applyPlayerStatus === "function") return _core.applyPlayerStatus(element, message);
+        element && (message ? (element.textContent = String(message), element.classList.add("is-active")) : (element.textContent = "", element.classList.remove("is-active")))
+    }
+
+    function legacyApplyDetailPlayerTransition(playerScreen, detailScreen) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.applyDetailPlayerTransition === "function") return _core.applyDetailPlayerTransition(playerScreen, detailScreen);
+        playerScreen && playerScreen.classList && (playerScreen.classList.remove("is-mini"), playerScreen.classList.add("is-active")), detailScreen && detailScreen.classList && detailScreen.classList.remove("is-active")
+    }
+
+    function legacyResetDetailPlayerSurface(playerScreen) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.resetDetailPlayerSurface === "function") return _core.resetDetailPlayerSurface(playerScreen);
+        playerScreen && playerScreen.classList && (playerScreen.classList.remove("is-mini"), playerScreen.classList.remove("is-active"))
+    }
+
+    function legacyApplyPlayerModeClass(element, isVod) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.applyPlayerModeClass === "function") return _core.applyPlayerModeClass(element, isVod);
+        element && element.classList && (isVod ? element.classList.add("is-vod") : element.classList.remove("is-vod"))
+    }
+
+    function legacyDevServiceUrl(base, method, parameters) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.buildDevServiceUrl === "function") return _core.buildDevServiceUrl(base, method, parameters);
+        var query = [];
+        for (var key in parameters) Object.prototype.hasOwnProperty.call(parameters, key) && query.push(encodeURIComponent(key) + "=" + encodeURIComponent(parameters[key]));
+        return String(base).replace(/\/$/, "") + "/" + method + "?" + query.join("&")
+    }
+
+    function legacyLanguagePreference(code, fallback) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.languagePreferenceIndex === "function") return _core.languagePreferenceIndex(code, fallback);
+        var value = String(code || "").toLowerCase();
+        return /^(es|spa|esp)|espa/.test(value) ? 0 : /^(pt|por)|portu/.test(value) ? 1 : /^(en|eng|ing)|ingl/.test(value) ? 2 : fallback
+    }
+
+    function legacySelectTrackIndex(codes, preferredCode, preference) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.selectTrackIndexByCodeOrPreference === "function") return _core.selectTrackIndexByCodeOrPreference(codes, preferredCode, preference);
+        var target = String(preferredCode || "").trim().toLowerCase();
+        if (target)
+            for (var i = 0; i < codes.length; i++)
+                if (String(codes[i] || "").trim().toLowerCase() === target) return i;
+        for (var a = 0; a < codes.length; a++)
+            if (Ia(codes[a], ["es", "pt", "en"][Number(preference) || 0] || "es")) return a;
+        return -1
+    }
+
+    function legacyRelayStreamMode(mode) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.isRelayStreamMode === "function") return _core.isRelayStreamMode(mode);
+        return "relay" === mode || "smooth" === mode
+    }
+
+    function legacyForceRelay(mode, resumeAt) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.shouldForceRelay === "function") return _core.shouldForceRelay(mode, resumeAt);
+        return "relay" === mode || "smooth" === mode || resumeAt > 0
+    }
+
+    function legacyRelayResumeStart(url, resumeAt) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.applyRelayResumeStart === "function") return _core.applyRelayResumeStart(url, resumeAt);
+        return resumeAt > 0 && /\/s\/[0-9a-f]+\.mp4/i.test(url) ? {
+            url: url + (-1 !== url.indexOf("?") ? "&" : "?") + "start=" + Math.floor(resumeAt),
+            consumed: !0
+        } : {
+            url: url,
+            consumed: !1
+        }
+    }
+
+    function legacyDestroyHls(slot) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.destroyLegacyHls === "function") return _core.destroyLegacyHls(window, slot);
+        window[slot] && (function() {
+            try {
+                window[slot].destroy()
+            } catch (e) {}
+        })(), window[slot] = null
+    }
+
+    function legacySchedulePlaybackRetry(guard, retry) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.scheduleGuardedRetry === "function") return _core.scheduleGuardedRetry(function(callback) {
+            return setTimeout(callback, 0)
+        }, guard, retry);
+        setTimeout(function() {
+            guard() && retry()
+        }, 0)
+    }
+
+    function legacyInstallNavigation(target, handler) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.connectLegacyNavigation === "function") return _core.connectLegacyNavigation(target, handler);
+        target.addEventListener("keydown", handler, !1), target.addEventListener("keyup", function(e) {
+            461 !== (e.keyCode || e.which) && "Back" !== e.key && "GoBack" !== e.key || handler(e)
+        }, !1)
+    }
+
+    function legacyCanUseLuna() {
+        if (!E()) return !1;
+        var _core = window.TutyCore;
+        if (_core && _core.platform && typeof _core.platform.canUseLunaService === "function") return _core.platform.canUseLunaService(window.PalmServiceBridge);
+        return !!window.PalmServiceBridge
+    }
+
+    function legacyNativePreviewHls(video) {
+        var _core = window.TutyCore;
+        if (_core && _core.platform && typeof _core.platform.canPlayPreviewHls === "function") return _core.platform.canPlayPreviewHls(video);
+        return !!(video.canPlayType && video.canPlayType("application/vnd.apple.mpegurl"))
+    }
+
+    function legacyPlatformBack() {
+        var _core = window.TutyCore;
+        if (_core && _core.platform && typeof _core.platform.back === "function") return _core.platform.back(window);
+        window.webOSTV && window.webOSTV.platformBack ? window.webOSTV.platformBack() : window.PalmSystem && window.PalmSystem.platformBack && window.PalmSystem.platformBack()
     }
 
     function Q() {
@@ -714,7 +1297,7 @@
     function toast(msg) {
         var i = t("app");
         if (i) {
-            var a = e("div", "xuper-toast", msg);
+            var a = e("div", "tuty-toast", msg);
             i.appendChild(a), setTimeout(function() {
                 a.parentNode && a.parentNode.removeChild(a)
             }, 3500)
@@ -722,23 +1305,15 @@
     }
 
     function stopWebMedia() {
-        if (!window.XUPERTV_WEB) return;
+        if (!window.TUTYTV_WEB) return;
         try {
-            we && we.pause()
+            we && legacyPauseVideo(we)
         } catch (e) {}
-        window.__xuperHls && (function() {
-            try {
-                window.__xuperHls.destroy()
-            } catch (e) {}
-        })(), window.__xuperHls = null;
+        legacyDestroyHls("__tutyHls");
         try {
-            Et && Et.pause()
+            Et && legacyPauseVideo(Et)
         } catch (e) {}
-        window.__xuperPreviewHls && (function() {
-            try {
-                window.__xuperPreviewHls.destroy()
-            } catch (e) {}
-        })(), window.__xuperPreviewHls = null;
+        legacyDestroyHls("__tutyPreviewHls");
         try {
             q("abortMedia", {}, function() {})
         } catch (e) {}
@@ -766,14 +1341,14 @@
         })(t[n])
     }! function() {
         var e = G($, null);
-        if (e)
-            for (var t in j.playback) j.playback.hasOwnProperty(t) && void 0 !== e[t] && (j.playback[t] = e[t]);
-        var i = G(W, null);
-        i && i.id ? (X = i).history && X.history.length || (X.history = []) : (X.id = "TV-" + String(Date.now()).slice(-8), X.createdAt = Date.now(), J(W, X)),         X.favs || (X.favs = {}), X.reminders || (X.reminders = {}), j.favs = X.favs
+        if (e) legacyMergePlaybackPreferences(j.playback, e);
+        var r = legacyEnsureViewerProfile(X, G(W, null), Date.now());
+        X = r.profile, r.created && J(W, X), X.favs || (X.favs = {}), X.reminders || (X.reminders = {}), j.favs = X.favs
     }();
     var Y, Z, ee, te, ie, ae, ne, re, oe, se, le, de, ce, pe, ue, ve, fe, he, ge, me, ye, be, Ce, we, xe, Se, _e, Le, ke, Me, Ie, Te, Ee, qe, Oe, De, Ae, Pe = !1,
         Ne = [],
         Re = [],
+        tabFocus = [],
         Ue = [],
         Fe = [],
         Be = {},
@@ -789,31 +1364,72 @@
         Qe = 0,
         Ke = null;
 
+    function legacyFocusScrollAdjustment(rect, container, metrics) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.computeLegacyScrollAdjustment === "function") return _core.computeLegacyScrollAdjustment(rect, container, metrics);
+        var sx = metrics.offsetWidth ? (container.right - container.left) / metrics.offsetWidth : 1,
+            sy = metrics.offsetHeight ? (container.bottom - container.top) / metrics.offsetHeight : 1;
+        (!isFinite(sx) || sx <= 0) && (sx = 1), (!isFinite(sy) || sy <= 0) && (sy = 1);
+        var l = (rect.left - container.left) / sx,
+            r = (rect.right - container.right) / sx,
+            u = (rect.top - container.top) / sy,
+            d = (rect.bottom - container.bottom) / sy,
+            top = u < 0 ? u - 12 : d > 0 ? d + 12 : 0,
+            left = 0;
+        return (metrics.scrollWidth || 0) > (metrics.clientWidth || 0) + 1 && (l < 0 ? left = l - 12 : r > 0 && (left = r + 12)), {
+            top: top,
+            left: left
+        }
+    }
+
+    function legacyFocusVisible(element) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.isLegacyFocusVisible === "function") return _core.isLegacyFocusVisible({
+            closest: function(selector) {
+                var node = n(element, selector);
+                return node ? {
+                    hasClass: function(name) {
+                        return node.classList.contains(name)
+                    }
+                } : null
+            }
+        }, {
+            episodeBrowserOpen: !!j.episodeBrowserOpen,
+            categoryPickerOpen: !!j.categoryPickerOpen,
+            liveCategoriesOpen: !!j.liveCategoriesOpen,
+            liveSearchOpen: !!j.liveSearchOpen,
+            resumeOpen: !!j.resumeOpen,
+            filterOpen: !!j.filterOpen,
+            playSettingsOpen: !!fa,
+            playSettingViewOpen: !!va
+        });
+        if (j.episodeBrowserOpen) return !!n(element, "#player-episodes");
+        if (j.categoryPickerOpen) return !!n(element, "#player-categories");
+        if (j.liveCategoriesOpen) return !!n(element, "#live-categories");
+        if (j.liveSearchOpen) return !!n(element, "#live-search");
+        if (j.resumeOpen) return !!n(element, "#dialog-resume");
+        if (j.filterOpen) return !!n(element, "#filter-panel");
+        if (fa) return !!n(element, "#dialog-playsettings");
+        if (va) return !!n(element, "#player-playsetting-view");
+        var i = n(element, ".home-page");
+        if (i && !i.classList.contains("is-current")) return !1;
+        var a = n(element, ".settings-panel");
+        if (a && !a.classList.contains("is-active")) return !1;
+        var r = n(element, ".search-hot");
+        if (r && r.classList.contains("is-hidden")) return !1;
+        var o = n(element, ".search-results");
+        if (o && !o.classList.contains("is-active")) return !1;
+        var s = n(element, ".player-channels");
+        if (s && !s.classList.contains("is-active")) return !1;
+        var l = n(element, ".player-infobar");
+        return !(l && !l.classList.contains("is-active"))
+    }
+
     function Ye(e) {
         if (!e || !e.getBoundingClientRect) return !1;
         if (null === e.offsetParent) return !1;
         var t = e.getBoundingClientRect();
-        if (t.width < 1 || t.height < 1) return !1;
-        if (j.episodeBrowserOpen) return !!n(e, "#player-episodes");
-        if (j.categoryPickerOpen) return !!n(e, "#player-categories");
-        if (j.liveCategoriesOpen) return !!n(e, "#live-categories");
-        if (j.liveSearchOpen) return !!n(e, "#live-search");
-        if (j.resumeOpen) return !!n(e, "#dialog-resume");
-        if (j.filterOpen) return !!n(e, "#filter-panel");
-        if (fa) return !!n(e, "#dialog-playsettings");
-        if (va) return !!n(e, "#player-playsetting-view");
-        var i = n(e, ".home-page");
-        if (i && !i.classList.contains("is-current")) return !1;
-        var a = n(e, ".settings-panel");
-        if (a && !a.classList.contains("is-active")) return !1;
-        var r = n(e, ".search-hot");
-        if (r && r.classList.contains("is-hidden")) return !1;
-        var o = n(e, ".search-results");
-        if (o && !o.classList.contains("is-active")) return !1;
-        var s = n(e, ".player-channels");
-        if (s && !s.classList.contains("is-active")) return !1;
-        var l = n(e, ".player-infobar");
-        return !(l && !l.classList.contains("is-active"))
+        return t.width < 1 || t.height < 1 ? !1 : legacyFocusVisible(e)
     }
 
     function Ze() {
@@ -825,21 +1441,20 @@
         for (var t = n(e, ".scrollable"); t;) {
             var i = e.getBoundingClientRect(),
                 a = t.getBoundingClientRect(),
-                sx = t.offsetWidth ? a.width / t.offsetWidth : 1,
-                sy = t.offsetHeight ? a.height / t.offsetHeight : 1;
-            (!isFinite(sx) || sx <= 0) && (sx = 1), (!isFinite(sy) || sy <= 0) && (sy = 1);
-            var l = (i.left - a.left) / sx,
-                r = (i.right - a.right) / sx,
-                u = (i.top - a.top) / sy,
-                d = (i.bottom - a.bottom) / sy;
-            u < 0 ? t.scrollTop += u - 12 : d > 0 && (t.scrollTop += d + 12), t.scrollWidth > t.clientWidth + 1 && (l < 0 ? t.scrollLeft += l - 12 : r > 0 && (t.scrollLeft += r + 12)), t = n(t.parentNode, ".scrollable")
+                adjustment = legacyFocusScrollAdjustment(i, a, {
+                    offsetWidth: t.offsetWidth,
+                    offsetHeight: t.offsetHeight,
+                    scrollWidth: t.scrollWidth,
+                    clientWidth: t.clientWidth
+                });
+            t.scrollTop += adjustment.top, t.scrollLeft += adjustment.left, t = n(t.parentNode, ".scrollable")
         }
     }
 
     function tt(e, i) {
         if (e)
             if (j.focus !== e) {
-                j.focus && j.focus.classList.remove("is-focused"), j.focus = e, e.classList.add("is-focused"), e._onFocus && e._onFocus(), rn();
+                j.focus && "home" === j.screen && n(j.focus, ".home-page") && (tabFocus[j.tab] = j.focus), j.focus && j.focus.classList.remove("is-focused"), j.focus = e, e.classList.add("is-focused"), e._onFocus && e._onFocus(), rn();
                 var a = t("home-tabs");
                 if (a && "home" === j.screen) {
                     var r = n(e, ".home-tabs");
@@ -857,6 +1472,14 @@
         return null
     }
 
+    function focusHomeTab(tab) {
+        var saved = tabFocus[tab];
+        if (saved && saved.parentNode && Ye(saved)) return tt(saved);
+        var page = H[tab] && H[tab].page,
+            first = page >= 0 && Ne[page] ? it(Ne[page]) : null;
+        first ? tt(first) : Re[tab] && tt(Re[tab])
+    }
+
     function at(e) {
         if (j.focus) {
             if (!j.focus._onMove || !j.focus._onMove(e)) {
@@ -866,6 +1489,12 @@
                         var u, v, f, h = p.getBoundingClientRect(),
                             g = h.left + h.width / 2 - o,
                             m = h.top + h.height / 2 - s;
+                        var _core = window.TutyCore;
+                        if (_core && typeof _core.scoreLegacyFocus === "function") {
+                            var _score = _core.scoreLegacyFocus(e, r, h);
+                            null !== _score && _score < d && (d = _score, l = p);
+                            continue
+                        }
                         if ("left" === e) {
                             if (g > -4) continue;
                             u = Math.max(0, r.left - h.right), v = Math.abs(m), f = h.bottom > r.top + 2 && h.top < r.bottom - 2
@@ -879,7 +1508,7 @@
                             if (m < 4) continue;
                             u = Math.max(0, h.top - r.bottom), v = Math.abs(g), f = h.right > r.left + 2 && h.left < r.right - 2
                         }
-                        var y = u + 2 * v + (f ? 0 : 320);
+                        var y = u + 0.5 * v + (f ? 0 : 320);
                         y < d && (d = y, l = p)
                     }
                 }
@@ -897,9 +1526,9 @@
         if (n && n.classList.add("is-active"), j.screen = e, "player" !== e && j.episodeBrowserOpen && un(!0), "player" !== e && j.categoryPickerOpen && An(!0), "home" !== e && j.liveCategoriesOpen && lvCloseCats(!0), "home" !== e && j.liveSearchOpen && lvCloseSearch(!0), "player" !== e && "detail" !== e) {
             fa && _n(), va && an();
             var r = t("screen-player");
-            r && (r.classList.remove("is-mini"), r.classList.remove("is-active")), ar(), wa++, Da = [], ua && (ua.innerHTML = "")
+            legacyResetDetailPlayerSurface(r), ar(), wa++, Da = [], ua && (ua.innerHTML = "")
         }
-        window.XUPERTV_WEB && "player" !== e && "detail" !== e && stopWebMedia(), mt()
+        window.TUTYTV_WEB && "player" !== e && "detail" !== e && stopWebMedia(), mt()
     }
     var rt = 0;
 
@@ -930,7 +1559,7 @@
                     } else {
                         ar();
                         var s = t("screen-player");
-                        s && (s.classList.remove("is-mini"), s.classList.remove("is-active")), e && "search" === e.screen ? (nt("search"), tt(e.focus)) : (nt("home"), ht(j.tab, !1), e && e.focus && Ye(e.focus) ? tt(e.focus) : Re[j.tab] && tt(Re[j.tab]))
+                        legacyResetDetailPlayerSurface(s), e && "search" === e.screen ? (nt("search"), tt(e.focus)) : (nt("home"), ht(j.tab, !1), e && e.focus && Ye(e.focus) ? tt(e.focus) : Re[j.tab] && tt(Re[j.tab]))
                     }
                 }());
                 if ("detail" !== j.screen) {
@@ -938,7 +1567,7 @@
                     if ("settings" === j.screen) return nt("home"), ht(j.tab, !1), void(Re[j.tab] && tt(Re[j.tab]));
                     if ("home" === j.screen) {
                         if (0 !== j.tab) return ht(0, !0), void(Re[0] && tt(Re[0]));
-                        window.webOSTV && window.webOSTV.platformBack ? window.webOSTV.platformBack() : window.PalmSystem && window.PalmSystem.platformBack && window.PalmSystem.platformBack()
+                        legacyPlatformBack()
                     }
                 } else {
                     if (ni) {
@@ -958,7 +1587,7 @@
                     }();
                     ar();
                     var n = t("screen-player");
-                    n && (n.classList.remove("is-mini"), n.classList.remove("is-active"));
+                    legacyResetDetailPlayerSurface(n);
                     var r = j.detailReturn;
                     r && "search" === r.screen ? (nt("search"), tt(r.focus)) : (nt("home"), ht(j.tab, !1), r && r.focus && Ye(r.focus) ? tt(r.focus) : Re[j.tab] && tt(Re[j.tab]))
                 }
@@ -972,8 +1601,9 @@
     function lt(e) {
         var t = e.keyCode || e.which,
             i = e.key || "",
+            _action = legacyNavigationAction(e),
             a = !0;
-        if (461 === t || 27 === t || 8 === t || "Back" === i || "GoBack" === i || "Escape" === i) return j.categoryPickerOpen ? (An(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveSearchOpen ? (lvCloseSearch(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveCategoriesOpen ? (lvCloseCats(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.episodeBrowserOpen ? (un(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : Pt ? (rt = Date.now(), Wt(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.resumeOpen ? (closeResume(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.filterOpen ? (closeFilter(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : fa ? (rt = Date.now(), _n(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : va ? (rt = Date.now(), an(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : (ot(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation()));
+        if ("back" === _action) return j.categoryPickerOpen ? (An(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveSearchOpen ? (lvCloseSearch(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveCategoriesOpen ? (lvCloseCats(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.episodeBrowserOpen ? (un(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : Pt ? (rt = Date.now(), Wt(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.resumeOpen ? (closeResume(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.filterOpen ? (closeFilter(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : fa ? (rt = Date.now(), _n(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : va ? (rt = Date.now(), an(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : (ot(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation()));
         if (j.resumeOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
         if (j.filterOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
         if (j.categoryPickerOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
@@ -994,17 +1624,17 @@
             } else 38 === t ? at("up") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1;
             a && e.preventDefault && e.preventDefault()
         } else {
-            var d = 415 === t || "MediaPlay" === i || "Play" === i,
-                c = 19 === t || "MediaPause" === i || "Pause" === i,
-                p = 10252 === t || "MediaPlayPause" === i,
-                u = 417 === t || "MediaFastForward" === i || "FastForward" === i,
-                v = 412 === t || "MediaRewind" === i || "Rewind" === i,
-                f = 413 === t || "MediaStop" === i || "Stop" === i;
-            if ("player" === j.screen) {
+            var mediaAction = legacyMediaKey(t, i),
+                d = "play" === mediaAction,
+                c = "pause" === mediaAction,
+                p = "playpause" === mediaAction,
+                u = "forward" === mediaAction,
+                v = "rewind" === mediaAction,
+                f = "stop" === mediaAction;            if ("player" === j.screen) {
                 if (d) {
                     if (we && we.paused) {
                         try {
-                            we.play()
+                            legacyPlayVideo(we)
                         } catch (e) {}
                         qi("none"), Pi()
                     }
@@ -1013,7 +1643,7 @@
                 if (c) {
                     if (we && !we.paused) {
                         try {
-                            we.pause()
+                            legacyPauseVideo(we)
                         } catch (e) {}
                         qi("pause"), Pi()
                     }
@@ -1024,7 +1654,7 @@
                 if (v) return Oi(-15), void(e.preventDefault && e.preventDefault());
                 if (f) return ot(), void(e.preventDefault && e.preventDefault())
             }
-            var h = 457 === t || 93 === t || 467 === t || "Menu" === i || "ContextMenu" === i;
+            var h = "menu" === mediaAction;
             if ("player" === j.screen && "vod" === j.playerMode && h) return fa ? _n() : va ? an() : tn(), void(e.preventDefault && e.preventDefault());
             if ("home" === j.screen && 0 === j.tab && h && !j.liveCategoriesOpen && !j.liveSearchOpen) return lvOpenCats(), void(e.preventDefault && e.preventDefault());
             if ("player" === j.screen && (37 === t || 38 === t || 39 === t || 40 === t)) {
@@ -1066,17 +1696,17 @@
                     }
                 }
             }
-            if (37 === t) at("left");
-            else if (38 === t) at("up");
-            else if (39 === t) at("right");
-            else if (40 === t) at("down");
-            else if (13 === t || 32 === t) {
+            if ("left" === _action) at("left");
+            else if ("up" === _action) at("up");
+            else if ("right" === _action) at("right");
+            else if ("down" === _action) at("down");
+            else if ("enter" === _action) {
                 if (j.episodeBrowserOpen) return void st();
                 if (fa) st();
                 else if (va) en(), st();
                 else if ("player" === j.screen && "vod" === j.playerMode && j.focus === Ee && Je) er(!0);
                 else if ("player" === j.screen && j.streamError && we && we.src && !n(j.focus, ".player-channels")) {
-                    var b = we.play();
+                    var b = legacyPlayVideo(we);
                     b && b.catch && b.catch(function() {}), j.streamError = "", nr("")
                 } else "player" === j.screen && "vod" === j.playerMode ? Di() : st()
             } else a = !1;
@@ -1148,92 +1778,83 @@
             }, t.appendChild(ie)
         }, function(e) {
             var t = Yt("destacado"),
-                i = t.slice(0, 6),
+                i = t.slice(0, 9),
                 a = !(!i[0] || !i[0]._portal);
             Kt(e, i, {
                 titles: a,
                 dots: a ? 4 : 0,
                 shade: a
             });
-            var n = t.slice(6);
+            var n = t.slice(9);
             n.length && Zt(e, n, 860, "Títulos destacados")
         }, function(e) {
             var t = Yt("pelicula"),
-                i = t.slice(0, 6),
+                i = t.slice(0, 9),
                 a = !(!i[0] || !i[0]._portal);
             Kt(e, i, {
                 titles: a,
                 dots: a ? 4 : 0,
                 shade: a
             });
-            var n = t.slice(6);
+            var n = t.slice(9);
             n.length && Zt(e, n, 860, "Más películas")
         }, function(e) {
             var t = Yt("serie"),
-                i = t.slice(0, 6),
+                i = t.slice(0, 9),
                 a = !(!i[0] || !i[0]._portal);
             Kt(e, i, {
                 titles: a,
                 dots: a ? 3 : 2,
                 shade: a
             });
-            var n = t.slice(6);
+            var n = t.slice(9);
             n.length && Zt(e, n, 860, "Más series")
         }, function(t) {
             var i = I("infantil", 12, 0);
             i.length || (i = l);
             var n = !(!i[0] || !i[0]._portal);
-            t.appendChild(Jt(i[0], 192, 38.5, 831, 534, {
-                shade: !0,
-                title: n
-            }));
-            for (var r = [
-                    [1029, 38.5],
-                    [1446, 38.5],
-                    [1029, 269.5],
-                    [1446, 269.5]
-                ], o = 0; o < r.length; o++) t.appendChild(Jt(i[(o + 1) % i.length], r[o][0], r[o][1], 413, 222, {}));
-            if (t.appendChild(Qt(833, 468.5, 4, 0)), i[0]) {
-                var s = e("div", "kids-subtitle", i[0].tagline || i[0].title);
-                a(s, 192, 526.5, 1249, 40), t.appendChild(s)
-            }
-            var d = e("div", "poster-row");
-            a(d, 192, 578.5, 1920, 310);
-            for (var c = 0; c < 7; c++) {
-                var p = i[c % i.length];
-                if (!p) break;
-                d.appendChild(bt(p, 266 * c, 0, 266, 310, {
-                    gold: !0
-                }))
-            }
-            t.appendChild(d)
+            Kt(t, i.slice(0, 9), {
+                titles: n,
+                shade: n
+            });
+            var rest = i.slice(9);
+            rest.length && Zt(t, rest, 860, "Más para niños")
         }, function(e) {
             var t = Yt("anime"),
-                i = t.slice(0, 6),
+                i = t.slice(0, 9),
                 a = !(!i[0] || !i[0]._portal);
             Kt(e, i, {
                 titles: a,
                 dots: a ? 3 : 2,
                 shade: a
             });
-            var n = t.slice(6);
+            var n = t.slice(9);
             n.length && Zt(e, n, 860, "Anime y animación")
         }, function(t) {
             var i = l.length ? l : [];
-            t.appendChild(Jt(i[0], 192, 38.5, 1249, 703, {
-                shade: !0
-            }));
-            for (var n = 0; n < 3; n++) t.appendChild(Jt(i[(n + 1) % i.length], 1446, 38.5 + 231 * n, 413, 226, {
-                badge: 2 === n ? "Adult" : ""
-            }));
-            t.appendChild(e("div", "explore-row-title", "Netflix"));
-            var r = e("div", "explore-strip");
-            a(r, 192, 811.5, 1920, 130);
-            for (var o = 0; o < 8; o++) {
-                var s = e("div", "explore-logo");
-                a(s, 272 * o, 0, 260, 120), r.appendChild(s)
+            Kt(t, i.slice(0, 9), {
+                titles: false,
+                shade: true
+            });
+            for (var explore = [{
+                    key: "pelicula",
+                    label: "Películas"
+                }, {
+                    key: "serie",
+                    label: "Series"
+                }, {
+                    key: "anime",
+                    label: "Anime y animación"
+                }, {
+                    key: "infantil",
+                    label: "Infantil"
+                }, {
+                    key: "gratis",
+                    label: "Gratis"
+                }], exploreY = 811.5, exploreIndex = 0; exploreIndex < explore.length; exploreIndex++) {
+                var categoryItems = Yt(explore[exploreIndex].key).slice(0, 6);
+                categoryItems.length && (Zt(t, categoryItems, exploreY, explore[exploreIndex].label), exploreY += 490)
             }
-            t.appendChild(r)
         }],
         pt = {};
 
@@ -1264,10 +1885,7 @@
                                     return e._channel === j.channel
                                 })[0];
                                 t ? tt(t) : Ue.length ? tt(Ue[0]) : ie && tt(ie)
-                            } else if (H[e].page >= 0) {
-                                var i = it(Ne[H[e].page]);
-                                i && tt(i)
-                            }
+                            } else if (H[e].page >= 0) focusHomeTab(e)
                         }
                     }(n), r._onMove = function(e) {
                         return function(t) {
@@ -1280,10 +1898,7 @@
                                         return e._channel === j.channel
                                     })[0];
                                     i ? tt(i) : Ue.length ? tt(Ue[0]) : ie && tt(ie)
-                                } else if (H[e].page >= 0) {
-                                    var a = it(Ne[H[e].page]);
-                                    a && tt(a)
-                                }
+                                } else if (H[e].page >= 0) focusHomeTab(e)
                                 return !0
                             }
                             return !1
@@ -1340,7 +1955,7 @@
 
     function ht(e, t) {
         var i = H[e];
-        window.XUPERTV_WEB && "player" !== j.screen && "detail" !== j.screen && stopWebMedia();
+        window.TUTYTV_WEB && "player" !== j.screen && "detail" !== j.screen && stopWebMedia();
         if (i.page < 0) yi();
         else {
             var a = H[j.tab] ? H[j.tab].page : i.page;
@@ -1360,10 +1975,7 @@
                         return e._channel === j.channel
                     })[0];
                     s ? tt(s) : Ue.length ? tt(Ue[0]) : ie && tt(ie)
-                } else {
-                    var l = it(Ne[i.page]);
-                    l && tt(l)
-                } mt()
+                } else focusHomeTab(e); mt()
         }
     }
     var gt = null;
@@ -1439,24 +2051,15 @@
     }];
 
     function wt() {
-        try {
-            var e = localStorage.getItem("xuper_m3u_addons");
-            if (e) {
-                var t = JSON.parse(e);
-                if (Array.isArray(t) && t.length) return t
-            }
-        } catch (e) {}
-        var i = [Ct[0]];
-        try {
-            localStorage.setItem("xuper_m3u_addons", JSON.stringify(i))
-        } catch (e) {}
-        return i
+        var e = G("xuper_m3u_addons", null);
+        if (Array.isArray(e) && e.length) return e;
+        var t = [Ct[0]];
+        J("xuper_m3u_addons", t);
+        return t
     }
 
     function xt(e) {
-        try {
-            localStorage.setItem("xuper_m3u_addons", JSON.stringify(e || []))
-        } catch (e) {}
+        J("xuper_m3u_addons", e || [])
     }
     var St = [],
         _t = null,
@@ -1474,17 +2077,13 @@
 
     function Nt() {
         if (Ot++, At = "", Dt && (clearTimeout(Dt), Dt = null), te && te.classList.remove("is-preview-playing", "is-preview-loading"), qt && (qt.textContent = ""), Et) {
-            window.__xuperPreviewHls && (function() {
-                try {
-                    window.__xuperPreviewHls.destroy()
-                } catch (e) {}
-            })(), window.__xuperPreviewHls = null;
+            legacyDestroyHls("__tutyPreviewHls");
             try {
-                Et.pause()
+                legacyPauseVideo(Et)
             } catch (e) {}
             Et.removeAttribute("src");
             try {
-                Et.src = "", Et.load()
+                legacySetVideoSource(Et, ""), legacyLoadVideo(Et)
             } catch (e) {}
         }
     }
@@ -1512,28 +2111,24 @@
                                     }, Et.onerror = function() {
                                         i === Ot && (te.classList.remove("is-preview-loading", "is-preview-playing"), qt && (qt.textContent = ""))
                                     };
-                                    var useHlsPreview = previewHls && !/webOS|SmartTV|Large Screen/i.test(navigator.userAgent || "") && window.Hls && window.Hls.isSupported() && !(Et.canPlayType && Et.canPlayType("application/vnd.apple.mpegurl"));
+                                    var useHlsPreview = previewHls && !legacyNativeTvPlayback() && window.Hls && window.Hls.isSupported() && !legacyNativePreviewHls(Et);
                                     if (useHlsPreview) {
-                                        window.__xuperPreviewHls && (function() {
-                                            try {
-                                                window.__xuperPreviewHls.destroy()
-                                            } catch (e) {}
-                                        })(), window.__xuperPreviewHls = null;
+                                        legacyDestroyHls("__tutyPreviewHls");
                                         var phls = new window.Hls({
                                             enableWorker: !0,
                                             backBufferLength: 10
                                         });
-                                        window.__xuperPreviewHls = phls, phls.on(window.Hls.Events.MANIFEST_PARSED, function() {
+                                        window.__tutyPreviewHls = phls, phls.on(window.Hls.Events.MANIFEST_PARSED, function() {
                                             if (i === Ot) try {
-                                                var e = Et.play();
+                                                var e = legacyPlayVideo(Et);
                                                 e && e.catch && e.catch(function() {})
                                             } catch (e) {}
                                         }), phls.on(window.Hls.Events.ERROR, function(e, t) {
                                             t && t.fatal && i === Ot && (te.classList.remove("is-preview-loading", "is-preview-playing"), qt && (qt.textContent = ""))
-                                        }), phls.loadSource(a), phls.attachMedia(Et)
+                                        }), legacyLoadHls(Et, phls, a)
                                     } else try {
-                                        Et.src = a, Et.load();
-                                        var n = Et.play();
+                                        legacySetVideoSource(Et, a), legacyLoadVideo(Et);
+                                        var n = legacyPlayVideo(Et);
                                         n && n.catch && n.catch(function() {})
                                     } catch (e) {
                                         te.classList.remove("is-preview-loading")
@@ -1557,15 +2152,24 @@
     /* Local live favourites survive category changes and app restarts.  Portal
        channels expose channelCode, addon channels only a name, so key on both. */
     function liveFavKey(e) {
+        var _core = window.TutyCore;
+        if (_core && _core.liveFavKey) return _core.liveFavKey(e);
         return "live:" + (e && (e.channelCode || e.id || e.name) || "")
     }
 
     function liveIsFav(e) {
+        var _core = window.TutyCore;
+        if (_core && _core.isLiveFavorite) return _core.isLiveFavorite(e, j.favs);
         return !!(e && (e.fav || j.favs && j.favs[liveFavKey(e)]))
     }
 
     function liveToggleFav(e) {
         if (!e) return !1;
+        var _core = window.TutyCore;
+        if (_core && _core.toggleLiveFavorite) {
+            var _result = _core.toggleLiveFavorite(e, j.favs);
+            return j.favs = _result.favorites, X.favs = j.favs, J(W, X), e.fav = _result.favorite, _result.favorite
+        }
         var t = liveFavKey(e),
             i = !j.favs[t];
         return i ? j.favs[t] = !0 : delete j.favs[t], X.favs = j.favs, J(W, X), e.fav = i, i
@@ -2112,18 +2716,46 @@
         return o
     }
 
-    function Kt(e, t, i) {
+    function Kt(pageEl, t, i) {
         i = i || {};
-        var a = t.length ? t : l;
-        if (a.length) {
-            var n;
-            for (n = 0; n < 2; n++) e.appendChild(Jt(a[n % a.length], Gt.bigX[n], Gt.bigY, Gt.bigW, Gt.bigH, {
+        var list = t.length ? t : l;
+        if (!list.length) return;
+        pageEl._bentoTimer && (clearInterval(pageEl._bentoTimer), pageEl._bentoTimer = null);
+        var heroItems = list.slice(0, 4),
+            heroIndex = 0,
+            hero = Jt(heroItems[0], Gt.bigX[0], Gt.bigY, Gt.bigW, Gt.bigH, {
                 shade: !1 !== i.shade,
                 title: i.titles
-            }));
-            for (n = 0; n < 4; n++) e.appendChild(Jt(a[(n + 2) % a.length], Gt.smallX[n], Gt.smallY, Gt.smallW, Gt.smallH, {}));
-            i.dots && e.appendChild(Qt(848, 535.5, i.dots, 0))
-        }
+            });
+        pageEl.appendChild(hero);
+        hero._activate = function() {
+            ei(hero._item)
+        }, hero._onMove = function(direction) {
+            if ("left" === direction && Re[j.tab]) return tt(Re[j.tab]), !0;
+            return !1
+        };
+        pageEl.appendChild(Jt(list[4] || list[0], Gt.bigX[1], Gt.bigY, Gt.bigW, Gt.bigH, {
+            shade: !1 !== i.shade,
+            title: i.titles
+        }));
+        for (var n = 0; n < 4; n++) pageEl.appendChild(Jt(list[5 + n] || list[(5 + n) % list.length], Gt.smallX[n], Gt.smallY, Gt.smallW, Gt.smallH, {}));
+        if (heroItems.length > 1) pageEl._bentoTimer = setInterval(function() {
+            if (!hero.parentNode || !pageEl.classList.contains("is-current") || "home" !== j.screen) return;
+            heroIndex = (heroIndex + 1) % heroItems.length;
+            var item = heroItems[heroIndex],
+                previous = hero.querySelector(".bento-img"),
+                source = item.landscape || item.poster || "",
+                next = e("img", "bento-img");
+            hero._item = item, next.setAttribute("data-poster-src", source), source ? next.src = source : next.style.display = "none", next.style.transition = "opacity .55s ease", next.style.opacity = "0", next.style.zIndex = "2", hero.appendChild(next), previous && (previous.style.transition = "opacity .55s ease", previous.style.zIndex = "1"), setTimeout(function() {
+                next.style.opacity = "1", previous && (previous.style.opacity = "0")
+            }, 20), setTimeout(function() {
+                previous && previous.parentNode && previous.parentNode.removeChild(previous), next.style.opacity = "", next.style.transition = "", next.style.zIndex = ""
+            }, 650);
+            var title = hero.querySelector(".bento-title");
+            title && setTimeout(function() {
+                title.textContent = item.title || ""
+            }, 260)
+        }, 5e3)
     }
 
     function Yt(e) {
@@ -2158,6 +2790,7 @@
             }
             return
         }
+        e._seriesId = e._seriesId || e.id;
         if (j.detail = e, j.detailReturn = {
                 screen: j.screen,
                 focus: j.focus
@@ -2176,6 +2809,8 @@
     }
 
     function findHistory(e) {
+        var _core = window.TutyCore;
+        if (_core && _core.findHistoryEntry) return _core.findHistoryEntry(X.history, e);
         if (!e || !e.id) return null;
         for (var t = X.history || [], i = 0; i < t.length; i++)
             if (String(t[i].id) === String(e.id)) return t[i];
@@ -2183,6 +2818,8 @@
     }
 
     function episodeIdExists(item, id) {
+        var _core = window.TutyCore;
+        if (_core && _core.episodeIdExists) return _core.episodeIdExists(item, id);
         if (!item || !item.episodes || !id) return !1;
         for (var i = 0; i < item.episodes.length; i++)
             if (String(item.episodes[i].id) === String(id)) return !0;
@@ -2244,7 +2881,7 @@
             epLen = item && item.episodes ? item.episodes.length : 0,
             mismatchReset = !1;
         if (epLen > 1 && hist && hist.episodeId && j.detailEpisode && String(hist.episodeId) !== String(j.detailEpisode.id) && episodeIdExists(item, hist.episodeId)) pos = 0, mismatchReset = !0;
-        window.XUPERTV_WEB && window.console && console.log("[XUPERTV] resume", item && item.id, "pos", hist && hist.position, "dur", dur, "series", isSeries, "eps", epLen, "histEp", hist && hist.episodeId, "curEp", j.detailEpisode && j.detailEpisode.id, "reset", mismatchReset, "show", pos > 2);
+        window.TUTYTV_WEB && window.console && console.log("[TUTYTV] resume", item && item.id, "pos", hist && hist.position, "dur", dur, "series", isSeries, "eps", epLen, "histEp", hist && hist.episodeId, "curEp", j.detailEpisode && j.detailEpisode.id, "reset", mismatchReset, "show", pos > 2);
         if (pos > 2) {
             ar();
             try {
@@ -2252,7 +2889,7 @@
                     j.resumePosition = cont ? pos : 0, sr(item, j.detailEpisode)
                 })
             } catch (err) {
-                window.XUPERTV_WEB && window.console && console.error("[XUPERTV] resume modal error", err), j.resumePosition = 0, sr(item, j.detailEpisode)
+                window.TUTYTV_WEB && window.console && console.error("[TUTYTV] resume modal error", err), j.resumePosition = 0, sr(item, j.detailEpisode)
             }
             return
         }
@@ -2568,11 +3205,7 @@
         var e = j.searchQuery || "",
             t = o(e.trim());
         if (t) {
-            for (var i = [], a = 0; a < l.length; a++) {
-                var n = o(l[a].title || ""),
-                    r = l[a].alias ? o(l[a].alias) : "";
-                (-1 !== n.indexOf(t) || r && -1 !== r.indexOf(t)) && i.push(l[a])
-            }
+            var i = legacyFindLocalSearchMatches(l, e);
             if (fi(i), j.searchTimer && clearTimeout(j.searchTimer), "portal" === p.mode && t.length >= 2) {
                 var s = ++j.searchSeq;
                 j.searchTimer = setTimeout(function() {
@@ -2580,12 +3213,9 @@
                         value: e.trim()
                     }, function(e, t) {
                         if (s === j.searchSeq && !e && t && !1 !== t.returnValue && t.items && t.items.length) {
-                            for (var a = i.slice(), n = {}, r = 0; r < a.length; r++) n[String(a[r].id)] = !0;
-                            for (var o = 0; o < t.items.length; o++) {
-                                var l = _(t.items[o], a.length + 1);
-                                n[String(l.id)] || (n[String(l.id)] = !0, a.push(l))
-                            }
-                            fi(a)
+                            fi(legacyCombineSearchResults(i, t.items, function(item, index) {
+                                return _(item, index)
+                            }))
                         }
                     })
                 }, 350)
@@ -2599,6 +3229,8 @@
     }
 
     function filterMatches(item, value) {
+        var _core = window.TutyCore;
+        if (_core && _core.filterMatches) return _core.filterMatches(item, value);
         if ("*" === value) return !0;
         if (0 === value.indexOf("cat:")) {
             for (var cat = value.slice(4), cats = String(item.category || "").split(","), i = 0; i < cats.length; i++)
@@ -2791,7 +3423,7 @@
             }, ge.appendChild(r), He.push(r)
         }
         var o;
-        for (var s in (Be = {}).profile = xi(), Be.history = Si(), Be.share = ((o = Ci("Compartir APP")).appendChild(e("div", "sp-hr")), o.appendChild(e("div", "share-copy", "Instala XuperTV en otro televisor desde tu propia IPK. El historial de este perfil permanece privado en este TV.")), o), Be.playback = function() {
+        for (var s in (Be = {}).profile = xi(), Be.history = Si(), Be.share = ((o = Ci("Compartir APP")).appendChild(e("div", "sp-hr")), o.appendChild(e("div", "share-copy", "Instala TutyTV en otro televisor desde tu propia IPK. El historial de este perfil permanece privado en este TV.")), o), Be.playback = function() {
                 var t = Ci("Configuración global de reproducción");
                 t.appendChild(e("div", "sp-hr")), t.appendChild(e("div", "sp-global-note", "Estas preferencias se aplican automáticamente a todas las películas y series nuevas.")), wi(t, 198, "Reproductor", ["Normal (directo)", "Modo fluido"], "streamMode", "smooth" === j.playback.streamMode ? 1 : 0), wi(t, 307, "Formato de pantalla", ["Pantalla completa", "Normal", "16:9", "4:3"], "screen", j.playback.screen), wi(t, 416, "Audio preferido", ["Español", "Portugués", "Inglés"], "audio", j.playback.audio), t.appendChild(a(e("div", "sp-hr"), 0, 535, 1498, 1)), t.appendChild(e("div", "sp-subtitle-h", "Subtitulos"));
                 var i = e("div", "sp-switch focusable " + (j.playback.subtitle ? "on" : "off"));
@@ -2831,7 +3463,7 @@
                 return a._activate = function() {}, t.appendChild(a), t
             }(), Be.about = function() {
                 var t = e("div", "settings-panel");
-                t.appendChild(e("div", "sp-title plain", "Sobre nosotros")), t.appendChild(a(e("div", "sp-hr soft"), 0, 165, 1498, 1)), t.appendChild(e("div", "sp-about-body", "Xuper TV se dedica a ofrecer a los usuarios una amplia variedad de recursos de alta calidad. Aquí encontrarás miles de películas, series, animes y canales en vivo, todo reunido en un solo lugar. Brindamos una experiencia estable, diversa y siempre actualizada, además de contenidos gratuitos para disfrutar.")), t.appendChild(e("div", "sp-about-port", "Port para LG webOS realizado por CristiancoDEV"));
+                t.appendChild(e("div", "sp-title plain", "Sobre nosotros")), t.appendChild(a(e("div", "sp-hr soft"), 0, 165, 1498, 1)), t.appendChild(e("div", "sp-about-body", "TutyTV se dedica a ofrecer a los usuarios una amplia variedad de recursos de alta calidad. Aquí encontrarás miles de películas, series, animes y canales en vivo, todo reunido en un solo lugar. Brindamos una experiencia estable, diversa y siempre actualizada, además de contenidos gratuitos para disfrutar.")), t.appendChild(e("div", "sp-about-port", "Port para LG webOS realizado por CristiancoDEV"));
                 var i = e("div", "sp-about-mail"),
                     n = e("img");
                 return n.src = "assets/original/settings/vod_email_icon.png", n.alt = "", i.appendChild(n), i.appendChild(e("span", null, "escuchamos-tv@outlook.com")), t.appendChild(i), t
@@ -2868,7 +3500,7 @@
         for (var l = 0; l < n.length; l++) {
             var d = e("div", "pb-opt focusable" + (l === o ? " is-checked" : ""));
             d.style.marginLeft = (0 === l ? 0 : 28) + "px", d.appendChild(e("div", "radio")), d.appendChild(e("span", null, n[l])), d._group = r, d._index = l, d._activate = function() {
-                "streamMode" === this._group ? (j.playback.streamMode = 1 === this._index ? "smooth" : "normal", za = {}, j.playerItem && Wa(j.playerItem)) : j.playback[this._group] = this._index, ka(), Q();
+                "streamMode" === this._group ? (j.playback.streamMode = 1 === this._index ? "smooth" : "normal", za = {}, j.playerItem && Wa(j.playerItem)) : (j.playback[this._group] = this._index, "audio" === this._group ? j.playback.audioCode = "" : "subLang" === this._group && (j.playback.subCode = "")), ka(), Q();
                 for (var e = t.querySelectorAll(".pb-opt"), i = 0; i < e.length; i++) e[i]._group === this._group && e[i].classList.toggle("is-checked", e[i]._index === this._index)
             }, s.appendChild(d)
         }
@@ -2960,36 +3592,11 @@
         Li = null;
 
     function ki(e) {
-        e = Math.max(0, Math.floor(e || 0));
-        var t = Math.floor(e / 3600),
-            i = Math.floor(e % 3600 / 60),
-            a = e % 60;
-        return r(t) + ":" + r(i) + ":" + r(a)
+        return legacyFormatPlaybackTime(e)
     }
 
     function Mi(e) {
-        if ("number" == typeof e && isFinite(e) && e > 0) return e;
-        if ("string" != typeof e) return 0;
-        var t = e.trim();
-        if (!t || "—" === t || "-" === t) return 0;
-        var i = t.match(/(\d+)\s*h(?:our|ora|s)?/i),
-            a = t.match(/(\d+)\s*m(?:in|uto|s)?/i),
-            n = t.match(/(\d+)\s*s(?:ec|eg)?/i);
-        if (i || a || n) return 3600 * (i ? parseInt(i[1], 10) : 0) + 60 * (a ? parseInt(a[1], 10) : 0) + (n ? parseInt(n[1], 10) : 0);
-        if (-1 !== t.indexOf(":")) {
-            var r = t.split(":");
-            if (2 === r.length) {
-                var o = Number(r[0]),
-                    s = Number(r[1]);
-                if (isFinite(o) && isFinite(s) && o >= 0 && s >= 0) return 60 * o + s
-            } else if (3 === r.length) {
-                o = Number(r[0]), s = Number(r[1]);
-                var l = Number(r[2]);
-                if (isFinite(o) && isFinite(s) && isFinite(l) && o >= 0 && s >= 0 && l >= 0) return 3600 * o + 60 * s + l
-            }
-        }
-        var d = Number(t);
-        return isFinite(d) && d > 0 ? d : 0
+        return legacyParsePlaybackDuration(e)
     }
     var Ii = null;
 
@@ -2999,19 +3606,30 @@
 
     function Ei(e, t) {
         if (Ie && Te && qe) {
-            Je && (e = Qe);
-            var i = Mi(t);
-            if (!i && j.playerEpisode && j.playerEpisode.duration && (i = Mi(j.playerEpisode.duration)), !i && j.playerItem && j.playerItem.duration && (i = Mi(j.playerItem.duration)), !i && we && isFinite(we.duration) && we.duration > 0 && (i = we.duration), !i && Da && Da.length) {
-                var a = Da[Da.length - 1];
-                a && a.end > 0 && (i = Math.round(a.end + 60))
-            }
-            if (e = Number(e) || 0, Ie.textContent = ki(e), !i || i <= 0) e > (i = S(j.playerItem) ? 2700 : 6300) && (i = Math.round(1.15 * e));
-            Te.textContent = ki(i);
-            var n = Math.min(100, Math.max(0, e / i * 100));
+            Je && (jn || Vn) && (e = Qe);
+            e = Number(e) || 0;
+            var i = legacyResolvePlaybackDuration(Hn ? [
+                Hd,
+                j.playerEpisode && j.playerEpisode.duration,
+                j.playerItem && j.playerItem.duration,
+                we && isFinite(we.duration) && we.duration > 0 ? zn + we.duration : 0,
+                t,
+                legacyInferEpisodeDuration(j.playerItem && j.playerItem.episodes, j.playerEpisode),
+                Da && Da.length && Da[Da.length - 1] && Da[Da.length - 1].end > 0 ? Math.round(Da[Da.length - 1].end + 60) : 0
+            ] : [
+                t,
+                j.playerEpisode && j.playerEpisode.duration,
+                j.playerItem && j.playerItem.duration,
+                we && isFinite(we.duration) && we.duration > 0 ? we.duration : 0,
+                legacyInferEpisodeDuration(j.playerItem && j.playerItem.episodes, j.playerEpisode),
+                Da && Da.length && Da[Da.length - 1] && Da[Da.length - 1].end > 0 ? Math.round(Da[Da.length - 1].end + 60) : 0
+            ], S(j.playerItem), e);
+            Ie.textContent = ki(e), Te.textContent = ki(i);
+            var n = legacyPlaybackPercent(e, i);
             if (qe.style.width = n.toFixed(2) + "%", De && (De.style.left = n.toFixed(2) + "%"), we && we.buffered && we.buffered.length > 0) try {
                 var r = we.buffered.end(we.buffered.length - 1);
                 Hn && (r += zn);
-                var o = Math.min(100, Math.max(0, r / i * 100));
+                var o = legacyPlaybackPercent(r, i);
                 Oe && (Oe.style.width = o.toFixed(2) + "%")
             } catch (e) {}
         }
@@ -3032,7 +3650,7 @@
             var i = we.currentTime || 0,
                 a = Math.max(0, Math.min(t, i + e));
             try {
-                we.currentTime = a
+                legacySeekVideo(we, a)
             } catch (e) {}
             Ei(a, we.duration), Pi(), qi(e > 0 ? "forward" : "backward")
         }
@@ -3042,13 +3660,13 @@
         if (we)
             if (we.paused) {
                 try {
-                    var e = we.play();
+                    var e = legacyPlayVideo(we);
                     e && e.catch && e.catch(function() {})
                 } catch (e) {}
                 qi("none"), Pi()
             } else {
                 try {
-                    we.pause()
+                    legacyPauseVideo(we)
                 } catch (e) {}
                 qi("pause"), Pi()
             }
@@ -3126,6 +3744,8 @@
     }
 
     function Ia(e, t) {
+        var _core = window.TutyCore;
+        if (_core && typeof _core.matchesLanguagePreference === "function") return _core.matchesLanguagePreference(e, t);
         var i = String(e || t || "").toLowerCase(),
             a = t || "es";
         return "es" === a ? /^(es|spa|esp)|espa/.test(i) : "pt" === a ? /^(pt|por)|portu/.test(i) : "en" === a && /^(en|eng|ing)|ingl/.test(i)
@@ -3137,36 +3757,89 @@
             var n = Date.now();
             if (i || !(n - La < 15e3)) {
                 La = n;
+                var _core = window.TutyCore,
+                    _seriesId = String(a._seriesId || a.id),
+                    _seasonId = String(a.seasonId || a.id);
+                if (_core && typeof _core.updatePlaybackHistory === "function") {
+                    var _episode = j.playerEpisode, _series = !!S(a),
+                        _context = {
+                            seriesId: _seriesId,
+                            seasonId: _seasonId
+                        };
+                    return X.history = _core.updatePlaybackHistory(X.history || [], a, _episode, e, t, n, _series, _context), void J(W, X)
+                }
                 for (var r = j.playerEpisode, o = String(a.id), s = [{
                         id: o,
                         title: a.title || a.name || "Contenido",
                         poster: a.poster || a.cover || "",
                         series: !!S(a),
+                        seriesId: _seriesId,
+                        seasonId: _seasonId,
                         episodeId: r && r.id ? String(r.id) : "",
                         episodeNumber: r && (r.number || r.seriesNumber) || "",
+                        episodeTitle: r && (r.title || r.name) || "",
                         position: Math.floor(e),
                         duration: Math.floor(t || a.duration || 0),
                         updatedAt: n
-                    }], l = X.history || [], d = 0; d < l.length && s.length < 30; d++) String(l[d].id) !== o && s.push(l[d]);
+                    }], l = X.history || [], d = 0; d < l.length && s.length < 30; d++) {
+                        var entry = l[d],
+                            entrySeries = entry.seriesId ? String(entry.seriesId) : String(entry.id);
+                        String(entry.id) !== o && entrySeries !== _seriesId && s.push(entry)
+                    }
                 X.history = s, J(W, X)
             }
         }
     }
-    var Ea = null;
-
     function qa(e) {
-        var t = findHistory(e) || Ea;
-        if (t && e && String(t.id) === String(e.id) && t.episodeId && e.episodes)
-            for (var i = 0; i < e.episodes.length; i++)
-                if (String(e.episodes[i].id) === t.episodeId) return j.detailEpisode = e.episodes[i], void(j.playerEpisode = e.episodes[i])
+        var t = findHistory(e);
+        if (!t || !e || !t.episodeId) return;
+        var targetSeason = t.seasonId ? String(t.seasonId) : "",
+            seasons = e.seasons || [],
+            index = -1;
+        if (targetSeason)
+            for (var i = 0; i < seasons.length; i++)
+                if (String(seasons[i].id) === targetSeason) {
+                    index = i;
+                    break
+                }
+        if (index >= 0) {
+            var season = seasons[index];
+            j.detailSeason = index;
+            if (String(season.id) !== String(e.seasonId || "")) {
+                if (season._episodes) e.seasonId = season.id, e.episodes = season._episodes;
+                else ln(e, season, function(episodes) {
+                    e.seasonId = season.id, e.episodes = episodes, season._episodes = episodes;
+                    if (j.playerEpisode && String(j.playerEpisode.id) === String(t.episodeId))
+                        for (var a = 0; a < episodes.length; a++)
+                            if (String(episodes[a].id) === String(t.episodeId)) {
+                                j.detailEpisode = episodes[a], j.playerEpisode = episodes[a];
+                                break
+                            }
+                    j.detail === e && "detail" === j.screen && ti(e)
+                })
+            }
+        }
+        t.seriesId && (e._seriesId = t.seriesId), t.title && (e.title = t.title), t.poster && (e.poster = t.poster), t.id && (e.id = t.id);
+        var episode = null;
+        for (var a = 0; a < (e.episodes || []).length; a++)
+            if (String(e.episodes[a].id) === String(t.episodeId)) {
+                episode = e.episodes[a];
+                break
+            }
+        episode || (episode = {
+            id: t.episodeId,
+            number: t.episodeNumber,
+            title: t.episodeTitle || "",
+            duration: t.duration || 0
+        }), j.detailEpisode = episode, j.playerEpisode = episode
     }
 
     function Oa(e) {
         if (!e || !e.id) return;
         for (var t = 0; t < l.length; t++)
-            if (String(l[t].id) === String(e.id)) return Ea = e, void ei(l[t]);
+            if (String(l[t].id) === String(e.id)) return void ei(l[t]);
         var i = _(e, 0);
-        i._portal = !0, Ea = e, ei(i)
+        i._portal = !0, ei(i)
     }
     var Da = [],
         Aa = {},
@@ -3174,9 +3847,7 @@
         Na = null;
 
     function Ra(e) {
-        if (!e) return 0;
-        var t = e.replace(",", ".").split(":");
-        return 3 === t.length ? 3600 * parseFloat(t[0]) + 60 * parseFloat(t[1]) + parseFloat(t[2]) : 0
+        return legacyParseSubtitleTimestamp(e)
     }
 
     function Ua(e) {
@@ -3185,29 +3856,7 @@
         try {
             var i = new XMLHttpRequest;
             i.open("GET", e.url, !0), i.onload = function() {
-                t === wa && i.status >= 200 && i.status < 300 && (Da = function(e) {
-                    var t = [];
-                    if (!e) return t;
-                    for (var i = e.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n\n"), a = 0; a < i.length; a++) {
-                        var n = i[a].trim().split("\n");
-                        if (n.length >= 2) {
-                            var r = -1 !== n[0].indexOf("--\x3e") ? n[0] : n[1],
-                                o = -1 !== n[0].indexOf("--\x3e") ? n.slice(1) : n.slice(2);
-                            if (r && -1 !== r.indexOf("--\x3e")) {
-                                var s = r.split("--\x3e"),
-                                    l = Ra(s[0].trim()),
-                                    d = Ra(s[1].trim()),
-                                    c = o.join("<br>").replace(/<font[^>]*>/gi, "").replace(/<\/font>/gi, "").trim();
-                                c && t.push({
-                                    start: l,
-                                    end: d,
-                                    text: c
-                                })
-                            }
-                        }
-                    }
-                    return t
-                }(i.responseText))
+                t === wa && i.status >= 200 && i.status < 300 && (Da = legacyParseSubtitleCues(i.responseText))
             }, i.send()
         } catch (e) {}
     }
@@ -3219,11 +3868,8 @@
     function Ba(e) {
         if (ua)
             if (ba && Da && Da.length) {
-                for (var t = null, i = 0; i < Da.length; i++)
-                    if (e >= Da[i].start && e <= Da[i].end) {
-                        t = Da[i];
-                        break
-                    } if (t) {
+                var t = legacyFindSubtitleCue(Da, e);
+                if (t) {
                     var a = '<span class="player-subtitles-text">' + t.text + "</span>";
                     ua.innerHTML !== a && (ua.innerHTML = a)
                 } else "" !== ua.innerHTML && (ua.innerHTML = "")
@@ -3290,9 +3936,11 @@
     }
 
     function Ka(e) {
-        for (var t = (e || "").split(/[,\/]/), i = ["es", "pt", "en"][Number(j.playback.audio) || 0] || "es", a = 0; a < t.length; a++)
-            if (Ia(t[a].trim(), i)) return a;
-        return 0
+        var t = (e || "").split(/[,\/]/).map(function(code) {
+                return String(code).trim()
+            }),
+            i = legacySelectTrackIndex(t, j.playback.audioCode, j.playback.audio);
+        return i >= 0 ? i : 0
     }
 
     function Ya(e) {
@@ -3322,12 +3970,11 @@
         } else {
             if (!j.playback.subtitle) return ba = !1, ya = null, void Ua(null);
             if (!t.length) return ba = !1, ya = null, void Ua(null);
-            ba = !0, ya = t[0];
-            for (var n = 0; n < t.length; n++)
-                if (Ia(t[n].lang, Ma())) {
-                    ya = t[n];
-                    break
-                } Ua(ya)
+            ba = !0;
+            var n = legacySelectTrackIndex(t.map(function(item) {
+                return item.lang || ""
+            }), j.playback.subCode, j.playback.subLang);
+            ya = n >= 0 ? t[n] : t[0], Ua(ya)
         }
     }
 
@@ -3423,38 +4070,31 @@
     }
 
     function sn(e) {
-        return e && e.seasons && e.seasons.length ? e.seasons : [{
-            id: e ? e.id : "",
-            number: 1
-        }]
+        return legacySeasonList(e)
     }
 
     function ln(e, t, i) {
-        return i = i || function() {}, e && t ? t.id === (e.seasonId || e.id) && e.episodes && e.episodes.length ? (t._episodes = e.episodes, i(e.episodes)) : t._episodes ? i(t._episodes) : t._loading ? (t._wait = t._wait || [], void t._wait.push(i)) : (t._loading = !0, t._wait = [i], void q("detail", {
+        return i = i || function() {}, e && t ? t.id === (e.seasonId || e.id) && e.episodes && e.episodes.length ? (t._episodes = e.episodes, i(e.episodes, t._item || null)) : t._episodes ? i(t._episodes, t._item || null) : t._loading ? (t._wait = t._wait || [], void t._wait.push(i)) : (t._loading = !0, t._wait = [i], void q("detail", {
             contentId: t.id
-        }, function(e, i) {
+        }, function(e, response) {
             t._loading = !1;
-            var a = !e && i && !1 !== i.returnValue && i.episodes ? i.episodes : [];
-            a.length && (t._episodes = a);
+            var item = !e && response && !1 !== response.returnValue && response.item ? response.item : null,
+                a = !e && response && !1 !== response.returnValue && response.episodes ? response.episodes : [];
+            a.length && (t._episodes = a), item && (t._item = item);
             var n = t._wait || [];
             t._wait = [];
             for (var r = 0; r < n.length; r++) try {
-                n[r](a)
+                n[r](a, item)
             } catch (e) {}
         })) : i([])
     }
 
     function dn(e, t, i) {
-        var a = t && void 0 !== t.number && null !== t.number ? t.number : i + 1,
-            n = String(t && (t.title || t.name) || "").trim(),
-            r = String(e && e.title || "").trim().replace(/[\s\-–_]*[TtSs]\d+$/, "");
-        return r && 0 === n.indexOf(r) && (n = n.substring(r.length)), (n = n.replace(/^[\s\-–_:.]+/, "").trim()) && !/^(?:[TtSs]?\d+[\s\-–_.:]*)+$/.test(n) || (n = "Episodio " + a), n
+        return legacyEpisodeDisplayTitle(e, t, i)
     }
 
     function cn(e) {
-        var t = String(e && e.duration || "").trim(),
-            i = /^(\d+):(\d+)(?::(\d+))?$/.exec(t);
-        return i ? i[3] ? (parseInt(i[1], 10) || 0) + " h " + (parseInt(i[2], 10) || 0) + " min" : (parseInt(i[1], 10) || 0) + " min" : t
+        return legacyFormatEpisodeDuration(e && e.duration)
     }
 
     function pn() {
@@ -3574,15 +4214,10 @@
     function yn() {
         var e = j.playerItem;
         if (e && S(e) && "player" === j.screen) {
-            for (var i = function(e) {
-                    var t = sn(e),
-                        i = t[j.playerSeasonIndex] || t[0];
-                    return i ? i.id === (e.seasonId || e.id) && e.episodes && e.episodes.length ? e.episodes : i._episodes || [] : []
-                }(e), a = j.playerEpisode, n = -1, r = 0; r < i.length; r++)
-                if (a && (i[r].id === a.id || i[r].number === a.number)) {
-                    n = r;
-                    break
-                } if (!(n < 0))
+            var i = legacySeasonEpisodes(e, j.playerSeasonIndex),
+                a = j.playerEpisode,
+                n = legacyFindEpisodeIndex(i, a);
+            if (!(n < 0))
                 if (function(e) {
                         if (_e || (_e = t("next-episode-loading")), _e) {
                             var i = e && (e.backdrop || e.landscape || e.poster) || "";
@@ -3591,12 +4226,12 @@
                     }(e), n + 1 < i.length) gn(e, i[n + 1]);
                 else {
                     var o = sn(e),
-                        s = (j.playerSeasonIndex || 0) + 1,
-                        l = o[s];
+                        s = legacyNextSeasonIndex(o, Number(j.playerSeasonIndex) || 0),
+                        l = s >= 0 ? o[s] : null;
                     if (l) {
                         var d = a;
-                        ln(e, l, function(t) {
-                            j.playerItem === e && j.playerEpisode === d && "player" === j.screen && (t && t.length ? (j.detailSeason = s, j.playerSeasonIndex = s, e.seasonId = l.id || e.seasonId, e.episodes = t, l._episodes = t, gn(e, t[0])) : mn())
+                        ln(e, l, function(t, item) {
+                            j.playerItem === e && j.playerEpisode === d && "player" === j.screen && (t && t.length ? (item && R(e, item), e.seasons = o, j.detailSeason = s, j.playerSeasonIndex = s, e.seasonId = l.id || e.seasonId, e.episodes = t, l._episodes = t, j.detail === e && (j.detailNeedsRebuild = !0), gn(e, t[0])) : mn())
                         })
                     } else mn()
                 }
@@ -3612,7 +4247,7 @@
     }
 
     function Cn() {
-        var e = "relay" === j.streamMode || "smooth" === j.streamMode;
+        var e = legacyRelayStreamMode(j.streamMode);
         if (ji) {
             ji.classList.toggle("is-selected", e);
             var t = ji.querySelector(".psv-check");
@@ -3678,7 +4313,7 @@
             for (var n = 0; n < a.length; n++)(function(t) {
                 var i = e("button", "dps-btn focusable");
                 i.textContent = t.label, ga === t.index && i.classList.add("is-selected"), i._activate = function() {
-                    In(t.index), Ln(), en()
+                    In(t.index, t.code), Ln(), en()
                 }, aa.appendChild(i)
             })(a[n])
         }
@@ -3698,7 +4333,7 @@
                 for (var r = 0; r < t.length; r++)(function(t) {
                     var i = e("button", "dps-btn focusable");
                     i.textContent = Mn(t.lang || "Sub"), ya && ya.url === t.url && i.classList.add("is-selected"), i._activate = function() {
-                        ya = t, ba = !0, Ca = !0, Ua(t), kn(), en()
+                        ya = t, ba = !0, Ca = !0, j.playback.subtitle = !0, j.playback.subCode = t.lang || "", j.playback.subLang = legacyLanguagePreference(t.lang, j.playback.subLang), Q(), Ua(t), kn(), en()
                     }, la.appendChild(i)
                 })(t[r])
             }
@@ -3720,12 +4355,8 @@
         return /^(spa|esp|es|castellano|latino)$/.test(t) ? "Español" : /^(eng|ing|en)$/.test(t) ? "Inglés" : /^(jpn|jap|ja)$/.test(t) ? "Japonés" : /^(kor|cor|ko)$/.test(t) ? "Coreano" : /^(por|pt)$/.test(t) ? "Portugués" : /^(fra|fre|fr|franc)$/.test(t) ? "Francés" : /^(ita|it)$/.test(t) ? "Italiano" : /^(deu|ger|de)$/.test(t) ? "Alemán" : /^(chi|zho|zh)$/.test(t) ? "Chino" : t ? t.charAt(0).toUpperCase() + t.slice(1) : "Pista"
     }
 
-    function In(e) {
-        if (ga = e, ma = !0, "player" === j.screen && we)
-            if (Hn) {
-                var t = zn + (we.currentTime || 0);
-                rr(Hn + "?start=" + Math.floor(t) + "&a=" + e)
-            } else "relay" !== j.streamMode && "smooth" !== j.streamMode && (j.streamMode = "relay", Cn()), Tn()
+    function In(e, code) {
+        ga = e, ma = !0, j.playback.audioCode = code || "", j.playback.audio = legacyLanguagePreference(code, j.playback.audio), Q(), "player" === j.screen && we && (Hn ? rr(Hn + "?start=" + Math.floor(zn + (we.currentTime || 0)) + "&a=" + e) : ("relay" !== j.streamMode && "smooth" !== j.streamMode && (j.streamMode = "relay", Cn()), Tn()))
     }
 
     function Tn() {
@@ -3734,11 +4365,11 @@
                 t = j.playerItem;
             ar(), nr("Cambiando reproductor…"), or(t, function(t) {
                 if (t) {
-                    if (-1 !== t.indexOf(":8787/s/")) {
+                    if (/\/s\/[0-9a-f]+\.mp4/i.test(t)) {
                         var i = t + "?start=" + Math.floor(e);
                         ga && (i += "&a=" + ga), rr(i)
                     } else if (rr(t), e > 0) try {
-                        we.currentTime = e
+                        legacySeekVideo(we, e)
                     } catch (e) {}
                 } else j.streamError || nr("Sin fuente de reproducción")
             })
@@ -3771,17 +4402,19 @@
                     var e = Ya(Aa[Ja(Ha())]);
                     !ya && e.length && (ya = e[0]), ya && Ua(ya)
                 } else Ua(null);
-                kn(), en()
+                j.playback.subtitle = ba, Q(), kn(), en()
             }), da)
             for (var r = da.querySelectorAll(".dps-btn"), o = 0; o < r.length; o++)(function(e) {
                 e._activate = function() {
-                    xa = e.getAttribute("data-size") || "normal", Fa(), kn()
+                    var value = e.getAttribute("data-size") || "normal";
+                    xa = value, j.playback.size = Math.max(0, ["normal", "big", "small"].indexOf(value)), Q(), Fa(), kn()
                 }
             })(r[o]);
         if (ca)
             for (var s = ca.querySelectorAll(".dps-btn"), l = 0; l < s.length; l++)(function(e) {
                 e._activate = function() {
-                    Sa = e.getAttribute("data-style") || "white", Fa(), kn()
+                    var value = e.getAttribute("data-style") || "white";
+                    Sa = value, j.playback.style = Math.max(0, ["white", "yellow", "black"].indexOf(value)), Q(), Fa(), kn()
                 }
             })(s[l]);
         pa && (pa._activate = function() {
@@ -4040,6 +4673,7 @@
         Bn = 0,
         Hn = "",
         zn = 0,
+        Hd = 0,
         Vn = 0,
         jn = null,
         Wn = null;
@@ -4050,8 +4684,8 @@
 
     function Xn(e) {
         Wn || j.streamError || (Wn = setTimeout(function() {
-            Wn = null, !j.streamError && we && !we.paused && we.readyState < 3 && nr(e)
-        }, 700))
+            Wn = null, legacyShouldReportBuffering(j.streamError, !!we, we ? we.paused : !1, we ? we.readyState : 0) && nr(e)
+        }, legacyPlaybackTiming().bufferNoticeMs))
     }
     var Gn = !1,
         Jn = null;
@@ -4069,40 +4703,73 @@
                     t = Math.max(0, e + Vn);
                 Vn = 0;
                 var i = j.playerItem && j.playerItem.duration || we.duration || 0;
-                i > 0 && t > i - 2 && (t = Math.max(0, i - 2)), zn = Math.floor(t);
+                zn = Math.floor(legacyLimitSeek(t, i, !0));
+                Qe = zn;
                 var a = Hn + "?start=" + zn;
-                return Jn = setTimeout(Qn, 12e3), void rr(a)
+                return Jn = setTimeout(Qn, legacyPlaybackTiming().relaySeekResetMs), void rr(a)
             }
             var n = (we.currentTime || 0) + Vn;
             Vn = 0;
             var r = we.duration || 0;
-            n < 0 && (n = 0), r > 0 && n > r - 1 && (n = r - 1);
+            n = legacyLimitSeek(n, r, !1);
+            Qe = n;
             try {
-                we.currentTime = n
+                legacySeekVideo(we, n)
             } catch (e) {}
         } else Vn = 0
     }
 
     function Oi(e) {
-        we && (Vn += e, jn && clearTimeout(jn), jn = setTimeout(Kn, 800), qi(e > 0 ? "fwd" : "rew"), setTimeout(function() {
+        we && (Vn += e, jn && clearTimeout(jn), jn = setTimeout(Kn, legacyPlaybackTiming().seekCommitMs), qi(e > 0 ? "forward" : "backward"), setTimeout(function() {
             qi("none")
         }, 600))
     }
 
     function Yn() {
-        return we ? Hn ? zn + (we.currentTime || 0) : we.currentTime || 0 : 0
+        return we ? legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn) : 0
     }
 
     function Zn() {
+        if (Hn) {
+            if (Hd > 0) return Hd;
+            var meta = (j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0) || (j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0) || legacyInferEpisodeDuration(j.playerItem && j.playerItem.episodes, j.playerEpisode);
+            if (meta) return meta;
+            return we && isFinite(we.duration) && we.duration > 0 ? zn + we.duration : 0
+        }
         var e = we && isFinite(we.duration) && we.duration > 0 ? we.duration : 0;
-        return !e && j.playerEpisode && j.playerEpisode.duration && (e = Mi(j.playerEpisode.duration)), !e && j.playerItem && j.playerItem.duration && (e = Mi(j.playerItem.duration)), e || 0
+        return !e && j.playerEpisode && j.playerEpisode.duration && (e = Mi(j.playerEpisode.duration)), !e && j.playerItem && j.playerItem.duration && (e = Mi(j.playerItem.duration)), !e && (e = legacyInferEpisodeDuration(j.playerItem && j.playerItem.episodes, j.playerEpisode)), e || 0
+    }
+
+    function probeRelayDuration(source) {
+        var expected = String(source || "").split("?")[0],
+            endpoint = legacyRelayDurationEndpoint(source),
+            attempts = 0;
+        if (!endpoint || "undefined" == typeof XMLHttpRequest) return;
+
+        function poll() {
+            if (Hn !== expected) return;
+            var xhr = new XMLHttpRequest;
+            xhr.open("GET", endpoint, !0), xhr.timeout = 2e3, xhr.onload = function() {
+                if (Hn !== expected) return;
+                try {
+                    var data = JSON.parse(xhr.responseText),
+                        duration = Number(data && data.duration) || 0;
+                    if (duration > 0) return Hd = duration, void("vod" === j.playerMode && Ei(Yn(), Zn()))
+                } catch (e) {}
+                ++attempts < 20 && setTimeout(poll, 1e3)
+            }, xhr.onerror = xhr.ontimeout = function() {
+                Hn === expected && ++attempts < 20 && setTimeout(poll, 1e3)
+            };
+            try {
+                xhr.send()
+            } catch (e) {}
+        }
+        poll()
     }
 
     function er(e) {
         if (Je) {
-            var t = Qe,
-                i = Yn();
-            Je = !1, Ee && Ee.classList.remove("is-scrubbing"), e && Math.abs(t - i) >= 1 && Oi(t - i), Ei(Yn(), Zn()), tt(ye), Ai()
+            Je = !1, Ee && Ee.classList.remove("is-scrubbing"), Ei(jn || Vn ? Qe : Yn(), Zn()), tt(ye), Ai()
         }
     }
 
@@ -4114,19 +4781,14 @@
     function ir(e) {
         var t = Zn();
         if (Je && t) {
-            var i = Math.max(60, Math.min(300, Math.round(.05 * t)));
-            Ei(Qe = Math.max(0, Math.min(t - 1, Qe + e * i)), t)
+            Qe = Math.max(0, Math.min(t - 1, (jn || Vn ? Qe : Yn()) + 10 * e)), Ei(Qe, t), Oi(10 * e)
         }
     }
 
     function ar() {
-        "vod" === j.playerMode && we && Ta(Hn ? zn + (we.currentTime || 0) : we.currentTime || 0, we && isFinite(we.duration) && we.duration > 0 ? we.duration : Mi(j.playerEpisode && j.playerEpisode.duration || j.playerItem && j.playerItem.duration || 0), !0);
-        j.streamError = "", $n(), nr(""), qi("none"), Ti(), jn && (clearTimeout(jn), jn = null, Vn = 0), Qn(), Hn = "", zn = 0, Bn++;
-        var e = Un;
-        if (!e && Fn && -1 !== Fn.indexOf("127.0.0.1")) {
-            var t = /^(http:\/\/127\.0\.0\.1:\d+)/.exec(Fn);
-            t && (e = t[1])
-        }
+        legacyShouldSaveHistoryBeforeReset(j.playerMode, !!we) && Ta(legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn), legacyResolvePlaybackTotal(we.duration, j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0, j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0), !0);
+        j.streamError = "", $n(), nr(""), qi("none"), Ti(), jn && (clearTimeout(jn), jn = null, Vn = 0), Qn(), Hn = "", zn = 0, Hd = 0, Bn++;
+        var e = legacyResolveAbortServiceBase(Un, Fn);
         if (e) try {
             var i = new XMLHttpRequest;
             i.open("GET", e + "/media/abort", !0), i.send()
@@ -4134,32 +4796,28 @@
         try {
             q("abortMedia", {}, function() {})
         } catch (e) {}
-        window.__xuperHls && (function() {
-            try {
-                window.__xuperHls.destroy()
-            } catch (e) {}
-        })(), window.__xuperHls = null;
+        legacyDestroyHls("__tutyHls");
         if (Fn = "", Un = "", we) {
             try {
                 we.onerror = null
             } catch (e) {}
             try {
-                we.pause()
+                legacyPauseVideo(we)
             } catch (e) {}
             try {
-                we.currentTime = 0
+                legacySeekVideo(we, 0)
             } catch (e) {}
             we.removeAttribute("src");
             try {
-                we.src = ""
+                legacySetVideoSource(we, "")
             } catch (e) {}
             for (; we.firstChild;) we.removeChild(we.firstChild);
-            we.classList.remove("is-active"), xe && (xe.style.display = "block")
+            legacyApplyPlaybackSurface(we, xe, !1)
         }
     }
 
     function nr(e) {
-        Se || (Se = t("player-status")), Se && (e ? (Se.textContent = e, Se.classList.add("is-active")) : (Se.textContent = "", Se.classList.remove("is-active")))
+        Se || (Se = t("player-status")), legacyApplyPlayerStatus(Se, e)
     }
 
     function rr(e, t) {
@@ -4170,47 +4828,56 @@
             var applyResume = function() {
                 if (resumeAt > 0) {
                     try {
-                        we.currentTime = resumeAt
+                        legacySeekVideo(we, resumeAt)
                     } catch (e) {}
                     resumeAt = 0
                 }
             };
             j.noHistorySave = !0, ar(), j.noHistorySave = !1, Fn = e;
             var a = /^(http:\/\/127\.0\.0\.1:\d+)/.exec(e);
-            if (a && (Un = a[1]), -1 !== e.indexOf(":8787/s/")) {
+            if (a && (Un = a[1]), /\/s\/[0-9a-f]+\.mp4/i.test(e)) {
                 Hn = e.split("?")[0];
                 var n = /[?&]start=(\d+)/.exec(e);
-                zn = n ? parseInt(n[1], 10) : 0
+                zn = n ? parseInt(n[1], 10) : 0, Hd = 0, probeRelayDuration(Hn)
             } else Hn = "", zn = 0;
             nr("Conectando con el vídeo…"), j.streamError = "";
             try {
                 we.preload = "auto"
             } catch (e) {}
-            var r = j.playerItem && j.playerItem.streamMime || "",
-                o = -1 !== e.indexOf(".m3u8") || -1 !== r.indexOf("mpegurl") || !(!j.playerItem || !j.playerItem.isHls),
-                s = o ? "application/vnd.apple.mpegurl" : -1 !== e.indexOf(".mp4") || -1 !== r.indexOf("mp4") ? "video/mp4" : "video/mp2t";
-            we.onerror = function() {
+            var descriptor = legacyDescribePlaybackStream(e, j.playerItem && j.playerItem.streamMime || "", j.playerItem && j.playerItem.isHls),
+                o = descriptor.isHls,
+                s = descriptor.contentType;
+            legacyWirePlaybackVideoEvents(we, {
+                error: function() {
                 mn(), Qn();
-                var t = we.error && we.error.code;
-                if (4 === t && "live" === j.playerMode && o && !i) {
+                var t = we.error && we.error.code,
+                    retry = legacyNativeRetry(t, j.playerMode, j.streamMode, o, i, !!j.playerItem);
+                if ("native-hls" === retry) {
                     var a = cr;
-                    return nr("Reintentando señal con compatibilidad webOS…"), void setTimeout(function() {
-                        "live" === j.playerMode && cr === a && rr(e, {
+                    return nr("Reintentando señal con compatibilidad webOS…"), void legacySchedulePlaybackRetry(function() {
+                        return "live" === j.playerMode && cr === a
+                    }, function() {
+                        rr(e, {
                             nativeHls: !0
                         })
-                    }, 0)
+                    })
                 }
-                if (4 === t && "vod" === j.playerMode && "normal" === j.streamMode && j.playerItem) {
+                if ("compatible-vod" === retry) {
                     var n = j.playerItem,
                         r = ja(n);
-                    if (Va !== r) return Va = r, $a(n, !0), nr("Reintentando película en modo compatible…"), void setTimeout(function() {
-                        "vod" === j.playerMode && j.playerItem === n && "smooth" === j.streamMode && Tn()
-                    }, 0)
+                    if (Va !== r) return Va = r, $a(n, !0), nr("Reintentando película en modo compatible…"), void legacySchedulePlaybackRetry(function() {
+                        return "vod" === j.playerMode && j.playerItem === n && "smooth" === j.streamMode
+                    }, function() {
+                        Tn()
+                    })
                 }
-                j.streamError = "No se pudo abrir el stream (código " + (t || "error") + ")", we.classList.remove("is-active"), xe && (xe.style.display = "block"), nr(j.streamError)
-            }, we.onloadeddata = v, we.oncanplay = function() {
+                j.streamError = "No se pudo abrir el stream (código " + (t || "error") + ")", legacyApplyPlaybackSurface(we, xe, !1), nr(j.streamError)
+            },
+                loadeddata: v,
+                canplay: function() {
                 Qn(), v()
-            }, we.onloadedmetadata = function() {
+            },
+                loadedmetadata: function() {
                 if (v(), "vod" === j.playerMode) {
                     var e = Hn ? zn : we.currentTime || 0,
                         t = we && isFinite(we.duration) && we.duration > 0 ? we.duration : 0,
@@ -4219,60 +4886,66 @@
                     Ei(e, t || i || a || 0)
                 }
                 applyResume()
-            }, we.ondurationchange = function() {
+            },
+                durationchange: function() {
                 if ("vod" === j.playerMode) {
-                    var e = Hn ? zn + (we.currentTime || 0) : we.currentTime || 0,
-                        t = we && isFinite(we.duration) && we.duration > 0 ? we.duration : 0,
-                        i = j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0,
-                        a = j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0;
-                    Ei(e, t || i || a || 0)
+                    var position = legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn),
+                        total = legacyResolvePlaybackTotal(we.duration, j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0, j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0);
+                    Ei(position, total)
                 }
-            }, we.onplaying = function() {
+            },
+                playing: function() {
                 mn(), v()
-            }, we.onended = function() {
+            },
+                ended: function() {
                 "vod" === j.playerMode && yn()
-            }, we.ontimeupdate = function() {
+            },
+                timeupdate: function() {
                 if (we.currentTime > 0 && v(), "vod" === j.playerMode) {
-                    var e = Hn ? zn + (we.currentTime || 0) : we.currentTime || 0,
-                        t = we && isFinite(we.duration) && we.duration > 0 ? we.duration : 0,
-                        i = j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0,
-                        a = j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0,
-                        n = t || i || a || 0;
-                    Ei(e, n), Ba(e), Ta(e, n)
+                    var position = legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn),
+                        total = legacyResolvePlaybackTotal(we.duration, j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0, j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0);
+                    Ei(position, total), Ba(position), Ta(position, total)
                 }
-            }, we.onpause = function() {
-                (Ti(), "vod" === j.playerMode) && (Ta(Hn ? zn + (we.currentTime || 0) : we.currentTime || 0, we && isFinite(we.duration) && we.duration > 0 ? we.duration : Mi(j.playerEpisode && j.playerEpisode.duration || j.playerItem && j.playerItem.duration || 0), !0), qi("pause"))
-            }, we.onplay = function() {
+            },
+                pause: function() {
+                (Ti(), "vod" === j.playerMode) && (Ta(legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn), legacyResolvePlaybackTotal(we.duration, j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0, j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0), !0), qi("pause"))
+            },
+                play: function() {
                 "vod" === j.playerMode && (qi("none"), Ti(), Ii = setInterval(function() {
-                    if ("player" === j.screen && "vod" === j.playerMode && we && !we.paused) {
-                        var e = Hn ? zn + (we.currentTime || 0) : we.currentTime || 0,
-                            t = we && isFinite(we.duration) && we.duration > 0 ? we.duration : 0,
-                            i = j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0,
-                            a = j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0,
-                            n = t || i || a || 0;
-                        Ei(e, n), Ba(e), Ta(e, n)
+                    if (legacyShouldTickPlayback(j.screen, j.playerMode, !!we, we ? we.paused : !0)) {
+                        var position = legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn),
+                            total = legacyResolvePlaybackTotal(we.duration, j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0, j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0);
+                        Ei(position, total), Ba(position), Ta(position, total)
                     }
-                }, 500))
-            }, we.onwaiting = function() {
-                Xn("Cargando vídeo…")
-            }, we.onstalled = function() {
-                Xn("Conectando…")
-            };
-            var useHls = o && !i && !/webOS|SmartTV|Large Screen/i.test(navigator.userAgent || "") && window.Hls && window.Hls.isSupported();
+                }, legacyPlaybackTiming().historyTickMs))
+            },
+                waiting: function() {
+                Xn("Cargando vídeo…"), "vod" === j.playerMode && Ei(Yn(), Zn())
+            },
+                stalled: function() {
+                Xn("Conectando…"), "vod" === j.playerMode && Ei(Yn(), Zn())
+            },
+                seeking: function() {
+                "vod" === j.playerMode && Ei(Yn(), Zn())
+            },
+                seeked: function() {
+                "vod" === j.playerMode && Ei(Yn(), Zn())
+            },
+                progress: function() {
+                "vod" === j.playerMode && Ei(Yn(), Zn())
+            }
+            });
+            var useHls = legacyShouldUseHls(o, i, legacyNativeTvPlayback(), !!(window.Hls && window.Hls.isSupported()));
             if (useHls) {
-                window.__xuperHls && (function() {
-                    try {
-                        window.__xuperHls.destroy()
-                    } catch (e) {}
-                })(), window.__xuperHls = null;
+                legacyDestroyHls("__tutyHls");
                 try {
-                    we.pause()
+                    legacyPauseVideo(we)
                 } catch (e) {}
                 try {
                     we.removeAttribute("src")
                 } catch (e) {}
                 try {
-                    we.src = ""
+                    legacySetVideoSource(we, "")
                 } catch (e) {}
                 for (; we.firstChild;) we.removeChild(we.firstChild);
                 try {
@@ -4283,7 +4956,13 @@
                         backBufferLength: 30
                     }),
                     hlsPlay;
-                window.__xuperHls = hls, hls.on(window.Hls.Events.ERROR, function(e, t) {
+                window.__tutyHls = hls, legacyWireHlsPlaybackEvents(hls, window.Hls.Events, function(e, t) {
+                    var _core = window.TutyCore;
+                    if (_core && typeof _core.handleHlsError === "function") return _core.handleHlsError(hls, t, function() {
+                        return window.Hls.ErrorTypes
+                    }, function() {
+                        j.streamError = "No se pudo abrir el stream (HLS)", nr(j.streamError)
+                    });
                     if (t && t.fatal)
                         if (t.type === window.Hls.ErrorTypes.NETWORK_ERROR) try {
                             hls.startLoad()
@@ -4291,15 +4970,15 @@
                             hls.recoverMediaError()
                         } catch (e) {}
                     else j.streamError = "No se pudo abrir el stream (HLS)", nr(j.streamError)
-                }), hls.on(window.Hls.Events.MANIFEST_PARSED, function() {
+                }, function() {
                     try {
-                        var e = we.play();
+                        var e = legacyPlayVideo(we);
                         e && e.catch && e.catch(function() {})
                     } catch (e) {}
                     applyResume()
-                }), hls.loadSource(e), hls.attachMedia(we), we.classList.add("is-active"), xe && (xe.style.display = "none");
+                }), legacyLoadHls(we, hls, e), legacyApplyPlaybackSurface(we, xe, !0);
                 try {
-                    hlsPlay = we.play(), hlsPlay && hlsPlay.catch && hlsPlay.catch(function() {})
+                    hlsPlay = legacyPlayVideo(we), hlsPlay && hlsPlay.catch && hlsPlay.catch(function() {})
                 } catch (e) {}
                 return
             }
@@ -4332,16 +5011,16 @@
                     we.mediaOption = null
                 } catch (e) {}
                 try {
-                    we.src = e
+                    legacySetVideoSource(we, e)
                 } catch (e) {}
             }
             try {
-                we.currentTime = 0
+                legacySeekVideo(we, 0)
             } catch (e) {}
-            we.classList.add("is-active"), xe && (xe.style.display = "none");
+            legacyApplyPlaybackSurface(we, xe, !0);
             try {
-                o && we.load();
-                var u = we.play();
+                o && legacyLoadVideo(we);
+                var u = legacyPlayVideo(we);
                 u && u.catch && u.catch(function() {
                     we.error || (j.streamError = "Pulsa OK para iniciar la reproducción", nr(j.streamError))
                 })
@@ -4363,7 +5042,7 @@
                 a = {
                     contentId: e.id
                 };
-            a.playbackMode = j.streamMode, a.forceRelay = "smooth" === j.streamMode || "relay" === j.streamMode || resumeAt > 0, a.trackIndex = j.trackIndex || 0;
+            a.playbackMode = j.streamMode, a.forceRelay = legacyForceRelay(j.streamMode, resumeAt), a.trackIndex = j.trackIndex || 0;
             var n = Aa[Ja(e)];
             if (n && !ma && (ga = Ka(n.audio)), a.audioTrack = ga || 0, S(e)) {
                 var r = j.playerEpisode,
@@ -4381,13 +5060,14 @@
                     if (n || !s || !1 === s.returnValue) return j.resumePosition = 0, j.streamError = "No se pudo resolver el título" + (n ? ": " + n : ""), nr(j.streamError), t("");
                     e.streamMime = s.mime || "", e.streamCodec = s.codec || "", s.duration > 0 ? (e.duration = s.duration, j.playerEpisode && (j.playerEpisode.duration = s.duration)) : e.duration = e.duration || 0, e.subtitles = s.subtitles || [], e.streamAudioInfo = s.audio || "", e.isHls = !!s.isHls;
                     try {
-                        window.__xuperStreamInfo = {
+                        window.__tutyStreamInfo = {
                             selectedTrack: s.selectedTrack || {},
                             availableTracks: s.availableTracks || []
                         }
                     } catch (e) {}
-                    var l = s.proxyPath || s.url || "";
-                    resumeAt > 0 && /:8787\/s\//.test(l) && (l += (-1 !== l.indexOf("?") ? "&" : "?") + "start=" + Math.floor(resumeAt), j.resumePosition = 0), t(l)
+                    var l = s.proxyPath || s.url || "",
+                        relayResume = legacyRelayResumeStart(l, resumeAt);
+                    l = relayResume.url, relayResume.consumed && (j.resumePosition = 0), t(l)
                 }
             }
 
@@ -4399,7 +5079,7 @@
             }
             resolveCall(a.forceRelay)
         }
-        if (S(e) && !j.playerEpisode && (!e.episodes || !e.episodes.length) && !e._detailsLoaded) return nr("Cargando capítulos…"), void U(e, function() {
+        if (legacyShouldLoadSeriesEpisodesBeforePlay(e, j.playerEpisode)) return nr("Cargando capítulos…"), void U(e, function() {
             i === Bn && a()
         });
         a()
@@ -4426,21 +5106,27 @@
     function lr(e, i) {
         ye || En();
         var a = !i || !j.playerEpisode || j.playerEpisode === i || j.playerEpisode.id === i.id,
-            n = "detail" === j.screen && we && !!we.src && j.playerItem === e && a;
+            sameItem = j.playerItem === e,
+            hasSession = !!we && legacyHasPlaybackSession(we.src, we.currentSrc, Fn, j.streamError),
+            n = legacyShouldReusePlaybackSession("detail" === j.screen, hasSession, sameItem, a);
+        if (!n && sameItem && a && we) {
+            var currentPosition = legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn);
+            currentPosition > 0 && (j.resumePosition = currentPosition)
+        }
         j.playerMode = "vod", e && j.playerItem !== e && Xa(), e && (j.playerItem = e), i && (j.playerEpisode = i), e && Wa(e), j.playerReturn = {
             screen: "detail",
             focus: j.focus
         };
         var r = t("screen-player"),
             o = t("screen-detail");
-        r && (r.classList.remove("is-mini"), r.classList.add("is-active")), o && o.classList.remove("is-active"), j.screen = "player", ye.classList.add("is-vod"), vr(), tt(ye), Ri(), n || sr(j.playerItem, j.playerEpisode)
+        legacyApplyDetailPlayerTransition(r, o), j.screen = "player", legacyApplyPlayerModeClass(ye, !0), vr(), tt(ye), Ri(), n || sr(j.playerItem, j.playerEpisode)
     }
 
     function dr(e, t, i) {
         "vod" !== e || "detail" !== j.screen ? (ye || En(), "live" === e && Nt(), j.playerMode = e, t && j.playerItem !== t && Xa(), j.playerItem = t || null, j.playerEpisode = i || null, "vod" === e && t && Wa(t), j.playerReturn = {
             screen: j.screen,
             focus: j.focus
-        }, j.channelsOpen = !1, be.classList.remove("is-active"), Ce.classList.remove("is-active"), ye.classList.toggle("is-vod", "vod" === e), vr(), nt("player"), tt(ye), vr(), "vod" === e ? (Ri(), sr(j.playerItem, j.playerEpisode)) : (Pi(), ur(F[j.channel]))) : lr(t, i)
+        }, j.channelsOpen = !1, be.classList.remove("is-active"), Ce.classList.remove("is-active"), legacyApplyPlayerModeClass(ye, "vod" === e), vr(), nt("player"), tt(ye), vr(), "vod" === e ? (Ri(), sr(j.playerItem, j.playerEpisode)) : (Pi(), ur(F[j.channel]))) : lr(t, i)
     }
     var cr = 0,
         pr = null;
@@ -4462,7 +5148,7 @@
                     }
                 })
             };
-            t ? i() : pr = setTimeout(i, 180)
+            t ? i() : pr = setTimeout(i, legacyResolveLiveResolveDelay(!1))
         }
     }
 
@@ -4542,16 +5228,14 @@
 
     function yr() {
         var e, i;
-        mr(), window.addEventListener("resize", mr, !1), document.addEventListener("keydown", lt, !1), document.addEventListener("keyup", function(e) {
-                461 !== (e.keyCode || e.which) && "Back" !== e.key && "GoBack" !== e.key || lt(e)
-            }, !1), window.addEventListener("popstate", function() {
+        mr(), window.addEventListener("resize", mr, !1), legacyInstallNavigation(document, lt), window.addEventListener("popstate", function() {
                 ot()
             }, !1), document.addEventListener("click", function(e) {
                 var t = n(e.target, ".focusable");
                 t && (tt(t, !0), t._activate && t._activate())
             }), oi(),
             function() {
-                if (E() && window.PalmServiceBridge) {
+                if (legacyCanUseLuna()) {
                     var e = p.serviceId || "com.webosflux.xuptertv.fidelity.service";
                     try {
                         window.webOS.service.request("luna://" + e, {
@@ -4575,7 +5259,7 @@
                         } catch (e) {}
                     }, 15e3)
                 }
-            }(), Ke = setTimeout(dt, 2600), N(), Bt(), window.__xuper = {
+            }(), Ke = setTimeout(dt, 2600), N(), Bt(), window.__tuty = {
                 version: "4.34.4",
                 state: j,
                 vod: l,

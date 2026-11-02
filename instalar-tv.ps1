@@ -1,8 +1,8 @@
 ﻿<#
-  Instalador de XuperTV para televisores LG webOS 4.
+  Instalador de TutyTV para televisores LG webOS 4.
 
   Pensado para gente sin conocimientos tecnicos: se ejecuta con doble clic en
-  INSTALAR-XUPERTV.bat, pregunta la IP del televisor y hace todo lo demas.
+  INSTALAR-TUTYTV.bat, pregunta la IP del televisor y hace todo lo demas.
 
   Que hace:
     1. Busca el IPK junto al instalador (o en dist/).
@@ -16,7 +16,7 @@
   No necesita Node.js ni ares-cli: usa el cliente SSH que ya trae Windows 10/11.
 
   Uso normal:
-    Doble clic en INSTALAR-XUPERTV.bat
+    Doble clic en INSTALAR-TUTYTV.bat
 
   Uso avanzado (sin preguntas):
     powershell -ExecutionPolicy Bypass -File instalar-tv.ps1 -Ipk ruta\app.ipk -TvHost 192.168.1.50
@@ -450,7 +450,7 @@ function Get-TvKey([string]$ip, [string]$passphrase) {
         return ''
     }
     Remove-TvKey
-    $dir = Join-Path $env:TEMP ('xuper-tvkey-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
+    $dir = Join-Path $env:TEMP ('tuty-tvkey-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
     $path = Join-Path $dir 'webos_rsa'
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
@@ -539,10 +539,10 @@ function Get-KeyAuthDebug([string]$keyPath, [string]$user = $TvUser) {
             '-o', 'NumberOfPasswordPrompts=0', '-p', "$Port") + (Get-KeyAlgOpts) + $script:SshOpts + @(
             ($user + '@' + $TvHost), 'true')
         $out = & ssh @a 2>&1 | Out-String
-        $logPath = Join-Path $env:TEMP 'diagnostico-xupertv.txt'
+        $logPath = Join-Path $env:TEMP 'diagnostico-tutytv.txt'
         try {
             $sshVer = ([regex]::Match(((& ssh -V 2>&1) | Out-String), 'OpenSSH[_A-Za-z0-9.]+')).Value
-            $head = 'XuperTV - diagnostico de la llave de seguridad' + "`r`n" +
+            $head = 'TutyTV - diagnostico de la llave de seguridad' + "`r`n" +
                 ('TV      : ' + $user + '@' + $TvHost + ':' + $Port) + "`r`n" +
                 ('Fecha   : ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')) + "`r`n" +
                 ('Huella  : ' + (((& ssh-keygen -lf $keyPath 2>&1) | Out-String).Trim())) + "`r`n" +
@@ -577,7 +577,7 @@ function Send-FileToTv([string]$localPath, [string]$remotePath, [string]$pass) {
     # (-O) falla con "sh: scp: not found". Lo que si existe es el subsistema
     # sftp del sshd del modo desarrollador, asi que se usa sftp.
     $script:LastTransferError = ''
-    $batch = Join-Path $env:TEMP ('xuper-sftp-' + [Guid]::NewGuid().ToString('N').Substring(0, 6) + '.txt')
+    $batch = Join-Path $env:TEMP ('tuty-sftp-' + [Guid]::NewGuid().ToString('N').Substring(0, 6) + '.txt')
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     try {
@@ -648,7 +648,7 @@ function Explain-SshError($text) {
 
 function Get-IpkVersion($path) {
     # Lee la version real del IPK (data.tar.gz -> appinfo.json).
-    $tmpDir = Join-Path $env:TEMP ('xuper-ipk-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
+    $tmpDir = Join-Path $env:TEMP ('tuty-ipk-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
     try {
         New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
         & tar -xf $path -C $tmpDir 'data.tar.gz' 2>$null
@@ -1028,9 +1028,9 @@ Info ('Version que se va a instalar: ' + $expected)
 
 $installJson    = '{"id":"' + $AppId + '","ipkUrl":"' + $remoteIpk + '","subscribe":true}'
 $launchJson     = '{"id":"' + $AppId + '"}'
-$installJsonPath = $remoteDir + '/xuper-install.json'
-$launchJsonPath  = $remoteDir + '/xuper-launch.json'
-$remoteShPath    = $remoteDir + '/xuper-instalar.sh'
+$installJsonPath = $remoteDir + '/tuty-install.json'
+$launchJsonPath  = $remoteDir + '/tuty-launch.json'
+$remoteShPath    = $remoteDir + '/tuty-instalar.sh'
 
 $remoteScript = @'
 #!/bin/sh
@@ -1087,7 +1087,7 @@ case "$PERMS" in
     ;;
 esac
 
-echo "   >> Abriendo XuperTV en el televisor..."
+echo "   >> Abriendo TutyTV en el televisor..."
 luna-send-pub -n 1 -f luna://com.webos.applicationManager/launch "$(cat @@LAUNCH@@)" > /dev/null 2>&1
 exit 0
 '@
@@ -1095,11 +1095,11 @@ exit 0
 $remoteScript = $remoteScript.Replace('@@APPDIR@@', $AppDir).Replace('@@SVCDIR@@', $SvcDir).Replace('@@VERSION@@', $expected).Replace('@@JSON@@', $installJsonPath).Replace('@@LAUNCH@@', $launchJsonPath)
 $remoteScript = $remoteScript -replace "`r`n", "`n"
 
-$tmp = Join-Path $env:TEMP ('xuper-inst-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
+$tmp = Join-Path $env:TEMP ('tuty-inst-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Path $tmp -Force | Out-Null
-$localSh     = Join-Path $tmp 'xuper-instalar.sh'
-$localJson   = Join-Path $tmp 'xuper-install.json'
-$localLaunch = Join-Path $tmp 'xuper-launch.json'
+$localSh     = Join-Path $tmp 'tuty-instalar.sh'
+$localJson   = Join-Path $tmp 'tuty-install.json'
+$localLaunch = Join-Path $tmp 'tuty-launch.json'
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($localSh, $remoteScript, $utf8)
 [System.IO.File]::WriteAllText($localJson, $installJson, $utf8)
@@ -1128,9 +1128,9 @@ Remove-TvKey
 Line
 if ($installExit -eq 0) {
     Write-Host ''
-    Write-Host '   LISTO. XuperTV esta instalada en tu televisor.' -ForegroundColor Green
+    Write-Host '   LISTO. TutyTV esta instalada en tu televisor.' -ForegroundColor Green
     Write-Host ''
-    Info 'En la TV aparece en la barra de inicio como "XuperTV".'
+    Info 'En la TV aparece en la barra de inicio como "TutyTV".'
     Info 'Si no la ves, apaga y enciende la TV y mira en "Mis aplicaciones".'
     Info ''
     Info 'Para ACTUALIZAR: vuelve a ejecutar este mismo instalador.'

@@ -52,7 +52,8 @@ function register(info, opts) {
   sessions[token] = {
     url: info.url,
     headers: info.headers || {},
-    audio: opts.audio || 0
+    audio: opts.audio || 0,
+    duration: 0
   };
   while (Object.keys(sessions).length > 12) {
     const first = Object.keys(sessions)[0];
@@ -61,8 +62,37 @@ function register(info, opts) {
   return "http://" + HOST + ":" + PORT + "/s/" + token + ".mp4";
 }
 
-function buildArgs(info, start, audio) {
-  const h = splitHeaders(info.headers);
+function probeDuration(session) {
+  if (!session || session.duration > 0 || session.probing) return;
+  session.probing = true;
+  const h = splitHeaders(session.headers);
+  const args = ["-hide_banner", "-loglevel", "info", "-nostdin"];
+  if (/^https?:\/\//i.test(session.url)) {
+    args.push("-rw_timeout", "15000000");
+    if (h.ua) args.push("-user_agent", h.ua);
+    if (h.rest) args.push("-headers", h.rest);
+  }
+  args.push("-i", session.url);
+  const ff = spawn(FFMPEG, args, { stdio: ["ignore", "ignore", "pipe"] });
+  let text = "";
+  const finish = function () {
+    session.probing = false;
+    try { ff.kill("SIGKILL"); } catch (e) {}
+  };
+  ff.stderr.on("data", function (chunk) {
+    text += String(chunk);
+    const match = /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(text);
+    if (match) {
+      session.duration = 3600 * parseInt(match[1], 10) + 60 * parseInt(match[2], 10) + parseFloat(match[3]);
+      finish();
+    }
+  });
+  ff.on("error", function () { session.probing = false; });
+  ff.on("close", function () { session.probing = false; });
+  setTimeout(finish, 15000);
+}
+
+function buildArgs(info, start, audio) {  const h = splitHeaders(info.headers);
   const args = [
     "-hide_banner", "-loglevel", "warning", "-nostdin",
     "-err_detect", "ignore_err",
@@ -109,6 +139,19 @@ function handler(req, res) {
     res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Access-Control-Allow-Origin": "*" });
     return res.end("aborted");
   }
+  const durationMatch = /^\/duration\/([0-9a-f]+)$/.exec(parsed.pathname || "");
+  if (durationMatch) {
+    const data = sessions[durationMatch[1]];
+    if (data && !data.duration) probeDuration(data);
+    const body = JSON.stringify({ duration: data ? data.duration : 0 });
+    res.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Length": Buffer.byteLength(body),
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "no-store"
+    });
+    return res.end(body);
+  }
   const match = /^\/s\/([0-9a-f]+)\.mp4$/.exec(parsed.pathname || "");
   const session = match && sessions[match[1]];
   if (!session) {
@@ -152,6 +195,10 @@ function handler(req, res) {
   ff.stderr.on("data", function (chunk) {
     const text = String(chunk).trim();
     if (!text) return;
+    const duration = /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(text);
+    if (duration) {
+      session.duration = 3600 * parseInt(duration[1], 10) + 60 * parseInt(duration[2], 10) + parseFloat(duration[3]);
+    }
     if (/Could not find ref with POC|Error constructing the frame RPS|Skipping invalid undecodable NALU|\[hevc @/i.test(text)) return;
     console.error("[ffmpeg-web] " + text);
   });

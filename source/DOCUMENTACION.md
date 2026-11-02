@@ -1,8 +1,8 @@
-# Documentacion tecnica - XuperTV 1.6.5
+# Documentacion tecnica - TutyTV 1.6.5
 
 ## 1. Resumen
 
-XuperTV es una aplicacion web (HTML/CSS/JS) empaquetada como IPK para LG
+TutyTV es una aplicacion web (HTML/CSS/JS) empaquetada como IPK para LG
 webOS. No hay codigo nativo: la TV ejecuta una app web y un servicio Node.js
 (Luna). La misma interfaz se puede servir en Linux/Windows mediante un
 servidor web local que implementa los mismos metodos.
@@ -38,7 +38,7 @@ source/
   `index.js` registra los metodos y usa `magis.js` para el portal y `proxy.js`
   para el video. El modo fluido usa `ffmpeg-relay.js` en el puerto 8787.
 - **Web local**: `web/server.js` expone los mismos metodos por HTTP y sirve
-  los archivos de la app. El HTML servido inyecta `window.XUPERTV_WEB=true`,
+  los archivos de la app. El HTML servido inyecta `window.TUTYTV_WEB=true`,
   `hls.min.js` y `devServiceUrl = location.origin`. Para VOD H.265 usa
   `web/ffmpeg-web.js` (puerto 8787) y lo transcodifica a H.264/AAC.
 
@@ -94,8 +94,8 @@ Respuesta estandar: `{ returnValue: true, ... }` o
 ## 6. Version web local
 
 ```bash
-./XUPER-WEB.sh              # Linux
-XUPER-WEB.bat               # Windows
+./TUTY-WEB.sh              # Linux
+TUTY-WEB.bat               # Windows
 ```
 
 Por defecto escucha en `http://127.0.0.1:8910/`. Parametros:
@@ -208,17 +208,17 @@ Si se cambia el formato del historial, hay que actualizar `findHistory`,
 
 1. Editar archivos en `source/`.
 2. Si es cambio de interfaz/servicio, probar en web:
-   detener y volver a iniciar `./XUPER-WEB.sh`; recargar con Ctrl+Shift+R.
+   detener y volver a iniciar `./TUTY-WEB.sh`; recargar con Ctrl+Shift+R.
 3. Verificar sintaxis:
    `node --check` en los JS y `bash -n` en los scripts.
 4. Si el cambio tambien va para la TV, generar IPK:
    `cd source && ./tools/build-ipk.sh 1.6.6`
-   El IPK sale en la carpeta padre. Instalar con `INSTALAR-XUPERTV.sh`.
+   El IPK sale en la carpeta padre. Instalar con `INSTALAR-TUTYTV.sh`.
 5. Si solo cambia `source/web/`, no hace falta regenerar el IPK.
 
 ## 10. Pruebas recomendadas
 
-- `./INSTALAR-XUPERTV.sh --dry-run --host IP --user prisoner`
+- `./INSTALAR-TUTYTV.sh --dry-run --host IP --user prisoner`
 - Web: inicio, buscador, filtro, detalle, historial, reanudar, canales.
 - Detalle de pelicula y de serie: bajar a "Quizas te guste" y recorrer las 16
   sugerencias con flecha derecha; la fila debe desplazarse y mostrar las que
@@ -239,7 +239,7 @@ Si se cambia el formato del historial, hay que actualizar `findHistory`,
 - **VOD H.265 no soportado**: el navegador no decodifica HEVC; usar el relay
   de transcodificacion.
 - **Cambios no visibles**: detener el servidor, reiniciar y hacer Ctrl+Shift+R.
-  La consola del navegador debe mostrar `[XuperTV Web] build 1.6.5-r12`;
+  La consola del navegador debe mostrar `[TutyTV Web] build 1.6.5-r12`;
   si no aparece, se esta cargando una version vieja.
 - **TV no instala**: misma red, Modo Desarrollador activo, puerto 9922,
   clave vigente (50 h), KEY SERVER en ON si aplica.
@@ -250,7 +250,7 @@ Si se cambia el formato del historial, hay que actualizar `findHistory`,
 - Chromium 53: mantener JavaScript ES5 (sin `?.`, `??`, `let`/`const` en
   codigo nuevo de la app, sin `gap` en flexbox).
 - No romper el HLS nativo de la TV: el codigo exclusivo de web debe ir
-  protegido por `window.XUPERTV_WEB` o por la presencia de `window.Hls`.
+  protegido por `window.TUTYTV_WEB` o por la presencia de `window.Hls`.
 - No eliminar `ffmpeg` del IPK; debe conservar permisos `755`.
 - El IPK se arma con `ar` en orden `debian-binary`, `control.tar.gz`,
   `data.tar.gz` y propietario `0/0`.

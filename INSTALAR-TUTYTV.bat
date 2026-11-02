@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions
-title XuperTV - Instalador para LG webOS
+title TutyTV - Instalador para LG webOS
 color 0B
 cd /d "%~dp0"
 
@@ -9,7 +9,7 @@ if not exist "%PS1%" set "PS1=%~dp0tools\instalar-tv.ps1"
 
 echo.
 echo   ================================================================
-echo      Instalador de XuperTV para televisores LG webOS
+echo      Instalador de TutyTV para televisores LG webOS
 echo   ================================================================
 echo.
 

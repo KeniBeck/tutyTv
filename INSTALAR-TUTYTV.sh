@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 #
-# Instalador de XuperTV para televisores LG webOS (Linux).
+# Instalador de TutyTV para televisores LG webOS (Linux).
 #
-# Equivalente al INSTALAR-XUPERTV.bat / instalar-tv.ps1 de Windows.
+# Equivalente al INSTALAR-TUTYTV.bat / instalar-tv.ps1 de Windows.
 # No necesita Node.js ni ares-cli: usa el cliente SSH/OpenSSH del sistema.
 #
 # Uso normal:
-#   ./INSTALAR-XUPERTV.sh
+#   ./INSTALAR-TUTYTV.sh
 #
 # Uso avanzado:
-#   ./INSTALAR-XUPERTV.sh --ipk ruta/app.ipk --host 192.168.1.50 --user prisoner --port 9922
+#   ./INSTALAR-TUTYTV.sh --ipk ruta/app.ipk --host 192.168.1.50 --user prisoner --port 9922
 #
 # Comprobar sin tocar la TV:
-#   ./INSTALAR-XUPERTV.sh --dry-run --host 192.168.1.50 --user prisoner
+#   ./INSTALAR-TUTYTV.sh --dry-run --host 192.168.1.50 --user prisoner
 #
 # Si el script no tiene permiso de ejecucion:
-#   chmod +x INSTALAR-XUPERTV.sh
+#   chmod +x INSTALAR-TUTYTV.sh
 
 APP_ID='com.webosflux.xuptertv.fidelity'
 SVC_ID="${APP_ID}.service"
@@ -25,7 +25,7 @@ SVC_DIR="/media/developer/apps/usr/palm/services/${SVC_ID}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 CONFIG_FILE="${SCRIPT_DIR}/instalar-config.json"
 
-TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/xuper-tv.XXXXXX") || {
+TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/tuty-tv.XXXXXX") || {
     echo "No se pudo crear una carpeta temporal." >&2
     exit 1
 }
@@ -344,13 +344,13 @@ prepare_askpass() {
     if [ ! -f "$ASKPASS_SCRIPT" ]; then
         cat > "$ASKPASS_SCRIPT" <<'ASKPASS_EOF'
 #!/bin/sh
-cat "$XUPER_ASKPASS_FILE"
+cat "$TUTY_ASKPASS_FILE"
 ASKPASS_EOF
         chmod 700 "$ASKPASS_SCRIPT"
     fi
     printf '%s\n' "$TV_PASS" > "$ASKPASS_FILE"
     chmod 600 "$ASKPASS_FILE"
-    export XUPER_ASKPASS_FILE="$ASKPASS_FILE"
+    export TUTY_ASKPASS_FILE="$ASKPASS_FILE"
     export SSH_ASKPASS="$ASKPASS_SCRIPT"
     export SSH_ASKPASS_REQUIRE=force
     export DISPLAY="${DISPLAY:-:0}"
@@ -1075,9 +1075,9 @@ while [ -z "$TV_PASS" ]; do
                 info 'Detalle tecnico:'
                 printf '%s\n' "$dbg" | sed 's/^/           /'
             fi
-            diag_log="${TMPDIR:-/tmp}/diagnostico-xupertv.txt"
+            diag_log="${TMPDIR:-/tmp}/diagnostico-tutytv.txt"
             {
-                printf 'XuperTV - diagnostico de la llave de seguridad\n'
+                printf 'TutyTV - diagnostico de la llave de seguridad\n'
                 printf 'TV      : %s@%s:%s\n' "${USERS[${#USERS[@]}-1]}" "$TV_HOST" "$PORT"
                 printf 'Fecha   : %s\n' "$(date '+%Y-%m-%d %H:%M:%S')"
                 printf 'Huella  : %s\n' "$(ssh-keygen -lf "$key_path" 2>&1)"
@@ -1143,9 +1143,9 @@ info "Version que se va a instalar: ${EXPECTED}"
 
 INSTALL_JSON="{\"id\":\"${APP_ID}\",\"ipkUrl\":\"${REMOTE_IPK}\",\"subscribe\":true}"
 LAUNCH_JSON="{\"id\":\"${APP_ID}\"}"
-INSTALL_JSON_PATH="${REMOTE_DIR}/xuper-install.json"
-LAUNCH_JSON_PATH="${REMOTE_DIR}/xuper-launch.json"
-REMOTE_SH_PATH="${REMOTE_DIR}/xuper-instalar.sh"
+INSTALL_JSON_PATH="${REMOTE_DIR}/tuty-install.json"
+LAUNCH_JSON_PATH="${REMOTE_DIR}/tuty-launch.json"
+REMOTE_SH_PATH="${REMOTE_DIR}/tuty-instalar.sh"
 
 REMOTE_SCRIPT=$(cat <<'REMOTE_EOF'
 #!/bin/sh
@@ -1210,7 +1210,7 @@ case "$PERMS" in
     ;;
 esac
 
-echo "   >> Abriendo XuperTV en el televisor..."
+echo "   >> Abriendo TutyTV en el televisor..."
 luna-send-pub -n 1 -f luna://com.webos.applicationManager/launch "$(cat @@LAUNCH@@)" > /dev/null 2>&1
 exit 0
 REMOTE_EOF
@@ -1222,16 +1222,16 @@ REMOTE_SCRIPT=${REMOTE_SCRIPT//@@VERSION@@/$EXPECTED}
 REMOTE_SCRIPT=${REMOTE_SCRIPT//@@JSON@@/$INSTALL_JSON_PATH}
 REMOTE_SCRIPT=${REMOTE_SCRIPT//@@LAUNCH@@/$LAUNCH_JSON_PATH}
 
-LOCAL_SH="${TMP_ROOT}/xuper-instalar.sh"
-LOCAL_INSTALL_JSON="${TMP_ROOT}/xuper-install.json"
-LOCAL_LAUNCH_JSON="${TMP_ROOT}/xuper-launch.json"
+LOCAL_SH="${TMP_ROOT}/tuty-instalar.sh"
+LOCAL_INSTALL_JSON="${TMP_ROOT}/tuty-install.json"
+LOCAL_LAUNCH_JSON="${TMP_ROOT}/tuty-launch.json"
 
 printf '%s\n' "$REMOTE_SCRIPT" > "$LOCAL_SH"
 printf '%s' "$INSTALL_JSON" > "$LOCAL_INSTALL_JSON"
 printf '%s' "$LAUNCH_JSON" > "$LOCAL_LAUNCH_JSON"
 
 files_ok=1
-for leaf in xuper-instalar.sh xuper-install.json xuper-launch.json; do
+for leaf in tuty-instalar.sh tuty-install.json tuty-launch.json; do
     if ! send_file "${TMP_ROOT}/${leaf}" "${REMOTE_DIR}/${leaf}"; then
         files_ok=0
         break
@@ -1252,9 +1252,9 @@ cleanup_key
 line
 if [ "$install_exit" -eq 0 ]; then
     printf '\n'
-    printf '   %sLISTO. XuperTV esta instalada en tu televisor.%s\n' "$C_GREEN" "$C_RESET"
+    printf '   %sLISTO. TutyTV esta instalada en tu televisor.%s\n' "$C_GREEN" "$C_RESET"
     printf '\n'
-    info 'En la TV aparece en la barra de inicio como "XuperTV".'
+    info 'En la TV aparece en la barra de inicio como "TutyTV".'
     info 'Si no la ves, apaga y enciende la TV y mira en "Mis aplicaciones".'
     info ''
     info 'Para ACTUALIZAR: vuelve a ejecutar este mismo instalador.'

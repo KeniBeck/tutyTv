@@ -1,9 +1,21 @@
-# XuperTV 1.6.5 - codigo base
+# TutyTV 1.6.5 - codigo base
 
 Este arbol contiene la aplicacion webOS y el servicio que usa el IPK, ya
 legibles (no minificados), mas una version web local.
 
-Documentacion tecnica y de configuracion: [DOCUMENTACION.md](DOCUMENTACION.md).
+El flujo principal de desarrollo y build parte de la raiz del repositorio con
+`pnpm`:
+
+```bash
+pnpm dev          # web con Vite + HMR + API Node
+pnpm build:web    # build web de produccion
+pnpm start:web    # sirve dist/web
+pnpm build:ipk    # genera el IPK
+```
+
+Los lanzadores `web/start.sh` y `web/start.bat` se mantienen como alternativa
+legacy. Documentacion tecnica y de configuracion:
+[DOCUMENTACION.md](DOCUMENTACION.md).
 
 ## Estructura
 
@@ -30,7 +42,7 @@ cd source
 ```
 
 Por defecto el `.ipk` se guarda en la carpeta padre de `source/`, junto a
-`INSTALAR-XUPERTV.sh`. Para instalarlo en la TV usa ese instalador.
+`INSTALAR-TUTYTV.sh`. Para instalarlo en la TV usa ese instalador.
 
 ## Version web local (Linux/Windows)
 
@@ -47,7 +59,7 @@ cd source/web
 Windows: doble clic en `start.bat`.
 
 Tambien hay lanzadores en la carpeta principal del proyecto:
-`XUPER-WEB.sh` (Linux) y `XUPER-WEB.bat` (Windows).
+`TUTY-WEB.sh` (Linux) y `TUTY-WEB.bat` (Windows).
 
 Luego abre `http://127.0.0.1:8910/`. El servidor sirve la interfaz, habla con
 el portal y sirve el proxy de video. El puerto se puede cambiar:

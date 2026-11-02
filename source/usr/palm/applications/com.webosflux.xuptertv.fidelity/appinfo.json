@@ -4,7 +4,7 @@
   "vendor": "webosflux",
   "type": "web",
   "main": "index.html",
-  "title": "XuperTV",
+  "title": "TutyTV",
   "icon": "images/icon_80x80.png",
   "largeIcon": "images/icon_130x130.png",
   "resolution": "1920x1080",

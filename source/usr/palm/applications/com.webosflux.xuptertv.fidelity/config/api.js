@@ -1,4 +1,4 @@
-window.XUPERTV_API = {
+window.TUTYTV_API = {
     enabled: !0,
     mode: "portal",
     serviceId: "com.webosflux.xuptertv.fidelity.service",

@@ -1,5 +1,5 @@
 /* =============================================================================
-   XuperTV 4.34.4  ->  LG webOS 4 (Chromium 53) fidelity reconstruction
+   TutyTV 4.34.4  ->  LG webOS 4 (Chromium 53) fidelity reconstruction
    -----------------------------------------------------------------------------
    Scale convention taken from the decoded AndroidManifest:
        design_width       = 1920
@@ -1841,7 +1841,7 @@ div, section, span { outline: none; }
 .profile-history-detail { margin-top: 4px; font-size: 20px; line-height: 24px; color: #b8c0cb; }
 .profile-empty { padding-top: 18px; font-size: 28px; color: #9ca6b3; }
 
-/* XuperTV account-style settings shell: a calm black rail, clear icons and
+/* TutyTV account-style settings shell: a calm black rail, clear icons and
    a rounded red selection instead of the former full-width technical list. */
 #screen-settings { background: #000; }
 .settings-menu {
@@ -1915,7 +1915,7 @@ div, section, span { outline: none; }
 .account-history-btn.is-focused { background: #d21525; outline: 2px solid #fff; }
 .share-copy { position: absolute; left: 48px; top: 215px; right: 150px; color: #ccc; font-size: 31px; line-height: 44px; }
 
-/* My List follows XuperTV's full-library layout rather than the settings
+/* My List follows TutyTV's full-library layout rather than the settings
    sidebar: tabs at the top and a five-column poster library underneath. */
 .history-panel { background: #000; }
 .history-tabs {
@@ -2118,11 +2118,11 @@ div, section, span { outline: none; }
   border: 5px solid rgba(255,255,255,.28);
   border-top-color: #ffffff;
   border-radius: 50%;
-  -webkit-animation: xuper-loading-spin .85s linear infinite;
-  animation: xuper-loading-spin .85s linear infinite;
+  -webkit-animation: tuty-loading-spin .85s linear infinite;
+  animation: tuty-loading-spin .85s linear infinite;
 }
-@-webkit-keyframes xuper-loading-spin { to { -webkit-transform: rotate(360deg); } }
-@keyframes xuper-loading-spin { to { transform: rotate(360deg); } }
+@-webkit-keyframes tuty-loading-spin { to { -webkit-transform: rotate(360deg); } }
+@keyframes tuty-loading-spin { to { transform: rotate(360deg); } }
 /* Center OSD status icon (Play / Pause / Seek feedback) */
 .player-osd-icon {
   position: absolute;
@@ -3998,7 +3998,7 @@ div, section, span { outline: none; }
 }
 
 /* =============================================================================
-   XuperTV 1.6.5 - filtro de contenido y recordatorios
+   TutyTV 1.6.5 - filtro de contenido y recordatorios
    ============================================================================= */
 .filter-panel {
   position: absolute;
@@ -4037,7 +4037,7 @@ div, section, span { outline: none; }
 #screen-search.is-filter-results .search-nav {
   left: 0; width: 1536px;
 }
-.xuper-toast {
+.tuty-toast {
   position: absolute;
   left: 50%; bottom: 110px;
   -webkit-transform: translateX(-50%);

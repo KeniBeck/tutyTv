@@ -7,7 +7,7 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const ROOT = path.resolve(__dirname, "..");
-const APP_DIR = path.join(ROOT, "usr/palm/applications/com.webosflux.xuptertv.fidelity");
+const DEFAULT_APP_DIR = path.join(ROOT, "usr/palm/applications/com.webosflux.xuptertv.fidelity");
 const SERVICE_DIR = path.join(ROOT, "usr/palm/services/com.webosflux.xuptertv.fidelity.service");
 const HLS_FILE = path.join(__dirname, "hls.min.js");
 
@@ -17,10 +17,26 @@ const webRelay = require(path.join(__dirname, "ffmpeg-web.js"));
 
 const VERSION = "1.6.5";
 const BUILD = "1.6.5-r12";
-const args = process.argv.slice(2).filter(function (x) { return x.indexOf("--") !== 0; });
-const PORT = Math.max(1, parseInt(args[0] || process.env.PORT || "8910", 10) || 8910);
-const HOST = process.env.HOST || "127.0.0.1";
-const OPEN = process.env.XUPER_NO_OPEN !== "1" && process.argv.indexOf("--no-open") < 0;
+
+const API_METHODS = new Set([
+  "ping",
+  "keepAlive",
+  "heartbeat",
+  "home",
+  "search",
+  "detail",
+  "liveChannels",
+  "liveCategories",
+  "fetchM3u",
+  "resolve",
+  "resolveSmooth",
+  "mediaInfo",
+  "resolveLive",
+  "abortMedia",
+  "prewarm"
+]);
+
+let APP_DIR = path.resolve(process.env.TUTY_APP_DIR || DEFAULT_APP_DIR);
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -173,7 +189,7 @@ function handleApi(method, q, res) {
   switch (method) {
     case "ping":
       return respond(res, {
-        service: "xuper-web",
+        service: "tuty-web",
         version: VERSION,
         proxyPort: proxy.port(),
         relayAvailable: webRelay.available(),
@@ -246,9 +262,9 @@ function serveIndex(res) {
     }
     const inject = [
       '<style>html,body{cursor:default !important}.focusable{cursor:pointer}</style>',
-      '<script>window.XUPERTV_WEB=true;window.XUPERTV_WEB_BUILD="' + BUILD + '";console.log("[XuperTV Web] build " + window.XUPERTV_WEB_BUILD);</script>',
+      '<script>window.TUTYTV_WEB=true;window.TUTYTV_WEB_BUILD="' + BUILD + '";console.log("[TutyTV Web] build " + window.TUTYTV_WEB_BUILD);</script>',
       '<script src="/hls.min.js?v=' + BUILD + '"></script>',
-      '<script>window.XUPERTV_API&&(window.XUPERTV_API.devServiceUrl=location.origin);</script>',
+      '<script>window.TUTYTV_API&&(window.TUTYTV_API.devServiceUrl=location.origin);</script>',
       '<script src="js/app.js?v=' + BUILD + '"></script>'
     ].join("\n");
     html = html.replace('href="css/style.css"', 'href="css/style.css?v=' + BUILD + '"');
@@ -263,9 +279,14 @@ function serveIndex(res) {
   });
 }
 
+function hlsFile() {
+  const local = path.join(APP_DIR, "hls.min.js");
+  return fs.existsSync(local) ? local : HLS_FILE;
+}
+
 function serveStatic(pathname, res) {
   if (pathname === "/" || pathname === "/index.html") return serveIndex(res);
-  if (pathname === "/hls.min.js") return sendFile(res, HLS_FILE, "application/javascript; charset=utf-8");
+  if (pathname === "/hls.min.js") return sendFile(res, hlsFile(), "application/javascript; charset=utf-8");
   let decoded;
   try { decoded = decodeURIComponent(pathname); } catch (e) { decoded = pathname; }
   const file = path.normalize(path.join(APP_DIR, decoded));
@@ -276,59 +297,110 @@ function serveStatic(pathname, res) {
   return sendFile(res, file);
 }
 
-const server = http.createServer(function (req, res) {
-  const parsed = new URL(req.url, "http://" + HOST + ":" + PORT);
-  const pathname = parsed.pathname || "/";
-  const method = pathname.replace(/^\/+/, "");
-  if (!method || method.indexOf(".") >= 0 || pathname === "/") {
-    return serveStatic(pathname, res);
-  }
-  const query = {};
-  parsed.searchParams.forEach(function (value, key) {
-    query[key] = value;
-  });
-  handleApi(method, query, res);
-});
+function createHandler() {
+  return function (req, res) {
+    const parsed = new URL(req.url, "http://localhost");
+    const pathname = parsed.pathname || "/";
+    const method = pathname.replace(/^\/+/, "");
+    if (!method || method.indexOf(".") >= 0 || pathname === "/") {
+      return serveStatic(pathname, res);
+    }
+    const query = {};
+    parsed.searchParams.forEach(function (value, key) {
+      query[key] = value;
+    });
+    handleApi(method, query, res);
+  };
+}
 
-server.on("error", function (err) {
-  console.error("\n  Error del servidor: " + err.message);
-  process.exit(1);
-});
+function createServer() {
+  return http.createServer(createHandler());
+}
 
-server.listen(PORT, HOST, function () {
-  const shownHost = HOST === "0.0.0.0" ? "localhost" : HOST;
-  const link = "http://" + shownHost + ":" + PORT + "/";
-  console.log("");
-  console.log("   ================================================================");
-  console.log("      XuperTV  Web  " + VERSION);
-  console.log("   ================================================================");
-  console.log("");
-  console.log("   Abre en tu navegador:  " + link);
-  console.log("");
-  if (webRelay.available()) {
-    console.log("   ffmpeg: OK (H.265 se transcode a H.264 para el navegador)");
-  } else {
-    console.log("   Aviso: ffmpeg no encontrado. Los títulos H.265 no se verán.");
-    console.log("          En Arch: sudo pacman -S ffmpeg");
-  }
-  console.log("");
-  console.log("   Ctrl+C para detener.");
-  console.log("");
-  if (OPEN) {
-    let child = null;
-    try {
-      if (process.platform === "win32") child = spawn("cmd", ["/c", "start", "", link], { detached: true, stdio: "ignore" });
-      else if (process.platform === "darwin") child = spawn("open", [link], { detached: true, stdio: "ignore" });
-      else child = spawn("xdg-open", [link], { detached: true, stdio: "ignore" });
-    } catch (e) {}
-    if (child) {
-      child.on("error", function () {});
-      child.unref();
+function parseCli(argv) {
+  const options = {};
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === "--no-open") options.open = false;
+    else if (arg === "--open") options.open = true;
+    else if (arg.indexOf("--port=") === 0) options.port = parseInt(arg.slice("--port=".length), 10);
+    else if (arg.indexOf("--host=") === 0) options.host = arg.slice("--host=".length);
+    else if (arg.indexOf("--app-dir=") === 0) options.appDir = arg.slice("--app-dir=".length);
+    else if (arg.indexOf("--") !== 0) {
+      const port = parseInt(arg, 10);
+      if (port) options.port = port;
     }
   }
-});
+  return options;
+}
 
-process.on("SIGINT", function () {
-  console.log("\n   Cerrando XuperTV Web...");
-  process.exit(0);
-});
+function startServer(options) {
+  options = options || {};
+  if (options.appDir) APP_DIR = path.resolve(options.appDir);
+
+  const envPort = parseInt(process.env.PORT || "", 10);
+  const port = Math.max(1, options.port || envPort || 8910);
+  const host = options.host || process.env.HOST || "127.0.0.1";
+  const open = options.open !== undefined
+    ? options.open
+    : (process.env.TUTY_NO_OPEN || process.env.XUPER_NO_OPEN) !== "1";
+
+  const server = createServer();
+
+  server.on("error", function (err) {
+    console.error("\n  Error del servidor: " + err.message);
+    process.exit(1);
+  });
+
+  server.listen(port, host, function () {
+    const shownHost = host === "0.0.0.0" ? "localhost" : host;
+    const link = "http://" + shownHost + ":" + port + "/";
+    console.log("");
+    console.log("   ================================================================");
+    console.log("      TutyTV  Web  " + VERSION);
+    console.log("   ================================================================");
+    console.log("");
+    console.log("   Abre en tu navegador:  " + link);
+    console.log("");
+    if (webRelay.available()) {
+      console.log("   ffmpeg: OK (H.265 se transcode a H.264 para el navegador)");
+    } else {
+      console.log("   Aviso: ffmpeg no encontrado. Los títulos H.265 no se verán.");
+      console.log("          En Arch: sudo pacman -S ffmpeg");
+    }
+    console.log("");
+    console.log("   Ctrl+C para detener.");
+    console.log("");
+    if (open) {
+      let child = null;
+      try {
+        if (process.platform === "win32") child = spawn("cmd", ["/c", "start", "", link], { detached: true, stdio: "ignore" });
+        else if (process.platform === "darwin") child = spawn("open", [link], { detached: true, stdio: "ignore" });
+        else child = spawn("xdg-open", [link], { detached: true, stdio: "ignore" });
+      } catch (e) {}
+      if (child) {
+        child.on("error", function () {});
+        child.unref();
+      }
+    }
+  });
+
+  process.on("SIGINT", function () {
+    console.log("\n   Cerrando TutyTV Web...");
+    process.exit(0);
+  });
+
+  return server;
+}
+
+if (require.main === module) {
+  startServer(parseCli(process.argv.slice(2)));
+}
+
+module.exports = {
+  API_METHODS: API_METHODS,
+  handleApi: handleApi,
+  createHandler: createHandler,
+  createServer: createServer,
+  startServer: startServer
+};

@@ -7,15 +7,15 @@ var Service = require("webos-service"),
     service = new Service(pkg.name);
 try {
     process.exit = function(e) {
-        console.log("[xuper-service] blocked process.exit(" + e + ") to keep streaming alive")
+        console.log("[tuty-service] blocked process.exit(" + e + ") to keep streaming alive")
     }
 } catch (e) {}
 if (service.activityManager) try {
     service.activityManager.idleTimeout = 86400, service.activityManager.create("keepAlive", function(e) {
-        console.log("[xuper-service] persistent activity created")
+        console.log("[tuty-service] persistent activity created")
     })
 } catch (e) {
-    console.log("[xuper-service] activityManager init note: " + (e && e.message))
+    console.log("[tuty-service] activityManager init note: " + (e && e.message))
 }
 
 function fail(e, r, i) {
@@ -57,7 +57,7 @@ function resolveStream(e, r) {
                 hevc: n,
                 audio: Number(i.audioTrack) || 0
             });
-            return console.log("[xuper-service] routing stream via ffmpeg relay: " + s), a.proxyPath = s, a.mime = "video/mp4", a.isRelay = !0, a.isHls = !1, void proxy.start(function() {
+            return console.log("[tuty-service] routing stream via ffmpeg relay: " + s), a.proxyPath = s, a.mime = "video/mp4", a.isRelay = !0, a.isHls = !1, void proxy.start(function() {
                 respond(e, null, attachSubtitles(a))
             })
         }
@@ -179,4 +179,4 @@ service.register("ping", function(e) {
             userId: magis.session.userId
         })
     })
-}), console.log("[xuper-service] started " + pkg.name + " v" + pkg.version);
+}), console.log("[tuty-service] started " + pkg.name + " v" + pkg.version);

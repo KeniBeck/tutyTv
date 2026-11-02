@@ -13,7 +13,7 @@ var http = require("http"),
 function log() {
     var e = Array.prototype.slice.call(arguments);
     try {
-        fs.appendFileSync("/tmp/xuper-relay.log", e.join(" ") + "\n")
+        fs.appendFileSync("/tmp/tuty-relay.log", e.join(" ") + "\n")
     } catch (e) {}
     console.log.apply(console, ["[relay]"].concat(e))
 }

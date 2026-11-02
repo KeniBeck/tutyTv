@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Genera un IPK de XuperTV a partir de source/usr.
+# Genera un IPK de TutyTV a partir de source/usr.
 #
 # Uso:
 #   ./tools/build-ipk.sh                 # usa la version actual de appinfo.json
@@ -8,7 +8,7 @@
 #   ./tools/build-ipk.sh 1.6.6 salida.ipk
 #
 # El IPK por defecto se guarda en la carpeta padre de source/ (junto al
-# instalador INSTALAR-XUPERTV.sh).
+# instalador INSTALAR-TUTYTV.sh).
 
 set -euo pipefail
 
@@ -33,7 +33,7 @@ done
 validate_ipk() {
     local ipk="$1"
     local tmp
-    tmp=$(mktemp -d "${TMPDIR:-/tmp}/xuper-validate.XXXXXX")
+    tmp=$(mktemp -d "${TMPDIR:-/tmp}/tuty-validate.XXXXXX")
     trap 'rm -rf "$tmp"' RETURN
 
     # 1) Estructura AR esperada en orden exacto.
@@ -163,7 +163,7 @@ sed -i -E "s/(<div class=\"welcome-version\">v)[^<]*(<\/div>)/\1${VERSION}\2/" "
 SIZE=$(du -sb "${ROOT}/usr" | awk '{print $1}')
 sed -i -E "s/^Installed-Size: .*/Installed-Size: ${SIZE}/" "${ROOT}/control"
 
-BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/xuper-build.XXXXXX")
+BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/tuty-build.XXXXXX")
 trap 'rm -rf "$BUILD_DIR"' EXIT
 
 tar --format=ustar --owner=0 --group=0 --numeric-owner -cf "${BUILD_DIR}/control.tar" -C "$ROOT" control
