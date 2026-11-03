@@ -148,11 +148,26 @@ service.register("ping", function(e) {
     })
 }), service.register("resolveLive", function(e) {
     var r = e.payload || {};
-    return r.streamUrl ? respond(e, null, {
-        url: r.streamUrl,
-        proxyPath: r.streamUrl,
-        isHls: !0
-    }) : r.channelCode ? void magis.resolveLive(r.channelCode, function(r, i) {
+    if (r.streamUrl) {
+        if (!/\.m3u8(?:\?|$)/i.test(r.streamUrl)) return respond(e, null, {
+            url: r.streamUrl,
+            proxyPath: r.streamUrl,
+            isHls: !1
+        });
+        return proxy.start(function(t) {
+            if (t) return fail(e, t);
+            var i = proxy.add(r.streamUrl, {
+                "User-Agent": "Mozilla/5.0 (SmartHub; SMART-TV; U; Linux/SmartTV) AppleWebKit/538.1+ (KHTML, like Gecko) Safari/538.1+",
+                "Accept": "*/*"
+            }, 0);
+            respond(e, null, {
+                url: r.streamUrl,
+                proxyPath: proxy.baseUrl() + "/media/" + i + "/stream.m3u8",
+                isHls: !0
+            })
+        })
+    }
+    return r.channelCode ? void magis.resolveLive(r.channelCode, function(r, i) {
         if (r) return fail(e, r);
         proxy.start(function(r) {
             if (r) return fail(e, r);

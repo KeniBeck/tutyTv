@@ -162,7 +162,14 @@ function resolveLive(params, res) {
     if (!isHls) return respond(res, { url: params.streamUrl, proxyPath: params.streamUrl, isHls: false });
     return proxy.start(function (err) {
       if (err) return fail(res, err);
-      respond(res, proxyAdd({ url: params.streamUrl, headers: {}, duration: 0 }, true));
+      respond(res, proxyAdd({
+        url: params.streamUrl,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (SmartHub; SMART-TV; U; Linux/SmartTV) AppleWebKit/538.1+ (KHTML, like Gecko) Safari/538.1+",
+          "Accept": "*/*"
+        },
+        duration: 0
+      }, true));
     });
   }
   if (!params.channelCode) return fail(res, new Error("channelCode requerido"));
