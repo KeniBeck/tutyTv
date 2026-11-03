@@ -13,62 +13,15 @@ const focusHandler = appSource.match(/ {4}function at\(e\) \{[\s\S]*?(?= {4}func
 const visibility = appSource.match(/ {4}function legacyFocusVisible\(element\) \{[\s\S]*?(?= {4}function Ze\(\))/)?.[0];
 
 describe("legacy adapters integration", () => {
-  it.each([true, false])("preserves keyboard, remote and pause behavior (core available: %s)", (withCore) => {
-    expect(helpers).toBeDefined();
+  it("delegates key handling to the navigation runtime", () => {
     expect(keyHandler).toBeDefined();
-    const move = vi.fn();
-    const activate = vi.fn();
-    const back = vi.fn();
-    const preventDefault = vi.fn();
-    const stopPropagation = vi.fn();
-    const video = { pause: vi.fn(), play: vi.fn(), paused: false };
-    const j = { screen: "home", tab: 1, playerMode: "vod" };
-    const pauseSpy = vi.spyOn(core.player, "pause");
-    const playSpy = vi.spyOn(core.player, "play");
-    const seek = vi.fn();
-    const openSettings = vi.fn();
-    const runtime = runInNewContext(`${helpers}\n${keyHandler}\n({ lt, legacyNativeTvPlayback, legacyMediaKey })`, {
-      window: { TutyCore: withCore ? core : undefined },
-      navigator: { userAgent: "SmartTV" },
-      j, Pt: false, fa: false, va: false, we: video,
-      at: move, st: activate, ot: back, qi: vi.fn(), Pi: vi.fn(), Oi: seek, tn: openSettings
-    }) as {
-      lt(event: object): void;
-      legacyNativeTvPlayback(): boolean;
-      legacyMediaKey(code: number, key: string): string | null;
-    };
-
-    runtime.lt({ which: 38, preventDefault });
-    runtime.lt({ keyCode: 32, preventDefault });
-    runtime.lt({ keyCode: 37, key: "Back", preventDefault, stopPropagation });
-    runtime.lt({ key: "ArrowRight", preventDefault });
-    expect(move).toHaveBeenCalledOnce();
-    expect(move).toHaveBeenCalledWith("up");
-    expect(activate).toHaveBeenCalledOnce();
-    expect(back).toHaveBeenCalledOnce();
-    expect(preventDefault).toHaveBeenCalledTimes(3);
-    expect(stopPropagation).toHaveBeenCalledOnce();
-    expect(runtime.legacyNativeTvPlayback()).toBe(true);
-
-    j.screen = "player";
-    runtime.lt({ keyCode: 19, preventDefault });
-    expect(video.pause).toHaveBeenCalledOnce();
-    expect(pauseSpy).toHaveBeenCalledTimes(withCore ? 1 : 0);
-    expect(runtime.legacyMediaKey(415, "")).toBe("play");
-    video.paused = true;
-    runtime.lt({ keyCode: 415, preventDefault });
-    expect(video.play).toHaveBeenCalledOnce();
-    expect(playSpy).toHaveBeenCalledTimes(withCore ? 1 : 0);
-    runtime.lt({ keyCode: 417, preventDefault });
-    expect(seek).toHaveBeenLastCalledWith(15);
-    runtime.lt({ keyCode: 412, preventDefault });
-    expect(seek).toHaveBeenLastCalledWith(-15);
-    runtime.lt({ keyCode: 413, preventDefault });
-    expect(back).toHaveBeenCalledTimes(2);
-    runtime.lt({ keyCode: 457, preventDefault });
-    expect(openSettings).toHaveBeenCalledOnce();
-    pauseSpy.mockRestore();
-    playSpy.mockRestore();
+    const handler = vi.fn(() => true);
+    const runtime = runInNewContext(`${keyHandler}\n({ lt })`, {
+      window: { TutyUI: { handleNavigationKey: handler } }
+    }) as { lt(event: object): boolean };
+    const event = { keyCode: 38 };
+    expect(runtime.lt(event)).toBe(true);
+    expect(handler).toHaveBeenCalledWith(event);
   });
 
   it.each([true, false])("installs the original keyboard listener behavior (core available: %s)", (withCore) => {
@@ -92,34 +45,21 @@ describe("legacy adapters integration", () => {
     expect(exposedCore.connectLegacyNavigation).toHaveBeenCalledTimes(withCore ? 1 : 0);
   });
 
-  it.each([true, false])("preserves directional focus scoring and home-tab fallback (core available: %s)", (withCore) => {
+  it("delegates directional movement to the ui runtime when attached", () => {
     expect(focusHandler).toBeDefined();
-    const node = (left: number, top: number, inPage = false, inTabs = false) => ({
-      inPage, inTabs, _onMove: undefined as ((direction: string) => boolean) | undefined,
-      getBoundingClientRect: () => ({ left, right: left + 50, top, bottom: top + 50, width: 50, height: 50 })
-    });
-    const current = node(100, 100, true);
-    const aligned = node(200, 100);
-    const diagonal = node(160, 180);
-    const tabs = node(0, 100, false, true);
-    const j = { focus: current, screen: "home", tab: 0 };
-    const move = vi.fn((target: typeof current) => { j.focus = target; });
-    const exposedCore = { ...core, scoreLegacyFocus: vi.fn(core.scoreLegacyFocus) };
+    const move = vi.fn();
     const runtime = runInNewContext(`${focusHandler}\n({ at })`, {
-      window: { TutyCore: withCore ? exposedCore : undefined }, j, Re: [tabs],
-      Ze: () => [current, aligned, diagonal, tabs], tt: move,
-      n: (target: typeof current, selector: string) => selector === ".home-page" ? target.inPage : target.inTabs
+      window: {
+        TutyUI: {
+          hasFocusRuntime: () => true,
+          moveFocus: move
+        }
+      },
+      j: { focus: {} }
     }) as { at(direction: string): void };
-    runtime.at("right");
-    expect(move).toHaveBeenLastCalledWith(aligned);
-    expect(exposedCore.scoreLegacyFocus).toHaveBeenCalledTimes(withCore ? 2 : 0);
-    j.focus = current;
-    runtime.at("left");
-    expect(move).toHaveBeenLastCalledWith(tabs);
-    j.focus = current;
-    current._onMove = () => true;
-    runtime.at("right");
-    expect(move).toHaveBeenCalledTimes(2);
+
+    runtime.at("down");
+    expect(move).toHaveBeenCalledWith("down");
   });
 
   it.each([true, false])("preserves focus visibility rules (core available: %s)", (withCore) => {

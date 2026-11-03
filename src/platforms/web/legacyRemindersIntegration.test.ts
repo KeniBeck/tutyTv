@@ -7,6 +7,10 @@ const source = readFileSync(new URL(
   "../../../source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/app.js",
   import.meta.url
 ), "utf8");
+const detailSource = readFileSync(new URL(
+  "../../ui/screens/detail/detailScreen.ts",
+  import.meta.url
+), "utf8");
 
 const snippet = source.match(
   / {4}function legacyIsReminderActive\([\s\S]*?(?= {4}function legacyFormatPlaybackTime\()/
@@ -27,6 +31,11 @@ describe("legacy reminders integration", () => {
     expect(source).toMatch(/legacyShouldCheckReminders\(X\.reminders, X\.reminderCheckAt, now\)/);
     expect(source).toMatch(/legacySelectReminderCheckIds\(X\.reminders\)/);
     expect(source).toMatch(/legacyMergeReminderUpdate\(l, r\)/);
+  });
+
+  it("exposes the reminder button for movies and series", () => {
+    expect(detailSource).toMatch(/icon_detail_subscribe\.png/);
+    expect(detailSource).toMatch(/host\.toggleReminder\(item\)/);
   });
 
   it.each([true, false])("toggles, throttles and merges reminders (core available: %s)", (withCore) => {

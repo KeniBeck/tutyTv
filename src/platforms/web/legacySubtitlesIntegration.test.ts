@@ -9,7 +9,6 @@ const source = readFileSync(new URL(
 ), "utf8");
 const timestamp = source.match(/ {4}function legacyParseSubtitleTimestamp\(value\) \{[\s\S]*?(?= {4}function legacyParseSubtitleCues)/)?.[0];
 const cues = source.match(/ {4}function legacyParseSubtitleCues\(source\) \{[\s\S]*?(?= {4}function legacyResolvePlaybackDuration)/)?.[0];
-const wrapper = source.match(/ {4}function Ra\(e\) \{[\s\S]*?(?= {4}function Ua\(e\))/)?.[0];
 const active = source.match(/ {4}function legacyFindSubtitleCue\(cues, time\) \{[\s\S]*?(?= {4}function legacyEpisodeDisplayTitle)/)?.[0];
 
 const srt = [
@@ -26,19 +25,17 @@ const srt = [
 
 describe("legacy subtitle integration", () => {
   it.each([true, false])("parses timestamps and cues (core available: %s)", (withCore) => {
-    expect(timestamp && cues && wrapper && active).toBeTruthy();
+    expect(timestamp && cues && active).toBeTruthy();
     const runtime = runInNewContext(
-      `${timestamp}\n${cues}\n${active}\n${wrapper}\n({ legacyParseSubtitleTimestamp, legacyParseSubtitleCues, legacyFindSubtitleCue, Ra })`,
+      `${timestamp}\n${cues}\n${active}\n({ legacyParseSubtitleTimestamp, legacyParseSubtitleCues, legacyFindSubtitleCue })`,
       { window: { TutyCore: withCore ? core : undefined } }
     ) as {
       legacyParseSubtitleTimestamp(value: unknown): number;
       legacyParseSubtitleCues(source: unknown): Array<{ start: number; end: number; text: string }>;
       legacyFindSubtitleCue(cues: unknown, time: number): { text: string } | null;
-      Ra(value: unknown): number;
     };
 
     expect(runtime.legacyParseSubtitleTimestamp("00:01:02,500")).toBe(62.5);
-    expect(runtime.Ra("01:02:03.250")).toBe(3723.25);
     expect(runtime.legacyParseSubtitleCues(srt)).toEqual([
       { start: 1, end: 3.5, text: "Hola<br>mundo" },
       { start: 4, end: 6, text: "Segunda línea" }

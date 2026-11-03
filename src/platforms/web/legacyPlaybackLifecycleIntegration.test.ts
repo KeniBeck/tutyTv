@@ -18,10 +18,23 @@ const snippet = [
 describe("legacy playback lifecycle integration", () => {
   it("keeps cleanup and transitions connected to the Core helpers", () => {
     expect(source).toMatch(/legacyShouldSaveHistoryBeforeReset\(j\.playerMode, !!we\)/);
-    expect(source).toMatch(/var e = legacyResolveAbortServiceBase\(Un, Fn\);/);
-    expect(source).toMatch(/legacyShouldLoadSeriesEpisodesBeforePlay\(e, j\.playerEpisode\)/);
-    expect(source).toMatch(/legacyShouldReusePlaybackSession\("detail" === j\.screen, hasSession, sameItem, a\)/);
-    expect(source).toMatch(/legacyHasPlaybackSession\(we\.src, we\.currentSrc, Fn, j\.streamError\)/);
+    expect(source).toMatch(/legacyResolveAbortServiceBase\(Un, Fn\)/);
+    expect(source).toMatch(/shouldLoadEpisodes: legacyShouldLoadSeriesEpisodesBeforePlay/);
+    expect(source).toMatch(/return legacyShouldReusePlaybackSession\(screen, hasSource, sameItem, sameEpisode\)/);
+    expect(source).toMatch(/return legacyHasPlaybackSession\(source, currentSource, streamUrl, streamError\)/);
+  });
+
+  it("keeps media playing on visibility changes and only resumes if the browser paused it", () => {
+    expect(source).toMatch(/function handleVisibilityChange\(\) \{[\s\S]*?runtime\.handleLifecycleVisibilityChange/);
+    expect(source).toMatch(/function br\(\) \{[\s\S]*?runtime\.handleLifecycleUnload/);
+    expect(source).toMatch(/document\.addEventListener\("visibilitychange", handleVisibilityChange\)/);
+    expect(source).not.toMatch(/document\.hidden && br\(\)/);
+  });
+
+  it("delegates fullscreen, playback start and source cleanup to playerSession", () => {
+    expect(source).toMatch(/function lr\(e, i\) \{[\s\S]*?runtime\.openFullscreenPlayer\(e, i\)/);
+    expect(source).toMatch(/function sr\(e, t\) \{[\s\S]*?runtime\.startPlayerPlayback\(e, t\)/);
+    expect(source).toMatch(/runtime\.clearPlayerSessionSource && runtime\.clearPlayerSessionSource\(\)/);
   });
 
   it.each([true, false])("resolves cleanup and transition rules (core available: %s)", (withCore) => {

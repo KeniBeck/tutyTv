@@ -1129,8 +1129,11 @@ div, section, span { outline: none; }
   position: absolute;
   left: 0; top: 610px;
   width: 1920px; height: 470px;
-  overflow: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+.detail-bottom::-webkit-scrollbar { display: none; }
 /* flChoose : 280x53 season dropdown, white 1px box. */
 .detail-season {
   position: absolute;

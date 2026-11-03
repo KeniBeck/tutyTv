@@ -12,9 +12,8 @@ const episodes = source.match(/ {4}function legacySeasonEpisodes\(item, seasonIn
 const index = source.match(/ {4}function legacyFindEpisodeIndex\(episodes, current\) \{[\s\S]*?(?= {4}function legacyNextSeasonIndex)/)?.[0];
 const next = source.match(/ {4}function legacyNextSeasonIndex\(seasons, currentIndex\) \{[\s\S]*?(?= {4}function legacyFormatEpisodeDuration)/)?.[0];
 const seasons = source.match(/ {4}function sn\(e\) \{[\s\S]*?(?= {4}function ln\(e, t, i\))/)?.[0];
-const nextEpisode = source.match(/ {4}function showNextEpisodeLoading\(item\) \{[\s\S]*?(?= {4}function bn\(e\))/)?.[0];
 const loadSeason = source.match(/ {4}function ln\(e, t, i\) \{[\s\S]*?(?= {4}function dn)/)?.[0];
-const resolveNext = source.match(/ {4}function legacyResolveNextPlaybackTarget\([\s\S]*?(?= {4}function legacyFormatPlaybackTime)/)?.[0];
+const switchEpisode = source.match(/ {4}function gn\(e, t, saveHistory\) \{[\s\S]*?(?= {4}function mn\(\))/)?.[0];
 
 const series = {
   id: "series",
@@ -55,73 +54,52 @@ describe("legacy episode navigation integration", () => {
     )).toBe(3);
   });
 
-  it("loads the next chronological season when the current one ends", () => {
-    expect(nextEpisode && resolveNext).toBeTruthy();
-    const gn = vi.fn();
-    const R = vi.fn((target: Record<string, unknown>, data: Record<string, unknown>) => {
-      Object.assign(target, data);
-    });
-    const ln = vi.fn((_item: unknown, _season: unknown, callback: (episodes: unknown[], item: unknown) => void) => {
-      callback([{ id: "s2e1" }], {
-        title: "Serie T2",
-        id: "s2",
-        seasons: [{ id: "s6", number: 6 }, { id: "s2", number: 2 }, { id: "s1", number: 1 }]
-      });
-    });
-    const item = {
-      id: "series",
-      title: "Serie T1",
-      seasonId: "s1",
-      episodes: [{ id: "e1" }],
-      seasons: [
-        { id: "s6", number: 6 },
-        { id: "s1", number: 1 },
-        { id: "s2", number: 2 }
-      ]
-    };
+  it("closes a pending next-episode prompt when switching episodes", () => {
+    expect(switchEpisode).toBeTruthy();
+    const scheduled: Array<() => void> = [];
+    const close = vi.fn();
+    const ar = vi.fn();
+    const sr = vi.fn();
     const context = {
-      window: { TutyCore: core },
-      S: () => true,
+      window: { TutyUI: { hasNextEpisodePromptRuntime: () => true, closeNextEpisodePrompt: close } },
       j: {
         screen: "player",
-        detail: item,
-        playerItem: item,
-        playerSeasonIndex: 1,
+        detailSeason: 1,
+        playerItem: null,
+        playerEpisode: null,
+        detailEpisode: null,
+        playerSeasonIndex: 0,
         nextEpisodeSeq: 0,
-        playerEpisode: { id: "e1" },
-        detailNeedsRebuild: false
+        nextEpisodeOpen: true,
+        nextEpisodeDismissed: true,
+        nextEpisodeGuardUntil: 0,
+        resumePosition: 40
       },
-      _e: null,
-      t: () => ({ classList: { add() {}, remove() {} }, style: {} }),
-      mn: vi.fn(), tt: vi.fn(), dn: () => "Episodio 2", ar: vi.fn(),
-      setTimeout: vi.fn(() => 1), clearTimeout: vi.fn(),
-      R,
-      gn,
-      ln
+      ye: {}, be: {},
+      closeNextEpisodePrompt: close,
+      ar,
+      vr: vi.fn(),
+      bn: vi.fn(),
+      nr: vi.fn(),
+      sr,
+      setTimeout(callback: () => void) { scheduled.push(callback); return 1; },
+      clearTimeout: vi.fn()
     };
-    const runtime = runInNewContext(
-      `${list}
-${episodes}
-${index}
-${next}
-${seasons}
-${resolveNext}
-${nextEpisode}
-({ yn, confirmNextEpisodePrompt })`,
-      context
-    ) as { yn(): void; confirmNextEpisodePrompt(): void };
+    const runtime = runInNewContext(`${switchEpisode}
+({ gn })`, context) as { gn(item: unknown, episode: unknown, saveHistory: boolean): void };
+    const item = { id: "series" };
+    const episode = { id: "e4" };
 
-    runtime.yn();
-    expect(ln).not.toHaveBeenCalled();
-    runtime.confirmNextEpisodePrompt();
-    expect(ln).toHaveBeenCalledWith(item, item.seasons[2], expect.any(Function));
-    expect(context.j.playerSeasonIndex).toBe(2);
-    expect(item.seasonId).toBe("s2");
-    expect(item.title).toBe("Serie T2");
-    expect(item.seasons?.[2]?.id).toBe("s2");
-    expect(R).toHaveBeenCalledWith(item, expect.objectContaining({ title: "Serie T2", id: "s2" }));
-    expect(context.j.detailNeedsRebuild).toBe(true);
-    expect(gn).toHaveBeenCalledWith(item, { id: "s2e1" }, false);
+    runtime.gn(item, episode, false);
+
+    expect(close).toHaveBeenCalledWith(false);
+    expect(context.j.nextEpisodeDismissed).toBe(false);
+    expect(context.j.nextEpisodeGuardUntil).toBeGreaterThan(Date.now());
+    expect(ar).not.toHaveBeenCalled();
+    expect(scheduled).toHaveLength(1);
+    scheduled[0]?.();
+    expect(context.j.resumePosition).toBe(0);
+    expect(sr).toHaveBeenCalledWith(item, episode);
   });
 
   it("passes the season item and episodes to the loader callback", () => {

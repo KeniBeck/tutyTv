@@ -2,21 +2,20 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as core from "../shared/legacyCoreBridge";
+import { attachPlayerCleanup, resetPlayerCleanupRuntime, resetPlayerStream } from "../../ui/screens/player/playerCleanup";
 
 const appSource = readFileSync(new URL(
   "../../../source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/app.js",
   import.meta.url
 ), "utf8");
 const helpers = appSource.match(/ {4}function legacyNavigationAction\(e\) \{[\s\S]*?(?= {4}function Q\(\))/)?.[0];
-const stop = appSource.match(/ {4}function ar\(\) \{[\s\S]*?(?= {4}function nr\(e\))/)?.[0];
 const open = appSource.match(/ {4}function rr\(e, t\) \{[\s\S]*?(?= {4}function or\(e, t\))/)?.[0];
 const seek = appSource.match(/ {4}function Kn\(\) \{[\s\S]*?(?= {4}function Oi\(e\))/)?.[0];
-const preview = appSource.match(/ {4}function Nt\(\) \{[\s\S]*?(?= {4}function Ut\(e, t(?:, complete)?\))/)?.[0];
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); resetPlayerCleanupRuntime(); });
 
 function createRuntime(withCore: boolean, isTv: boolean, hlsEnabled: boolean) {
-  expect(helpers && stop && open && seek).toBeTruthy();
+  expect(helpers && open && seek).toBeTruthy();
   const calls: string[] = [];
   const scheduled: Array<() => void> = [];
   const listeners: Record<string, (event: unknown, data: { fatal: boolean; type: string } | null) => void> = {};
@@ -70,6 +69,7 @@ function createRuntime(withCore: boolean, isTv: boolean, hlsEnabled: boolean) {
       return { setAttribute(key: string, value: string) { attrs[key] = value; } };
     } },
     $n: vi.fn(), nr: vi.fn(), qi: vi.fn(), Ti: vi.fn(), Qn: vi.fn(), mn: vi.fn(),
+    clearPlayerSource: vi.fn(),
     ja: (item: { id: string }) => item.id,
     $a: vi.fn(() => { j.streamMode = "smooth"; }), Tn: vi.fn(), Va: "",
     Ta: saveHistory, q: abort, Ei: vi.fn(), Mi: vi.fn(), xe: null,
@@ -79,8 +79,54 @@ function createRuntime(withCore: boolean, isTv: boolean, hlsEnabled: boolean) {
     setInterval: vi.fn(), clearInterval: vi.fn()
   };
   Object.assign(video, { appendChild: vi.fn() });
+  attachPlayerCleanup({
+    state: j as never,
+    getVideo: () => video,
+    getPosition: () => scope.Hn ? scope.zn + (video.currentTime || 0) : video.currentTime || 0,
+    getAudioIndex: () => 0,
+    closeNextEpisodePrompt: () => {},
+    shouldSaveHistoryBeforeReset: () => j.playerMode === "vod" && !!video,
+    saveHistoryBeforeReset: () => saveHistory(video.currentTime, video.duration, true),
+    resetPlaybackState: () => {
+      j.streamError = "";
+      scope.$n();
+      scope.nr("");
+      scope.qi("none");
+      scope.Ti();
+      scope.Qn();
+      scope.Hn = "";
+      scope.zn = 0;
+      (scope as unknown as { Hd: number }).Hd = 0;
+      scope.Bn++;
+      return true;
+    },
+    resolveAbortBase: () => scope.Un || "",
+    abortMedia: () => { abort(); },
+    destroyHls: () => {
+      if (withCore) exposedCore.destroyLegacyHls(window as never, "__tutyHls");
+      else {
+        try { window.__tutyHls?.destroy(); } catch { /* ignore cleanup errors */ }
+        window.__tutyHls = null;
+      }
+    },
+    clearVideo: () => {
+      scope.Un = "";
+      scope.Fn = "";
+      try { (video as unknown as { onerror: unknown }).onerror = null; } catch { /* ignore */ }
+      video.pause();
+      video.removeAttribute("src");
+      if (withCore) core.player.seekTo(video, 0);
+      else video.currentTime = 0;
+    },
+    clearSessionSource: () => true,
+    notify: () => true,
+    resolveTarget: (_item, done) => done(null),
+    loadSource: () => true,
+    seekVideo: () => true
+  });
+  (scope as unknown as { ar: () => boolean }).ar = () => resetPlayerStream();
   const runtime = runInNewContext(
-    `${helpers}\n${stop}\n${open}\n${seek}\n({ rr, ar, Kn, legacyRelayStreamMode, legacyForceRelay, legacyRelayResumeStart })`,
+    `${helpers}\n${open}\n${seek}\n({ rr, ar, Kn, legacyRelayStreamMode, legacyForceRelay, legacyRelayResumeStart })`,
     scope
   ) as {
     rr(url: string, options?: { nativeHls: boolean }): void;
@@ -273,56 +319,10 @@ describe("legacy player integration", () => {
     expect(j.streamError).toBe("Pulsa OK para iniciar la reproducción");
   });
 
-  it.each([
-    [true, true], [true, false], [false, true], [false, false]
-  ])("preserves preview load and cleanup (core: %s, HLS.js: %s)", (withCore, useHls) => {
-    expect(preview).toBeDefined();
-    const calls: string[] = [];
-    const events: Record<string, () => void> = {};
-    const scheduled: Array<() => void> = [];
-    class Hls {
-      static Events = { MANIFEST_PARSED: "manifest", ERROR: "error" };
-      static isSupported() { return true; }
-      on(event: string, listener: () => void) { events[event] = listener; }
-      loadSource(url: string) { calls.push(`source:${url}`); }
-      attachMedia() { calls.push("attach"); }
-      destroy() { calls.push("destroy"); }
-    }
-    const video = {
-      src: "", currentTime: 0, canPlayType: () => "",
-      pause: () => calls.push("pause"), play: () => { calls.push("play"); },
-      load: () => calls.push("load"), removeAttribute: () => calls.push("remove")
-    };
-    const window = { TutyCore: withCore ? core : undefined, Hls, __tutyPreviewHls: null as Hls | null };
-    const scope = {
-      window, navigator: { userAgent: useHls ? "Desktop" : "SmartTV" },
-      Et: video, te: { classList: { add() {}, remove() {}, contains() { return false; } } },
-      qt: { textContent: "" }, j: { screen: "home", tab: 0, channel: 0 }, F: [],
-      Ot: 0, At: "", Dt: null,
-      setTimeout: (callback: () => void) => { scheduled.push(callback); return 1; },
-      clearTimeout: () => {},
-      q: (_method: string, _args: unknown, callback: (error: null, result: object) => void) =>
-        callback(null, { url: "https://example.com/preview.m3u8", isHls: true })
-    };
-    const runtime = runInNewContext(`${helpers}\n${preview}\n({ Rt, Nt })`, scope) as {
-      Rt(channel: object): void;
-      Nt(): void;
-    };
-    runtime.Rt({ streamUrl: "https://example.com/preview.m3u8" });
-    scheduled[0]?.();
-    if (useHls) {
-      expect(calls.indexOf("source:https://example.com/preview.m3u8")).toBeLessThan(calls.indexOf("attach"));
-      events.manifest?.();
-      expect(calls).toContain("play");
-    } else {
-      expect(video.src).toBe("https://example.com/preview.m3u8");
-      expect(calls.slice(-2)).toEqual(["load", "play"]);
-    }
-    runtime.Nt();
-    expect(video.src).toBe("");
-    expect(calls.slice(-3)).toEqual(["pause", "remove", "load"]);
-    expect(calls.includes("destroy")).toBe(useHls);
-    expect(window.__tutyPreviewHls).toBeNull();
+  it("delegates live preview to the UI runtime when available", () => {
+    expect(appSource).toMatch(/runtime\.hasPreviewRuntime && runtime\.hasPreviewRuntime\(\) && runtime\.stopPreview/);
+    expect(appSource).toMatch(/runtime\.previewChannel\(e \|\| F\[j\.channel\]\)/);
+    expect(appSource).toMatch(/runtime\.attachPreview && runtime\.attachPreview\(\{/);
   });
 
   it.each([true, false])("delegates relay stream decisions with fallback (core available: %s)", (withCore) => {

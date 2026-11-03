@@ -25,6 +25,32 @@ describe("catalog detail merge", () => {
     expect(item.synopsis).toBe("Sinopsis");
   });
 
+  it("keeps existing collections when the detail response omits them", () => {
+    const item: Record<string, unknown> = {
+      id: "series",
+      title: "Serie",
+      seasons: [{ id: "s1" }, { id: "s2" }],
+      episodes: [{ id: "e1" }]
+    };
+
+    mergeCatalogDetail(item, { title: "Serie actualizada", seasons: [], episodes: [] });
+
+    expect(item.title).toBe("Serie actualizada");
+    expect(item.seasons).toEqual([{ id: "s1" }, { id: "s2" }]);
+    expect(item.episodes).toEqual([{ id: "e1" }]);
+  });
+
+  it("replaces existing collections when the detail response includes data", () => {
+    const item: Record<string, unknown> = {
+      id: "series",
+      seasons: [{ id: "s1" }]
+    };
+
+    mergeCatalogDetail(item, { seasons: [{ id: "s2" }, { id: "s3" }] });
+
+    expect(item.seasons).toEqual([{ id: "s2" }, { id: "s3" }]);
+  });
+
   it("skips placeholder values", () => {
     const item: Record<string, unknown> = { id: "1", synopsis: "Original" };
     mergeCatalogDetail(item, { synopsis: "Sin sinopsis disponible.", title: "Nuevo" });

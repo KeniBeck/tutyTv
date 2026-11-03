@@ -17,6 +17,12 @@ export function mergeCatalogDetail<T extends Record<string, unknown>>(item: T, d
 
   for (const key of Object.keys(normalized)) {
     const value = normalized[key];
+    if (Array.isArray(value) && value.length === 0) {
+      const current = target[key];
+      if (Array.isArray(current) && current.length > 0) {
+        continue;
+      }
+    }
     if (hasValue(value)) {
       target[key] = value;
     }

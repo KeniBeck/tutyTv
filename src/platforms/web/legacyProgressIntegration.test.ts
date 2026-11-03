@@ -36,6 +36,7 @@ describe("legacy playback progress", () => {
       we: { duration: 3600, buffered: { length: 0 } },
       j: { playerItem: { duration: "2 h" as unknown, episodes: [] as unknown[] }, playerEpisode: null as unknown },
       Da: [] as unknown[], Hn: "", zn: 0, Hd: 0, Je: false, Qe: 0, jn: null, Vn: 0,
+      subtitleEnd: () => 0,
       S: () => false,
       r: (value: number) => value < 10 ? `0${value}` : String(value)
     };

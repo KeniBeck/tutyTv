@@ -7,6 +7,14 @@ const source = readFileSync(new URL(
   "../../../source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/app.js",
   import.meta.url
 ), "utf8");
+const liveListSource = readFileSync(new URL(
+  "../../ui/screens/home/liveList.ts",
+  import.meta.url
+), "utf8");
+const liveMenuSource = readFileSync(new URL(
+  "../../ui/screens/home/liveMenu.ts",
+  import.meta.url
+), "utf8");
 
 const snippet = [
   source.match(/ {4}function o\(e\) \{[\s\S]*?\n {4}\}/)?.[0],
@@ -22,23 +30,19 @@ interface Channel {
   channelCode?: string;
 }
 
-interface Category {
-  name: string;
-}
-
 describe("legacy live TV search integration", () => {
   it("keeps live filtering and search connected to Core helpers", () => {
-    expect(source).toMatch(/legacyFilterLiveChannels\(F, favOnly, liveIsFav\)/);
-    expect(source).toMatch(/legacyFindLiveSearchMatches\(F, cats, liveSearchQuery\)/);
+    expect(liveListSource).toMatch(/runtime\.filterChannels\(favoritesOnly\)/);
+    expect(liveMenuSource).toMatch(/findLiveSearchMatches\(host\.getChannels\(\), categories, searchQuery\)/);
     expect(source).toMatch(/legacySelectNewLiveChannels\(F, l\)/);
-    expect(source).toMatch(/item\.channel\.logo/);
-    expect(source).toMatch(/Vt\(item\.index, !0\)/);
+    expect(liveMenuSource).toMatch(/match\.channel\.logo/);
+    expect(liveMenuSource).toMatch(/host\.selectChannel\(match\.index, true\)/);
   });
 
   it.each([true, false])("preserves favorites, indexes, accents and category search (core available: %s)", (withCore) => {
     expect(snippet).toBeTruthy();
     const runtime = runInNewContext(
-      `${snippet}\n({ legacyFilterLiveChannels, legacyFindLiveSearchMatches, legacySelectNewLiveChannels })`,
+      `${snippet}\n({ legacyFilterLiveChannels, legacySelectNewLiveChannels })`,
       { window: { TutyCore: withCore ? core : undefined } }
     ) as {
       legacyFilterLiveChannels(
@@ -46,14 +50,6 @@ describe("legacy live TV search integration", () => {
         favoritesOnly: boolean,
         isFavorite: (channel: Channel) => boolean
       ): Array<{ channel: Channel; index: number }>;
-      legacyFindLiveSearchMatches(
-        channels: Channel[],
-        categories: Category[],
-        query: string
-      ): {
-        channels: Array<{ channel: Channel; index: number }>;
-        categories: Category[];
-      };
       legacySelectNewLiveChannels(current: Channel[], incoming: Channel[]): Channel[];
     };
 
@@ -62,8 +58,6 @@ describe("legacy live TV search integration", () => {
       { name: "Canal Dos" },
       { name: "Cine Acción", favorite: true }
     ];
-    const categories: Category[] = [{ name: "Cine" }, { name: "Deportes" }];
-
     expect(runtime.legacyFilterLiveChannels(channels, true, (channel) => Boolean(channel.favorite))).toEqual([
       { channel: channels[0], index: 0 },
       { channel: channels[2], index: 2 }
@@ -73,19 +67,6 @@ describe("legacy live TV search integration", () => {
       { channel: channels[1], index: 1 },
       { channel: channels[2], index: 2 }
     ]);
-    expect(runtime.legacyFindLiveSearchMatches(channels, categories, "CAFE")).toEqual({
-      channels: [{ channel: channels[0], index: 0 }],
-      categories: []
-    });
-    expect(runtime.legacyFindLiveSearchMatches(channels, categories, "cine")).toEqual({
-      channels: [{ channel: channels[2], index: 2 }],
-      categories: [categories[0]]
-    });
-    expect(runtime.legacyFindLiveSearchMatches(channels, categories, "")).toEqual({
-      channels: channels.map((channel, index) => ({ channel, index })),
-      categories
-    });
-
     const firstB = { name: "B", channelCode: "b" };
     const noCode = { name: "No code" };
     expect(runtime.legacySelectNewLiveChannels(

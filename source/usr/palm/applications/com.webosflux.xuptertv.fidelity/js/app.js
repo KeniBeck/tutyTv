@@ -2,23 +2,32 @@
     "use strict";
 
     function e(e, t, i) {
+        var runtime = window.TutyUI;
+        if (runtime && runtime.el) return runtime.el(e, t, i);
         var a = document.createElement(e);
         return t && (a.className = t), null != i && (a.textContent = i), a
     }
 
     function t(e) {
-        return document.getElementById(e)
+        var runtime = window.TutyUI;
+        return runtime && runtime.byId ? runtime.byId(e) : document.getElementById(e)
     }
 
     function i(e) {
+        var runtime = window.TutyUI;
+        if (runtime && runtime.clear) return runtime.clear(e);
         for (; e.firstChild;) e.removeChild(e.firstChild)
     }
 
     function a(e, t, i, a, n) {
+        var runtime = window.TutyUI;
+        if (runtime && runtime.place) return runtime.place(e, t, i, a, n);
         return e.style.position = "absolute", e.style.left = t + "px", e.style.top = i + "px", void 0 !== a && (e.style.width = a + "px"), void 0 !== n && (e.style.height = n + "px"), e
     }
 
     function n(e, t) {
+        var runtime = window.TutyUI;
+        if (runtime && runtime.closest) return runtime.closest(e, t);
         for (; e && e !== document;) {
             if (1 === e.nodeType && e.matches && e.matches(t)) return e;
             e = e.parentNode
@@ -238,7 +247,6 @@
                         }
                     }
                 }
-                le && (oi(), j.searchQuery && ui());
                 j.detail && ti(j.detail)
             }(), !0
     }
@@ -274,7 +282,33 @@
         }), !!(window.webOS && window.webOS.service && window.webOS.service.request)
     }
 
+    var serviceClient = null;
+
+    function getServiceClient() {
+        var runtime = window.TutyUI;
+        if (!runtime || !runtime.createServiceClient) return null;
+        return serviceClient || (serviceClient = runtime.createServiceClient({
+            getServiceId: function() {
+                return p.serviceId || "com.webosflux.xuptertv.fidelity.service"
+            },
+            getTimeout: function() {
+                return parseInt(p.timeoutMs, 10) || 2e4
+            },
+            getDevServiceUrl: function() {
+                return p.devServiceUrl || void 0
+            },
+            canUseLuna: legacyCanUseLuna,
+            getWebOs: function() {
+                return window.webOS
+            },
+            buildDevUrl: legacyDevServiceUrl,
+            requestDev: L
+        }))
+    }
+
     function q(e, t, i) {
+        var client = getServiceClient();
+        if (client) return client.request(e, t, i);
         var a = p.serviceId || "com.webosflux.xuptertv.fidelity.service",
             n = !1;
 
@@ -437,38 +471,7 @@
             page: 6,
             icon: "compass"
         }],
-        z = [{
-            id: "profile",
-            label: "Mi cuenta"
-        }, {
-            id: "history",
-            label: "Mi lista"
-        }, {
-            id: "share",
-            label: "Compartir APP"
-        }, {
-            id: "parent",
-            label: "Bloqueo"
-        }, {
-            id: "playback",
-            label: "Configuración global"
-        }, {
-            id: "feedback",
-            label: "Ayuda y Feedback"
-        }, {
-            id: "about",
-            label: "Sobre nosotros"
-        }],
-        V = {
-            profile: '<svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M6 27c.7-6 4.3-9 10-9s9.3 3 10 9"/></svg>',
-            history: '<svg viewBox="0 0 32 32"><rect x="4" y="4" width="9" height="9"/><rect x="19" y="4" width="9" height="9"/><rect x="4" y="19" width="9" height="9"/><rect x="19" y="19" width="9" height="9"/></svg>',
-            share: '<svg viewBox="0 0 32 32"><circle cx="8" cy="16" r="3"/><circle cx="24" cy="7" r="3"/><circle cx="24" cy="25" r="3"/><path d="M10.6 14.5l10.8-6M10.6 17.5l10.8 6"/></svg>',
-            parent: '<svg viewBox="0 0 32 32"><rect x="7" y="14" width="18" height="14" rx="2"/><path d="M11 14V10a5 5 0 0 1 10 0v4"/><path d="M16 19v4"/></svg>',
-            playback: '<svg viewBox="0 0 32 32"><rect x="4" y="6" width="24" height="20" rx="3"/><path d="M13 11l8 5-8 5z"/></svg>',
-            feedback: '<svg viewBox="0 0 32 32"><path d="M6 4h15l5 5v19H6z"/><path d="M20 4v6h6M10 16h12M10 21h8"/></svg>',
-            about: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12"/><path d="M16 14v8M16 10h.1"/></svg>'
-        },
-        j = {
+        j = window.TutyUI && window.TutyUI.createAppState ? window.TutyUI.createAppState() : {
             screen: "welcome",
             tab: 0,
             channel: 0,
@@ -514,6 +517,7 @@
             searchFocus: null,
             playback: {
                 streamMode: "normal",
+                streamModes: {},
                 screen: 0,
                 audio: 0,
                 audioCode: "",
@@ -643,64 +647,6 @@
         if (_core && typeof _core.mapLegacyMediaKey === "function") return _core.mapLegacyMediaKey(code, key);
         var name = key || "";
         return 415 === code || "MediaPlay" === name || "Play" === name ? "play" : 19 === code || "MediaPause" === name || "Pause" === name ? "pause" : 10252 === code || "MediaPlayPause" === name ? "playpause" : 417 === code || "MediaFastForward" === name || "FastForward" === name ? "forward" : 412 === code || "MediaRewind" === name || "Rewind" === name ? "rewind" : 413 === code || "MediaStop" === name || "Stop" === name ? "stop" : 457 === code || 93 === code || 467 === code || "Menu" === name || "ContextMenu" === name ? "menu" : null
-    }
-
-    function legacyNormalizeApiSession(session) {
-        var _core = window.TutyCore;
-        if (_core && typeof _core.normalizeApiSession === "function") return _core.normalizeApiSession(session);
-        var source = session || {};
-        return {
-            userId: String(source.userId || ""),
-            userToken: String(source.userToken || ""),
-            portalCode: String(source.portalCode || ""),
-            homePageCode: String(source.homePageCode || ""),
-            version: String(source.version || "4.34.4")
-        }
-    }
-
-    function legacyHasApiSession(session) {
-        var _core = window.TutyCore;
-        if (_core && typeof _core.hasApiSession === "function") return _core.hasApiSession(session);
-        var normalized = legacyNormalizeApiSession(session);
-        return !!(normalized.userId && normalized.userToken && normalized.portalCode)
-    }
-
-    function legacyBuildServiceParams(kind, value, session) {
-        var _core = window.TutyCore;
-        if (_core && typeof _core.buildServiceParams === "function") return _core.buildServiceParams(kind, value, session);
-        var normalized = legacyNormalizeApiSession(session);
-        return "catalog" === kind ? {
-            userId: normalized.userId,
-            userToken: normalized.userToken,
-            portalCode: normalized.portalCode,
-            homePageCode: normalized.homePageCode,
-            version: normalized.version
-        } : "search" === kind ? {
-            userToken: normalized.userToken,
-            userId: normalized.userId,
-            portalCode: normalized.portalCode,
-            columnId: "",
-            value: value || "",
-            type: "",
-            pageSize: 20,
-            pageNum: 1,
-            filter: ""
-        } : {
-            userToken: normalized.userToken,
-            userId: normalized.userId,
-            portalCode: normalized.portalCode,
-            programId: value
-        }
-    }
-
-    function legacyResolveServiceUrl(config, method) {
-        var _core = window.TutyCore;
-        if (_core && typeof _core.resolveServiceUrl === "function") return _core.resolveServiceUrl(config, method);
-        var explicit = config[method + "Url"];
-        if (explicit) return String(explicit);
-        var base = String(config.baseUrl || "").replace(/\/$/, ""),
-            path = String(config[method + "Path"] || "");
-        return base && path ? base + ("/" === path.charAt(0) ? path : "/" + path) : ""
     }
 
     function legacyDescribeServiceError(payload) {
@@ -1357,30 +1303,6 @@
         return l
     }
 
-    function legacyFindLocalSearchMatches(items, query) {
-        var _core = window.TutyCore;
-        if (_core && typeof _core.findLocalSearchMatches === "function") return _core.findLocalSearchMatches(items, query);
-        var t = o(String(query || "").trim());
-        if (!t) return [];
-        for (var i = [], a = 0; a < items.length; a++) {
-            var n = o(items[a].title || ""),
-                r = items[a].alias ? o(items[a].alias) : "";
-            (-1 !== n.indexOf(t) || r && -1 !== r.indexOf(t)) && i.push(items[a])
-        }
-        return i
-    }
-
-    function legacyCombineSearchResults(localItems, remoteItems, normalizeRemote) {
-        var _core = window.TutyCore;
-        if (_core && typeof _core.combineSearchResults === "function") return _core.combineSearchResults(localItems, remoteItems, normalizeRemote);
-        for (var a = localItems.slice(), n = {}, r = 0; r < a.length; r++) n[String(a[r].id)] = !0;
-        for (var o = 0; o < remoteItems.length; o++) {
-            var l = normalizeRemote(remoteItems[o], a.length + 1);
-            n[String(l.id)] || (n[String(l.id)] = !0, a.push(l))
-        }
-        return a
-    }
-
     function legacyResolvePlaybackDuration(candidates, series, position) {
         var _core = window.TutyCore;
         if (_core && typeof _core.resolvePlaybackDuration === "function") return _core.resolvePlaybackDuration(candidates, series, position);
@@ -1699,15 +1621,11 @@
         var r = legacyEnsureViewerProfile(X, G(W, null), Date.now());
         X = r.profile, r.created && J(W, X), X.favs || (X.favs = {}), X.reminders || (X.reminders = {}), j.favs = X.favs
     }();
-    var Y, Z, ee, te, ie, ae, ne, re, oe, se, le, de, ce, pe, ue, ve, fe, he, ge, me, ye, be, Ce, we, xe, Se, _e, Le, ke, Me, Ie, Te, Ee, qe, Oe, De, Ae, Pe = !1,
+    var ee, te, ie, ae, oe, se, ye, be, Ce, we, xe, Se, _e, Le, ke, Me, Ie, Te, Ee, qe, Oe, De, Ae, Pe = !1,
         Ne = [],
         Re = [],
         tabFocus = [],
         Ue = [],
-        Fe = [],
-        Be = {},
-        He = [],
-        ze = "history",
         Ve = {},
         je = null,
         We = null,
@@ -1807,18 +1725,8 @@
     }
 
     function tt(e, i) {
-        if (e)
-            if (j.focus !== e) {
-                j.focus && "home" === j.screen && n(j.focus, ".home-page") && (tabFocus[j.tab] = j.focus), j.focus && j.focus.classList.remove("is-focused"), j.focus = e, e.classList.add("is-focused"), e._onFocus && e._onFocus(), rn();
-                var a = t("home-tabs");
-                if (a && "home" === j.screen) {
-                    var r = n(e, ".home-tabs");
-                    a.classList.toggle("is-expanded", !!r), a.classList.toggle("is-collapsed", !r);
-                    var o = document.querySelector(".home-sidebar-bg");
-                    o && o.classList.toggle("is-on", !!r)
-                }
-                i || et(e), mt()
-            } else i || et(e)
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasFocusRuntime && runtime.hasFocusRuntime() && runtime.focusElement) return void runtime.focusElement(e, i)
     }
 
     function it(e) {
@@ -1836,237 +1744,221 @@
     }
 
     function at(e) {
-        if (j.focus) {
-            if (!j.focus._onMove || !j.focus._onMove(e)) {
-                for (var t = "home" === j.screen && n(j.focus, ".home-page"), i = "home" === j.screen && n(j.focus, ".home-tabs"), a = Ze(), r = j.focus.getBoundingClientRect(), o = r.left + r.width / 2, s = r.top + r.height / 2, l = null, d = 1e9, c = 0; c < a.length; c++) {
-                    var p = a[c];
-                    if (p !== j.focus && ((!t || !n(p, ".home-tabs")) && (!i || n(p, ".home-tabs")))) {
-                        var u, v, f, h = p.getBoundingClientRect(),
-                            g = h.left + h.width / 2 - o,
-                            m = h.top + h.height / 2 - s;
-                        var _core = window.TutyCore;
-                        if (_core && typeof _core.scoreLegacyFocus === "function") {
-                            var _score = _core.scoreLegacyFocus(e, r, h);
-                            null !== _score && _score < d && (d = _score, l = p);
-                            continue
-                        }
-                        if ("left" === e) {
-                            if (g > -4) continue;
-                            u = Math.max(0, r.left - h.right), v = Math.abs(m), f = h.bottom > r.top + 2 && h.top < r.bottom - 2
-                        } else if ("right" === e) {
-                            if (g < 4) continue;
-                            u = Math.max(0, h.left - r.right), v = Math.abs(m), f = h.bottom > r.top + 2 && h.top < r.bottom - 2
-                        } else if ("up" === e) {
-                            if (m > -4) continue;
-                            u = Math.max(0, r.top - h.bottom), v = Math.abs(g), f = h.right > r.left + 2 && h.left < r.right - 2
-                        } else {
-                            if (m < 4) continue;
-                            u = Math.max(0, h.top - r.bottom), v = Math.abs(g), f = h.right > r.left + 2 && h.left < r.right - 2
-                        }
-                        var y = u + 0.5 * v + (f ? 0 : 320);
-                        y < d && (d = y, l = p)
-                    }
-                }
-                l ? tt(l) : "left" === e && t && Re[j.tab] && tt(Re[j.tab])
-            }
-        } else {
-            var b = Ze();
-            b.length && tt(b[0])
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasFocusRuntime && runtime.hasFocusRuntime() && runtime.moveFocus) return void runtime.moveFocus(e)
     }
 
     function nt(e) {
-        for (var i = document.querySelectorAll(".screen"), a = 0; a < i.length; a++) i[a].classList.remove("is-active");
-        var n = t("screen-" + e);
-        if (n && n.classList.add("is-active"), j.screen = e, "player" !== e && j.nextEpisodeOpen && closeNextEpisodePrompt(!1), "player" !== e && j.episodeBrowserOpen && un(!0), "player" !== e && j.categoryPickerOpen && An(!0), "home" !== e && j.liveCategoriesOpen && lvCloseCats(!0), "home" !== e && j.liveSearchOpen && lvCloseSearch(!0), "player" !== e && "detail" !== e) {
+        var runtime = window.TutyUI;
+        runtime && runtime.showScreen && runtime.showScreen(e, document, j)
+        if ("player" !== e && j.nextEpisodeOpen && closeNextEpisodePrompt(!1), "player" !== e && j.episodeBrowserOpen && un(!0), "player" !== e && j.categoryPickerOpen && An(!0), "home" !== e && j.liveCategoriesOpen && lvCloseCats(!0), "home" !== e && j.liveSearchOpen && lvCloseSearch(!0), "player" !== e && "detail" !== e) {
             fa && _n(), va && an();
             var r = t("screen-player");
-            legacyResetDetailPlayerSurface(r), ar(), wa++, Da = [], ua && (ua.innerHTML = "")
+            legacyResetDetailPlayerSurface(r), ar(), resetSubtitles()
         }
         window.TUTYTV_WEB && "player" !== e && "detail" !== e && stopWebMedia(), mt()
     }
-    var rt = 0;
-
     function ot() {
-        var e = Date.now();
-        if (!(e - rt < 250))
-            if (rt = e, fa) _n();
-            else {
-                if ("player" === j.screen) return Je ? void er(!1) : j.categoryPickerOpen ? (rt = Date.now(), void An()) : j.episodeBrowserOpen ? (rt = Date.now(), void un()) : va ? void an() : void(j.channelsOpen ? gr() : j.infobar ? Ni() : j.vodInfobarVisible ? Ui() : function() {
-                    Ni(), Ui();
-                    var e = j.playerReturn;
-                    if (e && "detail" === e.screen) {
-                        var i = t("screen-player"),
-                            a = t("screen-detail");
-                        i && (i.classList.add("is-mini"), i.classList.add("is-active")), a && a.classList.add("is-active"), j.screen = "detail";
-                        var n = !1;
-                        if (j.detailNeedsRebuild && j.detail) {
-                            j.detailNeedsRebuild = !1, ti(j.detail), n = !0;
-                            var r = se ? se.querySelector(".detail-season") : null;
-                            r && tt(r)
-                        } else j.detail && bn(j.detail);
-                        if (!n)
-                            if (e.focus && Ye(e.focus)) tt(e.focus);
-                            else {
-                                var o = oe ? oe.querySelector(".focusable") : null;
-                                o && tt(o)
-                            }
-                    } else {
-                        ar();
-                        var s = t("screen-player");
-                        legacyResetDetailPlayerSurface(s), e && "search" === e.screen ? (nt("search"), tt(e.focus)) : (nt("home"), ht(j.tab, !1), e && e.focus && Ye(e.focus) ? tt(e.focus) : Re[j.tab] && tt(Re[j.tab]))
-                    }
-                }());
-                if ("detail" !== j.screen) {
-                    if ("search" === j.screen) return pi(), nt("home"), ht(j.tab, !1), void(Re[j.tab] && tt(Re[j.tab]));
-                    if ("settings" === j.screen) return nt("home"), ht(j.tab, !1), void(Re[j.tab] && tt(Re[j.tab]));
-                    if ("home" === j.screen) {
-                        if (0 !== j.tab) return ht(0, !0), void(Re[0] && tt(Re[0]));
-                        legacyPlatformBack()
-                    }
-                } else {
-                    if (ni) {
-                        ri();
-                        var i = se ? se.querySelector(".detail-season") : null;
-                        return void(i && tt(i))
-                    }
-                    var a = t("screen-detail");
-                    if (a && a.classList.contains("is-synopsis-open")) return void
-                    function() {
-                        var e = t("screen-detail");
-                        if (!e) return;
-                        var i = !e.classList.contains("is-synopsis-open");
-                        e.classList.toggle("is-synopsis-open", i);
-                        var a = document.querySelector(".detail-more");
-                        a && (a.textContent = i ? "Menos" : "Más")
-                    }();
-                    ar();
-                    var n = t("screen-player");
-                    legacyResetDetailPlayerSurface(n);
-                    var r = j.detailReturn;
-                    r && "search" === r.screen ? (nt("search"), tt(r.focus)) : (nt("home"), ht(j.tab, !1), r && r.focus && Ye(r.focus) ? tt(r.focus) : Re[j.tab] && tt(Re[j.tab]))
-                }
-            }
-    }
-
-    function st() {
-        j.focus && j.focus._activate && j.focus._activate()
+        var runtime = window.TutyUI;
+        return runtime && runtime.handleNavigationBack ? runtime.handleNavigationBack() : !1
     }
 
     function lt(e) {
-        var t = e.keyCode || e.which,
-            i = e.key || "",
-            _action = legacyNavigationAction(e),
-            a = !0;
-        if ("back" === _action) return j.categoryPickerOpen ? (An(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveSearchOpen ? (lvCloseSearch(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.liveCategoriesOpen ? (lvCloseCats(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.nextEpisodeOpen ? (cancelNextEpisodePrompt(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.episodeBrowserOpen ? (un(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : Pt ? (rt = Date.now(), Wt(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.resumeOpen ? (closeResume(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : j.filterOpen ? (closeFilter(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : fa ? (rt = Date.now(), _n(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : va ? (rt = Date.now(), an(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation())) : (ot(), e.preventDefault && e.preventDefault(), void(e.stopPropagation && e.stopPropagation()));
-        if (j.resumeOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
-        if (j.filterOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
-        if (j.categoryPickerOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
-        if (j.liveSearchOpen || j.liveCategoriesOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
-        if (j.nextEpisodeOpen) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1, void(a && e.preventDefault && e.preventDefault());
-        if (j.episodeBrowserOpen) {
-            var r = n(j.focus, "#pe-seasons"),
-                o = n(j.focus, "#pe-episodes");
-            if (37 === t) {
-                if (o && ea && "none" !== ea.style.display) {
-                    var s = Zi ? Zi.children[j.browserSeason] || it(Zi) : null;
-                    s && tt(s)
+        var runtime = window.TutyUI;
+        return runtime && runtime.handleNavigationKey ? runtime.handleNavigationKey(e) : !1
+    }
+
+    function returnFromPlayer() {
+        Ni(), Ui();
+        var e = j.playerReturn;
+        if (e && "detail" === e.screen) {
+            var i = t("screen-player"),
+                a = t("screen-detail");
+            i && (i.classList.add("is-mini"), i.classList.add("is-active")), a && a.classList.add("is-active"), j.screen = "detail";
+            var n = !1;
+            if (j.detailNeedsRebuild && j.detail) {
+                j.detailNeedsRebuild = !1, ti(j.detail), n = !0;
+                var r = se ? se.querySelector(".detail-season") : null;
+                r && tt(r)
+            } else j.detail && bn(j.detail);
+            if (!n)
+                if (e.focus && Ye(e.focus)) tt(e.focus);
+                else {
+                    var o = oe ? oe.querySelector(".focusable") : null;
+                    o && tt(o)
                 }
-            } else if (39 === t) {
-                if (r) {
-                    var l = ta ? ta.querySelector(".pe-ep.is-current") || it(ta) : null;
-                    l && tt(l)
-                }
-            } else 38 === t ? at("up") : 40 === t ? at("down") : 13 === t || 32 === t ? st() : a = !1;
-            a && e.preventDefault && e.preventDefault()
         } else {
-            var mediaAction = legacyMediaKey(t, i),
-                d = "play" === mediaAction,
-                c = "pause" === mediaAction,
-                p = "playpause" === mediaAction,
-                u = "forward" === mediaAction,
-                v = "rewind" === mediaAction,
-                f = "stop" === mediaAction;            if ("player" === j.screen) {
-                if (d) {
-                    if (we && we.paused) {
-                        try {
-                            legacyPlayVideo(we)
-                        } catch (e) {}
-                        qi("none"), Pi()
-                    }
-                    return void(e.preventDefault && e.preventDefault())
-                }
-                if (c) {
-                    if (we && !we.paused) {
-                        try {
-                            legacyPauseVideo(we)
-                        } catch (e) {}
-                        qi("pause"), Pi()
-                    }
-                    return void(e.preventDefault && e.preventDefault())
-                }
-                if (p) return Di(), void(e.preventDefault && e.preventDefault());
-                if (u) return Oi(15), void(e.preventDefault && e.preventDefault());
-                if (v) return Oi(-15), void(e.preventDefault && e.preventDefault());
-                if (f) return ot(), void(e.preventDefault && e.preventDefault())
+            ar();
+            var s = t("screen-player");
+            legacyResetDetailPlayerSurface(s), e && "search" === e.screen ? (nt("search"), tt(e.focus)) : (nt("home"), ht(j.tab, !1), e && e.focus && Ye(e.focus) ? tt(e.focus) : Re[j.tab] && tt(Re[j.tab]))
+        }
+    }
+
+    function returnFromDetail() {
+        ar();
+        var n = t("screen-player");
+        legacyResetDetailPlayerSurface(n);
+        var r = j.detailReturn;
+        r && "search" === r.screen ? (nt("search"), tt(r.focus)) : (nt("home"), ht(j.tab, !1), r && r.focus && Ye(r.focus) ? tt(r.focus) : Re[j.tab] && tt(Re[j.tab]))
+    }
+
+    function toggleDetailSynopsis() {
+        var e = t("screen-detail");
+        if (!e) return;
+        var i = !e.classList.contains("is-synopsis-open");
+        e.classList.toggle("is-synopsis-open", i);
+        var a = document.querySelector(".detail-more");
+        a && (a.textContent = i ? "Menos" : "Más")
+    }
+
+    function handleBrowserHorizontal(code) {
+        var r = n(j.focus, "#pe-seasons"),
+            o = n(j.focus, "#pe-episodes");
+        if (37 === code) {
+            if (o && ea && "none" !== ea.style.display) {
+                var s = Zi ? Zi.children[j.browserSeason] || it(Zi) : null;
+                s && tt(s);
+                return !0
             }
-            var h = "menu" === mediaAction;
-            if ("player" === j.screen && "vod" === j.playerMode && h) return fa ? _n() : va ? an() : tn(), void(e.preventDefault && e.preventDefault());
-            if ("home" === j.screen && 0 === j.tab && h && !j.liveCategoriesOpen && !j.liveSearchOpen) return lvOpenCats(), void(e.preventDefault && e.preventDefault());
-            if ("player" === j.screen && (37 === t || 38 === t || 39 === t || 40 === t)) {
-                if (fa) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t && at("down"), void(e.preventDefault && e.preventDefault());
-                if (va) return en(), 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t && at("down"), void(e.preventDefault && e.preventDefault());
-                if ("vod" === j.playerMode) {
-                    if (j.focus === Ee && Je) {
-                        if (37 === t) return ir(-1), void(e.preventDefault && e.preventDefault());
-                        if (39 === t) return ir(1), void(e.preventDefault && e.preventDefault());
-                        if (38 === t || 40 === t) return er(!1), void(e.preventDefault && e.preventDefault())
-                    }
-                    if (37 === t) return Oi(-10), void(e.preventDefault && e.preventDefault());
-                    if (39 === t) return Oi(10), void(e.preventDefault && e.preventDefault());
-                    if (40 === t) return tn(), void(e.preventDefault && e.preventDefault());
-                    if (38 === t) return tr(), void(e.preventDefault && e.preventDefault())
-                } else {
-                    var g = j.focus && n(j.focus, ".player-channels");
-                    if (j.channelsOpen || g) {
-                        if (j.focus && j.focus.classList && j.focus.classList.contains("pc-cat-pill")) return 37 === t ? at("left") : 38 === t ? at("up") : 39 === t ? at("right") : 40 === t && at("down"), void(e.preventDefault && e.preventDefault());
-                        if (38 === t) {
-                            if (0 === (y = j.focus && void 0 !== j.focus._channel ? j.focus._channel : j.channel)) {
-                                var m = Ce ? Ce.querySelector(".pc-cat-pill.is-selected") || Ce.querySelector(".pc-cat-pill") : null;
-                                m && tt(m)
-                            } else {
-                                Nn(y - 1)
-                            }
-                            return void(e.preventDefault && e.preventDefault())
-                        }
-                        if (40 === t) {
-                            var y = j.focus && void 0 !== j.focus._channel ? j.focus._channel : j.channel;
-                            return Nn(Math.min(F.length - 1, y + 1)), void(e.preventDefault && e.preventDefault())
-                        }
-                        if (39 === t) return gr(), void(e.preventDefault && e.preventDefault())
-                    } else {
-                        if (38 === t) return j.channel > 0 ? Vt(j.channel - 1, !1) : F.length && Vt(F.length - 1, !1), Pi(), void(e.preventDefault && e.preventDefault());
-                        if (40 === t) return j.channel < F.length - 1 ? Vt(j.channel + 1, !1) : F.length && Vt(0, !1), Pi(), void(e.preventDefault && e.preventDefault());
-                        if (37 === t) return hr(), void(e.preventDefault && e.preventDefault());
-                        j.infobar ? Ai() : Pi()
-                    }
-                }
-            }
-            if ("left" === _action) at("left");
-            else if ("up" === _action) at("up");
-            else if ("right" === _action) at("right");
-            else if ("down" === _action) at("down");
-            else if ("enter" === _action) {
-                if (j.episodeBrowserOpen) return void st();
-                if (fa) st();
-                else if (va) en(), st();
-                else if ("player" === j.screen && "vod" === j.playerMode && j.focus === Ee && Je) er(!0);
-                else if ("player" === j.screen && j.streamError && we && we.src && !n(j.focus, ".player-channels")) {
-                    var b = legacyPlayVideo(we);
-                    b && b.catch && b.catch(function() {}), j.streamError = "", nr("")
-                } else "player" === j.screen && "vod" === j.playerMode ? Di() : st()
-            } else a = !1;
-            a && e.preventDefault && e.preventDefault()
+        } else if (39 === code && r) {
+            var l = ta ? ta.querySelector(".pe-ep.is-current") || it(ta) : null;
+            l && tt(l);
+            return !0
+        }
+        return !1
+    }
+
+    function closeSeasonPopupAndFocus() {
+        ri();
+        var e = se ? se.querySelector(".season-arrow") : null;
+        e && tt(e)
+    }
+
+    function hasDetailSeasonPopup() {
+        var runtime = window.TutyUI,
+            modulePopup = !!(runtime && runtime.hasDetailRuntime && runtime.hasDetailRuntime() && runtime.hasSeasonPopup && runtime.hasSeasonPopup());
+        return !!(ni || modulePopup)
+    }
+
+    function getNavigationHost() {
+        return {
+            state: j,
+            byId: t,
+            closest: n,
+            getFocus: function() {
+                return j.focus
+            },
+            canFocus: Ye,
+            focus: tt,
+            moveFocus: at,
+            activateFocus: function() {
+                j.focus && j.focus._activate && j.focus._activate()
+            },
+            getTabs: function() {
+                return Re
+            },
+            getPlayerFocus: function() {
+                return ye
+            },
+            getSeekbar: function() {
+                return Ee
+            },
+            getChannels: function() {
+                return F
+            },
+            getVideoPaused: function() {
+                return !!(we && we.paused)
+            },
+            hasVideoSource: function() {
+                return !!(we && we.src)
+            },
+            isSeeking: function() {
+                return Je
+            },
+            isFullSettingsOpen: function() {
+                return fa
+            },
+            isQuickSettingsOpen: function() {
+                return va
+            },
+            isAddonsOpen: function() {
+                return Pt
+            },
+            hasSeasonPopup: hasDetailSeasonPopup,
+            isSynopsisOpen: function() {
+                var e = t("screen-detail");
+                return !!(e && e.classList.contains("is-synopsis-open"))
+            },
+            navigationAction: legacyNavigationAction,
+            mapMediaKey: legacyMediaKey,
+            closeCategoryPicker: An,
+            closeSearch: pi,
+            closeLiveSearch: lvCloseSearch,
+            closeLiveCategories: lvCloseCats,
+            cancelNextEpisodePrompt: cancelNextEpisodePrompt,
+            closeEpisodeBrowser: un,
+            closeAddons: Wt,
+            closeResume: closeResume,
+            closeFilter: closeFilter,
+            closeFullSettings: _n,
+            closeQuickSettings: an,
+            closeSeek: function() {
+                er(!1)
+            },
+            closeChannels: gr,
+            closeSeasonPopup: closeSeasonPopupAndFocus,
+            scheduleInfobarHide: Ai,
+            schedulePlaySettingsClose: en,
+            hideInfobar: Ni,
+            hideVodInfobar: Ui,
+            openCategories: lvOpenCats,
+            openQuickSettings: tn,
+            openFullSettings: Sn,
+            openChannels: hr,
+            showScreen: nt,
+            selectTab: ht,
+            platformBack: legacyPlatformBack,
+            returnFromPlayer: returnFromPlayer,
+            returnFromDetail: returnFromDetail,
+            toggleSynopsis: toggleDetailSynopsis,
+            handleBrowserHorizontal: handleBrowserHorizontal,
+            handleBrowserFocus: function(code) {
+                handleBrowserHorizontal(code)
+            },
+            resetStream: ar,
+            resetPlayerSurface: function(node) {
+                legacyResetDetailPlayerSurface(node)
+            },
+            stopWebMedia: stopWebMedia,
+            playVideo: function() {
+                try {
+                    legacyPlayVideo(we)
+                } catch (e) {}
+            },
+            pauseVideo: function() {
+                try {
+                    legacyPauseVideo(we)
+                } catch (e) {}
+            },
+            togglePlayPause: Di,
+            playCurrent: function() {
+                if (!we) return;
+                try {
+                    var e = legacyPlayVideo(we);
+                    e && e.catch && e.catch(function() {})
+                } catch (e) {}
+            },
+            setPlaybackStatus: qi,
+            showInfobar: Pi,
+            vodSeek: Oi,
+            stepSeek: ir,
+            startSeek: tr,
+            endSeek: function() {
+                er(!1)
+            },
+            notifyStatus: nr,
+            selectLiveChannel: Vt,
+            focusLiveChannelRow: Nn
         }
     }
 
@@ -2077,236 +1969,172 @@
         var i = document.querySelector(".home-sidebar-bg");
         i && i.classList.add("is-on")
     }
+    function getHomeShellHost() {
+        return {
+            state: j,
+            byId: t,
+            el: e,
+            clear: i,
+            focus: tt,
+            getTabs: function() {
+                return H
+            },
+            getIcons: function() {
+                return B
+            },
+            getPageCount: function() {
+                return ct.length
+            },
+            getInitialPage: function() {
+                return H[j.tab] && H[j.tab].page >= 0 ? H[j.tab].page : 0
+            },
+            getChannels: function() {
+                return Ue
+            },
+            getLiveFocus: function() {
+                return ie
+            },
+            selectTab: ht,
+            focusHomeTab: focusHomeTab,
+            openSettings: yi,
+            openSearch: li,
+            openFilter: openFilter
+        }
+    }
+
+    function getPlayerStageHost() {
+        return {
+            state: j,
+            byId: t,
+            el: e,
+            clear: i,
+            focus: tt,
+            openSeek: er,
+            stepSeek: ir,
+            stepVodSeek: Oi,
+            startSeek: tr,
+            openPlaySettings: tn,
+            openFullSettings: Sn,
+            openEpisodeBrowser: pn,
+            schedulePlaySettingsClose: en,
+            setSmooth: function(smooth) {
+                $a(Ha(), smooth)
+            },
+            refreshStreamModeButtons: Cn,
+            reloadStreamMode: Tn,
+            applyAspect: xn,
+            applySubtitleDisplay: Fa,
+            savePlaybackPreferences: ka,
+            openChannels: hr,
+            closeChannels: gr,
+            selectLiveChannel: Vt,
+            hideInfobar: Ni,
+            showInfobar: Pi,
+            togglePlayPause: Di,
+            renderLiveCategories: qn,
+            renderLiveChannels: Rn,
+            toggleFavorite: function(channel) {
+                liveToggleFav(channel)
+            },
+            refreshLiveList: Ht,
+            isFavoritesOnly: function() {
+                return liveFavFilter
+            },
+            getChannels: function() {
+                return F
+            }
+        }
+    }
+
+    function getHomeLivePageHost() {
+        return {
+            state: j,
+            getChannels: function() {
+                return F
+            },
+            getRows: function() {
+                return Ue
+            },
+            createVideo: function() {
+                return document.createElement("video")
+            },
+            el: e,
+            focus: tt,
+            canFocus: Ye,
+            openCategories: lvOpenCats,
+            toggleFavorites: lvToggleFav,
+            openSearch: lvOpenSearch,
+            selectChannel: Vt,
+            openPlayer: function() {
+                dr("live")
+            },
+            focusLive: function() {
+                ie && tt(ie)
+            },
+            focusTab: function() {
+                Re[0] && tt(Re[0])
+            }
+        }
+    }
+
+    function getHomePageHost() {
+        return {
+            getCatalog: function() {
+                return l
+            },
+            filterCategory: Yt,
+            selectPage: I,
+            el: e,
+            place: a,
+            openDetail: ei,
+            afterBuild: mt,
+            isHomeScreen: function() {
+                return "home" === j.screen
+            },
+            onHeroLeft: function() {
+                Re[j.tab] && tt(Re[j.tab])
+            }
+        }
+    }
+
     var ct = [function(t) {
-            te = e("div", "live-main"), (Et = document.createElement("video")).className = "live-preview-video", Et.preload = "auto", Et.muted = !0, Et.volume = 0, Et.setAttribute("muted", "muted"), Et.setAttribute("playsinline", ""), Et.setAttribute("webkit-playsinline", ""), te.appendChild(Et), te.appendChild(e("div", "live-frame")), te.appendChild(e("div", "live-logo")), qt = e("div", "live-preview-status"), te.appendChild(qt), t.appendChild(te);
-            var i = e("div", "live-info"),
-                cat = e("div", "live-category");
-            cat.id = "live-cat-label", i.appendChild(cat), (ee = e("div", "live-channel")).style.right = "112.5px", i.appendChild(ee);
-            var a = e("div", "live-fullscreen");
-            a._activate = function() {
-                dr("live")
-            }, i.appendChild(a), te.appendChild(i);
-            var n = e("div", "live-arrow-up"),
-                r = e("div", "live-arrow-down");
-            t.appendChild(n), t.appendChild(r), ae = e("div", "live-list scrollable"), t.appendChild(ae);
-            var fast = e("div", "live-fast live-fast-right"),
-                fastList = [];
-
-            function fastBtn(cls, id, label) {
-                var n = e("div", "fast-btn focusable " + cls);
-                return n.id = id, n._label = label, fast.appendChild(n), fastList.push(n), n
-            }
-
-            function fastMove(idx) {
-                return function(t) {
-                    if ("left" === t) return idx > 0 && (tt(fastList[idx - 1]), !0), !0;
-                    if ("right" === t) return idx < fastList.length - 1 ? (tt(fastList[idx + 1]), !0) : !0;
-                    if ("up" === t) return ie ? (tt(ie), !0) : !1;
-                    if ("down" === t) {
-                        for (var i = null, a = 0; a < Ue.length; a++)
-                            if (Ue[a]._channel === j.channel) {
-                                i = Ue[a];
-                                break
-                            }
-                        return !i && Ue.length && (i = Ue[0]), i && Ye(i) ? (tt(i), !0) : !1
-                    }
-                    return !1
-                }
-            }
-            liveFastAll = fastBtn("f-all", "live-btn-all", "Categorías"), liveFastFav = fastBtn("f-fav", "live-btn-fav", "Favoritos"), liveFastSrch = fastBtn("f-srch", "live-btn-srch", "Buscar"), liveFastAll._activate = function() {
-                lvOpenCats()
-            }, liveFastFav._activate = function() {
-                lvToggleFav()
-            }, liveFastSrch._activate = function() {
-                lvOpenSearch()
-            }, liveFastAll._onMove = fastMove(0), liveFastFav._onMove = fastMove(1), liveFastSrch._onMove = fastMove(2), lvSyncFav(), t.appendChild(fast), Ht(!1), Bt(), (ie = e("div", "live-focus focusable"))._onMove = function(e) {
-                if ("up" === e) return j.channel > 0 && Vt(j.channel - 1), !0;
-                if ("down" === e) return j.channel < F.length - 1 && Vt(j.channel + 1), !0;
-                if ("right" === e) {
-                    var t = Ue.filter(function(e) {
-                        return e._channel === j.channel
-                    })[0];
-                    return t ? tt(t) : Ue.length ? tt(Ue[0]) : liveFastAll && tt(liveFastAll), !0
-                }
-                return "left" === e && (Re[0] && tt(Re[0]), !0)
-            }, ie._activate = function() {
-                dr("live")
-            }, t.appendChild(ie)
+        var runtime = window.TutyUI;
+        if (!runtime || !runtime.buildHomeLivePage) return;
+        var refs = runtime.buildHomeLivePage(t, getHomeLivePageHost());
+        Et = refs.video, te = refs.container, qt = refs.status, ae = refs.list, ie = refs.focus, ee = refs.channelLabel;
+        liveFastAll = refs.fastAll, liveFastFav = refs.fastFav;
+        Ht(!1), Bt()
         }, function(e) {
-            var t = Yt("destacado"),
-                i = t.slice(0, 9),
-                a = !(!i[0] || !i[0]._portal);
-            Kt(e, i, {
-                titles: a,
-                dots: a ? 4 : 0,
-                shade: a
-            });
-            var n = t.slice(9);
-            n.length && Zt(e, n, 860, "Títulos destacados")
+            var runtime = window.TutyUI;
+            return runtime && runtime.buildHomeVodPage ? runtime.buildHomeVodPage(1, e, getHomePageHost()) : !1
         }, function(e) {
-            var t = Yt("pelicula"),
-                i = t.slice(0, 9),
-                a = !(!i[0] || !i[0]._portal);
-            Kt(e, i, {
-                titles: a,
-                dots: a ? 4 : 0,
-                shade: a
-            });
-            var n = t.slice(9);
-            n.length && Zt(e, n, 860, "Más películas")
+            var runtime = window.TutyUI;
+            return runtime && runtime.buildHomeVodPage ? runtime.buildHomeVodPage(2, e, getHomePageHost()) : !1
         }, function(e) {
-            var t = Yt("serie"),
-                i = t.slice(0, 9),
-                a = !(!i[0] || !i[0]._portal);
-            Kt(e, i, {
-                titles: a,
-                dots: a ? 3 : 2,
-                shade: a
-            });
-            var n = t.slice(9);
-            n.length && Zt(e, n, 860, "Más series")
+            var runtime = window.TutyUI;
+            return runtime && runtime.buildHomeVodPage ? runtime.buildHomeVodPage(3, e, getHomePageHost()) : !1
         }, function(t) {
-            var i = I("infantil", 12, 0);
-            i.length || (i = l);
-            var n = !(!i[0] || !i[0]._portal);
-            Kt(t, i.slice(0, 9), {
-                titles: n,
-                shade: n
-            });
-            var rest = i.slice(9);
-            rest.length && Zt(t, rest, 860, "Más para niños")
+            var runtime = window.TutyUI;
+            return runtime && runtime.buildHomeVodPage ? runtime.buildHomeVodPage(4, t, getHomePageHost()) : !1
         }, function(e) {
-            var t = Yt("anime"),
-                i = t.slice(0, 9),
-                a = !(!i[0] || !i[0]._portal);
-            Kt(e, i, {
-                titles: a,
-                dots: a ? 3 : 2,
-                shade: a
-            });
-            var n = t.slice(9);
-            n.length && Zt(e, n, 860, "Anime y animación")
+            var runtime = window.TutyUI;
+            return runtime && runtime.buildHomeVodPage ? runtime.buildHomeVodPage(5, e, getHomePageHost()) : !1
         }, function(t) {
-            var i = l.length ? l : [];
-            Kt(t, i.slice(0, 9), {
-                titles: false,
-                shade: true
-            });
-            for (var explore = [{
-                    key: "pelicula",
-                    label: "Películas"
-                }, {
-                    key: "serie",
-                    label: "Series"
-                }, {
-                    key: "anime",
-                    label: "Anime y animación"
-                }, {
-                    key: "infantil",
-                    label: "Infantil"
-                }, {
-                    key: "gratis",
-                    label: "Gratis"
-                }], exploreY = 811.5, exploreIndex = 0; exploreIndex < explore.length; exploreIndex++) {
-                var categoryItems = Yt(explore[exploreIndex].key).slice(0, 6);
-                categoryItems.length && (Zt(t, categoryItems, exploreY, explore[exploreIndex].label), exploreY += 490)
-            }
+            var runtime = window.TutyUI;
+            return runtime && runtime.buildHomeVodPage ? runtime.buildHomeVodPage(6, t, getHomePageHost()) : !1
         }],
-        pt = {};
+                pt = {};
 
     function ut(e) {
         !pt[e] && Ne[e] && ct[e] && (pt[e] = !0, ct[e](Ne[e]))
     }
 
     function vt() {
-        Pe = !0, Y = t("home-pages"), Z = t("home-notify"), i(Y), Ne = [], pt = {};
-        for (var a = 0; a < ct.length; a++) {
-            var n = e("div", "home-page scrollable");
-            0 === a && n.classList.add("is-current"), Y.appendChild(n), Ne.push(n)
-        }
-        ut(H[j.tab] && H[j.tab].page >= 0 ? H[j.tab].page : 0),
-            function() {
-                var a = t("home-tabs");
-                i(a), a.classList.add("scrollable"), a.classList.add("is-expanded"), Re = [];
-                for (var n = 0; n < H.length; n++) {
-                    var r = e("div", "tab-item focusable");
-                    r.appendChild(e("div", "tab-pill"));
-                    var o = e("div", "tab-icon");
-                    o.innerHTML = B[H[n].icon] || "", r.appendChild(o);
-                    var s = e("div", "tab-title", H[n].label);
-                    r.appendChild(s), r._tab = n, r._activate = function(e) {
-                        return function() {
-                            if (ht(e, !1), 0 === e) {
-                                var t = Ue.filter(function(e) {
-                                    return e._channel === j.channel
-                                })[0];
-                                t ? tt(t) : Ue.length ? tt(Ue[0]) : ie && tt(ie)
-                            } else if (H[e].page >= 0) focusHomeTab(e)
-                        }
-                    }(n), r._onMove = function(e) {
-                        return function(t) {
-                            if ("up" === t) return e > 0 && Re[e - 1] && (tt(Re[e - 1]), ht(e - 1, !1)), !0;
-                            if ("down" === t) return e < Re.length - 1 && Re[e + 1] && (tt(Re[e + 1]), ht(e + 1, !1)), !0;
-                            if ("left" === t) return !0;
-                            if ("right" === t) {
-                                if (ht(e, !1), 0 === e) {
-                                    var i = Ue.filter(function(e) {
-                                        return e._channel === j.channel
-                                    })[0];
-                                    i ? tt(i) : Ue.length ? tt(Ue[0]) : ie && tt(ie)
-                                } else if (H[e].page >= 0) focusHomeTab(e)
-                                return !0
-                            }
-                            return !1
-                        }
-                    }(n), a.appendChild(r), Re.push(r)
-                }
-            }(),
-            function() {
-                i(Z);
-                for (var t = [{
-                        cls: "search",
-                        icon: "assets/original/home/icon_notify_search.png",
-                        small: !0
-                    }, {
-                        cls: "filter",
-                        icon: "assets/original/search/icon_category_filter_n.png",
-                        small: !0
-                    }, {
-                        cls: "personal",
-                        icon: "assets/original/home/icon_notify_personal.png",
-                        small: !0
-                    }], a = 0; a < t.length; a++) {
-                    var n = t[a],
-                        r = e("div", "notify-item focusable " + n.cls + (n.small ? " is-small" : "")),
-                        o = e("div", "n-normal");
-                    o.style.backgroundImage = "url(" + n.icon + ")", r.appendChild(o), "personal" === n.cls ? r._activate = function() {
-                        yi()
-                    } : "search" === n.cls ? r._activate = function() {
-                        li()
-                    } : "filter" === n.cls ? r._activate = function() {
-                        openFilter()
-                    } : r._activate = function() {}, Z.appendChild(r)
-                }
-                var s = e("div", "notify-divider");
-                Z.appendChild(s);
-                var l = e("div", "notify-wifi");
-                l.innerHTML = '<svg viewBox="0 0 30 22"><path d="M15 19.5a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2z" fill="currentColor"/><path d="M8.4 12.2a9.6 9.6 0 0 1 13.2 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4.2 7.6a15.6 15.6 0 0 1 21.6 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', Z.appendChild(l);
-                var d = e("div", "notify-time");
-                d.id = "notify-time", Z.appendChild(d), ft(), setInterval(ft, 3e4)
-            }()
-    }
-
-    function ft() {
-        var e = t("notify-time");
-        if (e) {
-            var i = new Date,
-                a = i.getHours(),
-                n = a >= 12 ? "PM" : "AM";
-            0 === (a %= 12) && (a = 12);
-            var o = i.getMinutes();
-            e.textContent = a + ":" + r(o) + " " + n
-        }
+        var runtime = window.TutyUI;
+        if (!runtime || !runtime.buildHomeShell) return;
+        var refs = runtime.buildHomeShell(getHomeShellHost());
+        if (!refs) return;
+        Pe = !0, pt = {}, Ne = refs.pages, Re = refs.tabs, ut(refs.initialPage)
     }
 
     function ht(e, t) {
@@ -2424,77 +2252,18 @@
         Tt = null,
         Et = null,
         qt = null,
-        Ot = 0,
-        Dt = null,
-        At = "",
         Pt = !1;
 
     function Nt() {
-        if (Ot++, At = "", Dt && (clearTimeout(Dt), Dt = null), te && te.classList.remove("is-preview-playing", "is-preview-loading"), qt && (qt.textContent = ""), Et) {
-            legacyDestroyHls("__tutyPreviewHls");
-            try {
-                legacyPauseVideo(Et)
-            } catch (e) {}
-            Et.removeAttribute("src");
-            try {
-                legacySetVideoSource(Et, ""), legacyLoadVideo(Et)
-            } catch (e) {}
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasPreviewRuntime && runtime.hasPreviewRuntime() && runtime.stopPreview) return runtime.stopPreview();
+        return !1
     }
-
     function Rt(e) {
-        Dt && clearTimeout(Dt), Dt = setTimeout(function() {
-            Dt = null,
-                function(e) {
-                    if (Et && e && (e.channelCode || e.streamUrl) && "home" === j.screen && 0 === j.tab) {
-                        var t = e.channelCode || e.streamUrl;
-                        if (t !== At || !te || !te.classList.contains("is-preview-loading") && !te.classList.contains("is-preview-playing")) {
-                            Nt(), At = t;
-                            var i = ++Ot;
-                            te.classList.add("is-preview-loading"), qt && (qt.textContent = "Cargando " + (e.name || "canal") + "…"), q("resolveLive", e.streamUrl ? {
-                                streamUrl: e.streamUrl
-                            } : {
-                                channelCode: e.channelCode
-                            }, function(e, t) {
-                                if (i === Ot && "home" === j.screen && 0 === j.tab) {
-                                    var a = !e && t && !1 !== t.returnValue && (t.proxyPath || t.url),
-                                        previewHls = !!(!e && t && (t.isHls || /\.m3u8(?:\?|$)/i.test(a || "")));
-                                    if (!a) return te.classList.remove("is-preview-loading"), void(qt && (qt.textContent = ""));
-                                    Et.onloadeddata = function() {
-                                        i === Ot && (te.classList.remove("is-preview-loading"), te.classList.add("is-preview-playing"), qt && (qt.textContent = ""))
-                                    }, Et.onerror = function() {
-                                        i === Ot && (te.classList.remove("is-preview-loading", "is-preview-playing"), qt && (qt.textContent = ""))
-                                    };
-                                    var useHlsPreview = previewHls && !legacyNativeTvPlayback() && window.Hls && window.Hls.isSupported() && !legacyNativePreviewHls(Et);
-                                    if (useHlsPreview) {
-                                        legacyDestroyHls("__tutyPreviewHls");
-                                        var phls = new window.Hls({
-                                            enableWorker: !0,
-                                            backBufferLength: 10
-                                        });
-                                        window.__tutyPreviewHls = phls, phls.on(window.Hls.Events.MANIFEST_PARSED, function() {
-                                            if (i === Ot) try {
-                                                var e = legacyPlayVideo(Et);
-                                                e && e.catch && e.catch(function() {})
-                                            } catch (e) {}
-                                        }), phls.on(window.Hls.Events.ERROR, function(e, t) {
-                                            t && t.fatal && i === Ot && (te.classList.remove("is-preview-loading", "is-preview-playing"), qt && (qt.textContent = ""))
-                                        }), legacyLoadHls(Et, phls, a)
-                                    } else try {
-                                        legacySetVideoSource(Et, a), legacyLoadVideo(Et);
-                                        var n = legacyPlayVideo(Et);
-                                        n && n.catch && n.catch(function() {})
-                                    } catch (e) {
-                                        te.classList.remove("is-preview-loading")
-                                    }
-                                }
-                            })
-                        }
-                    }
-                }(e || F[j.channel])
-        }, 220)
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasPreviewRuntime && runtime.hasPreviewRuntime() && runtime.previewChannel) return runtime.previewChannel(e || F[j.channel]);
+        return !1
     }
-
     function Ut(e, t, complete) {
         e && (_t = e, qn(), e.isAddon ? Ft(function() {
             t && t(), complete && complete()
@@ -2537,27 +2306,6 @@
             index: index
         }) : 0;
         return result
-    }
-
-    function legacyFindLiveSearchMatches(channels, categories, query) {
-        var _core = window.TutyCore;
-        if (_core && _core.findLiveSearchMatches) return _core.findLiveSearchMatches(channels, categories, query);
-        var needle = o(query),
-            channelMatches = [],
-            categoryMatches = [],
-            index = 0;
-        for (index = 0; index < categories.length && categoryMatches.length < 8; index++)(!needle || o(categories[index].name || "").indexOf(needle) >= 0) && categoryMatches.push(categories[index]);
-        for (index = 0; index < channels.length && channelMatches.length < 250; index++) {
-            var channel = channels[index];
-            channel && (!needle || o(channel.name || "").indexOf(needle) >= 0) && channelMatches.push({
-                channel: channel,
-                index: index
-            })
-        }
-        return {
-            channels: channelMatches,
-            categories: categoryMatches
-        }
     }
 
     function legacySelectInitialAddons(stored, presets) {
@@ -2650,12 +2398,6 @@
         }), result
     }
 
-    function legacyIsAddonUrl(value) {
-        var _core = window.TutyCore;
-        if (_core && _core.isM3uAddonUrl) return _core.isM3uAddonUrl(value);
-        return /^https?:\/\//i.test(String(value).trim())
-    }
-
     function legacyUpsertM3uAddon(addons, entry, count) {
         var _core = window.TutyCore;
         if (_core && _core.upsertM3uAddon) return _core.upsertM3uAddon(addons, entry, count);
@@ -2687,21 +2429,6 @@
             next = scrollTop;
         rowTop < next && (next = rowTop), rowTop + 100.5 > next + clientHeight && (next = rowTop + 100.5 - clientHeight);
         return Math.max(0, Math.min(Math.max(0, scrollHeight - clientHeight), next))
-    }
-
-    function legacyHasAddonUrl(addons, url) {
-        var _core = window.TutyCore;
-        if (_core && _core.hasAddonUrl) return _core.hasAddonUrl(addons, url);
-        for (var index = 0; index < addons.length; index++)
-            if (addons[index].url === url) return !0;
-        return !1
-    }
-
-    function legacyRemoveAddonAt(addons, index) {
-        var _core = window.TutyCore;
-        if (_core && _core.removeAddonAt) return _core.removeAddonAt(addons, index);
-        var next = addons.slice();
-        return next.splice(index, 1), next
     }
 
     function Ft(e) {
@@ -2762,76 +2489,13 @@
     }
 
     function Ht(t) {
-        if (ae) {
-            /* Pagination rebuilds the whole list.  Keep the focused row (and its
-               channel) so multi-page categories do not steal focus mid-load. */
-            var keepRow = j.focus && j.focus._channel !== void 0 && j.focus.parentNode === ae,
-                keepChannel = keepRow ? j.focus._channel : -1;
-            i(ae), Ue = [];
-            var favOnly = !!t || liveFavFilter,
-                visibleChannels = legacyFilterLiveChannels(F, favOnly, liveIsFav);
-            if (F.length) {
-                for (var v = 0; v < visibleChannels.length; v++) {
-                    var a = visibleChannels[v].index,
-                        channel = visibleChannels[v].channel,
-                        n = e("div", "live-row focusable");
-                    n._channel = a;
-                    var r = e("div", "row-icon");
-                    channel.logo && (r.style.backgroundImage = "url(" + channel.logo + ")", r.style.backgroundSize = "contain", r.style.backgroundRepeat = "no-repeat", r.style.backgroundPosition = "center");
-                    var o = e("div", "row-play"),
-                        s = e("div", "row-name", channel.name),
-                        rowIndex = Ue.length,
-                        favBtn = e("div", "live-row-fav focusable" + (liveIsFav(channel) ? " is-fav" : ""), "♥");
-                    favBtn._channel = a, n._favBtn = favBtn, favBtn._activate = function(channel, heart, index) {
-                        return function() {
-                            liveToggleFav(channel);
-                            var favorite = liveIsFav(channel);
-                            if (heart.classList.toggle("is-fav", favorite), liveFavFilter && !favorite) {
-                                Ht(!0);
-                                for (var next = null, k = 0; k < Ue.length; k++)
-                                    if (Ue[k]._channel >= index) {
-                                        next = Ue[k];
-                                        break
-                                    }
-                                next = next || Ue[0], next ? tt(next) : lvFocusList()
-                            }
-                        }
-                    }(channel, favBtn, a), favBtn._onMove = function(row, index) {
-                        return function(action) {
-                            if ("left" === action) return tt(row), !0;
-                            if ("up" === action || "down" === action) {
-                                var target = Ue["up" === action ? index - 1 : index + 1];
-                                return target && target._favBtn ? (tt(target._favBtn), !0) : !0
-                            }
-                            return !0
-                        }
-                    }(n, rowIndex), n.appendChild(r), n.appendChild(o), n.appendChild(s), n.appendChild(favBtn), a === j.channel && n.classList.add("is-current"), n._activate = function(e) {
-                        return function() {
-                            Vt(e, !0), dr("live")
-                        }
-                    }(a), n._onMove = function(e, row) {
-                        return function(t) {
-                            if ("left" === t) return ie ? tt(ie) : Re[0] && tt(Re[0]), !0;
-                            if ("right" === t) return row._favBtn ? (tt(row._favBtn), !0) : !1;
-                            if ("up" === t) return e > 0 && Ue[e - 1] ? (tt(Ue[e - 1]), !0) : liveFastAll ? (tt(liveFastAll), !0) : !1;
-                            if ("down" === t) return e < Ue.length - 1 && Ue[e + 1] ? (tt(Ue[e + 1]), !0) : !1;
-                            return !1
-                        }
-                    }(rowIndex, n), ae.appendChild(n), Ue.push(n)
-                }
-                !Ue.length && favOnly && ae.appendChild(e("div", "live-list-status", "No tienes canales favoritos en esta categoría")), F[j.channel] && ee && (ee.textContent = F[j.channel].name), zt()
-            } else ae.appendChild(e("div", "live-list-status", kt ? favOnly ? "No tienes canales favoritos" : "No se encontraron canales" : "Cargando canales…"));
-            if (keepRow && Ue.length)
-                for (var k = 0; k < Ue.length; k++)
-                    if (Ue[k]._channel === keepChannel) {
-                        tt(Ue[k]);
-                        break
-                    }
-            liveUpdateLabel()
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasLiveListRuntime && runtime.hasLiveListRuntime() && runtime.renderLiveList) return runtime.renderLiveList(t);
+        return !1
     }
-
     function zt() {
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasLiveListRuntime && runtime.hasLiveListRuntime() && runtime.scrollLiveList) return void runtime.scrollLiveList();
         if (Ue.length) {
             var e = Ue.filter(function(e) {
                 return e._channel === j.channel
@@ -2841,6 +2505,8 @@
     }
 
     function Vt(e, t) {
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasLiveListRuntime && runtime.hasLiveListRuntime() && runtime.selectLiveChannel) return void runtime.selectLiveChannel(e, t);
         e = legacyClampLiveChannelIndex(e, F.length), j.channel = e;
         for (var i = 0; i < Ue.length; i++) Ue[i].classList.toggle("is-current", Ue[i]._channel === e);
         F[e] && ee && (ee.textContent = F[e].name), zt(), "player" === j.screen ? (! function() {
@@ -2856,12 +2522,6 @@
        ========================================================================= */
     var liveFastAll = null,
         liveFastFav = null,
-        liveFastSrch = null,
-        liveKbEdit = null,
-        liveSearchBuilt = !1,
-        liveSearchQuery = "",
-        liveSearchReturn = null,
-        liveCatReturn = null,
         liveFavFilter = !1;
 
     function liveCatName() {
@@ -2876,309 +2536,52 @@
         e.textContent = legacyFormatLiveCategoryLabel(i, liveFavFilter, a)
     }
 
-    function lvSyncFav() {
-        liveFastFav && liveFastFav.classList.toggle("is-active", liveFavFilter)
-    }
-
     function lvFocusList() {
-        for (var e = null, i = 0; i < Ue.length; i++)
-            if (Ue[i]._channel === j.channel) {
-                e = Ue[i];
-                break
-            }
-        if (!e && Ue.length && (e = Ue[0]), e && Ye(e)) return void tt(e);
-        liveFastAll && Ye(liveFastAll) ? tt(liveFastAll) : ie && Ye(ie) && tt(ie)
-    }
-
-    function lvBuildCats() {
-        var grid = t("live-cat-grid");
-        if (!grid) return;
-        i(grid);
-        var sub = t("live-cat-sub"),
-            cats = St && St.length ? St : [{
-                id: 76182,
-                name: "Todos"
-            }, {
-                id: 76206,
-                name: "Deportes"
-            }, {
-                id: 76205,
-                name: "Cine y Series"
-            }, {
-                id: 76188,
-                name: "Colombia"
-            }, {
-                id: 76191,
-                name: "España"
-            }, {
-                id: 76197,
-                name: "México"
-            }],
-            close = t("live-cat-close");
-        if (sub) sub.textContent = cats.length + " categorías disponibles · elige una para cargar sus canales";
-        if (close) close._activate = function() {
-            lvCloseCats()
-        };
-        var fav = e("div", "pcat-tile focusable");
-        fav.appendChild(e("div", "pcat-name", "❤ Favoritos"));
-        fav._special = "fav";
-        liveFavFilter && fav.classList.add("is-selected");
-        fav._activate = function() {
-            liveFavFilter = !0, lvSyncFav(), lvCloseCats(!0), Ht(!0), liveUpdateLabel(), lvFocusList()
-        };
-        grid.appendChild(fav);
-        var search = e("div", "pcat-tile focusable");
-        search.appendChild(e("div", "pcat-name", "🔍 Buscar canal o categoría"));
-        search._special = "search";
-        search._activate = function() {
-            lvCloseCats(!0), lvOpenSearch()
-        };
-        grid.appendChild(search);
-        for (var k = 0; k < cats.length; k++)(function(cat) {
-            var tile = e("div", "pcat-tile focusable");
-            tile.appendChild(e("div", "pcat-name", cat.name));
-            _t && _t.id === cat.id && tile.classList.add("is-selected");
-            tile._liveCat = cat;
-            tile._activate = function() {
-                liveFavFilter = !1, lvSyncFav(), lvCloseCats(!0), ie && tt(ie), Ut(cat, function() {
-                    liveUpdateLabel(), lvFocusList()
-                })
-            };
-            grid.appendChild(tile)
-        })(cats[k])
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasLiveMenuRuntime && runtime.hasLiveMenuRuntime() && runtime.focusLiveList) return void runtime.focusLiveList();
+        return !1
     }
 
     function lvOpenCats() {
-        j.liveSearchOpen && lvCloseSearch(!0), j.liveCategoriesOpen = !0, j.liveCatReturn = j.focus;
-        var e = t("live-categories");
-        if (e) {
-            lvBuildCats(), e.classList.add("is-active");
-            var i = e.querySelector(".pcat-tile.is-selected") || e.querySelector(".pcat-tile") || it(e);
-            i && tt(i)
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasLiveMenuRuntime && runtime.hasLiveMenuRuntime() && runtime.openCategories) return void runtime.openCategories();
+        return !1
     }
 
     function lvCloseCats(e) {
-        j.liveCategoriesOpen = !1;
-        var i = t("live-categories");
-        i && i.classList.remove("is-active");
-        if (!e) {
-            var a = j.liveCatReturn;
-            a && Ye(a) ? tt(a) : lvFocusList()
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasLiveMenuRuntime && runtime.hasLiveMenuRuntime() && runtime.closeCategories) return void runtime.closeCategories(e);
+        return !1
     }
 
     function lvToggleFav() {
-        liveFavFilter = !liveFavFilter, lvSyncFav(), Ht(liveFavFilter), liveUpdateLabel(), liveFavFilter && !Ue.length ? liveFastFav && tt(liveFastFav) : lvFocusList()
-    }
-
-    function lvUpdateQuery() {
-        liveKbEdit && (liveSearchQuery ? (liveKbEdit.textContent = liveSearchQuery, liveKbEdit.classList.remove("is-placeholder")) : (liveKbEdit.textContent = "Buscar canal o categoría…", liveKbEdit.classList.add("is-placeholder")))
-    }
-
-    function lvRenderResults() {
-        var list = t("live-search-list");
-        if (list) {
-            i(list);
-            var sub = t("live-search-sub"),
-                q = o(liveSearchQuery),
-                cats = St && St.length ? St : [],
-                search = legacyFindLiveSearchMatches(F, cats, liveSearchQuery),
-                catMatches = search.categories,
-                matches = search.channels;
-            if (sub) sub.textContent = q ? matches.length + (1 === matches.length ? " canal" : " canales") + " · " + catMatches.length + (1 === catMatches.length ? " categoría" : " categorías") : "Escribe para filtrar los " + F.length + " canales de " + liveCatName() + " o busca otra categoría";
-            for (var c = 0; c < catMatches.length; c++)(function(cat) {
-                var row = e("div", "live-sr-row live-sr-cat focusable");
-                row.appendChild(e("div", "live-sr-icon live-sr-icon-cat", "TV"));
-                row.appendChild(e("div", "live-sr-name", "Categoría: " + cat.name));
-                row.appendChild(e("div", "live-sr-badge", "CATEGORÍA"));
-                row._activate = function() {
-                    liveFavFilter = !1, lvSyncFav(), liveSearchQuery = "", lvUpdateQuery();
-                    var focusResults = function() {
-                        lvRenderResults(), liveUpdateLabel();
-                        var list = t("live-search-list"),
-                            first = list ? list.querySelector(".live-sr-row:not(.live-sr-cat)") || list.querySelector(".live-sr-row") : null;
-                        first && tt(first)
-                    };
-                    _t && _t.id === cat.id ? (Ht(!1), focusResults()) : Ut(cat, focusResults, focusResults)
-                };
-                list.appendChild(row)
-            })(catMatches[c]);
-            for (var m = 0; m < matches.length; m++)(function(item) {
-                var row = e("div", "live-sr-row focusable"),
-                    icon = e("div", "live-sr-icon");
-                item.channel.logo && (icon.style.backgroundImage = "url(" + item.channel.logo + ")", icon.style.backgroundSize = "contain", icon.style.backgroundRepeat = "no-repeat", icon.style.backgroundPosition = "center");
-                row.appendChild(icon);
-                row.appendChild(e("div", "live-sr-name", item.channel.name || "Canal"));
-                row.appendChild(e("div", "live-sr-badge", "EN VIVO"));
-                row._activate = function() {
-                    lvCloseSearch(!0), Vt(item.index, !0), dr("live")
-                };
-                list.appendChild(row)
-            })(matches[m]);
-            catMatches.length || matches.length || list.appendChild(e("div", "live-sr-empty", q ? 'No hay canales que coincidan con "' + liveSearchQuery + '"' : "No hay canales en esta categoría"))
-        }
-    }
-
-    function lvType(e) {
-        liveSearchQuery.length < 40 && (liveSearchQuery += e, lvUpdateQuery(), lvRenderResults())
-    }
-
-    function lvBackspace() {
-        liveSearchQuery = liveSearchQuery.slice(0, -1), lvUpdateQuery(), lvRenderResults()
-    }
-
-    function lvClear() {
-        liveSearchQuery = "", lvUpdateQuery(), lvRenderResults()
-    }
-
-    function lvSearchGo() {
-        var e = t("live-search-list"),
-            i = e ? e.querySelector(".live-sr-row:not(.live-sr-cat)") || e.querySelector(".live-sr-row") : null;
-        i && Ye(i) && tt(i)
-    }
-
-    function lvBuildKb() {
-        var i = t("live-search-kb");
-        if (i) {
-            liveKbEdit = e("div", "kb-edit focusable"), liveKbEdit._activate = function() {}, i.appendChild(liveKbEdit);
-            for (var a = e("div", "kb-actions"), n = [{
-                    cls: "clear",
-                    w: 100.5
-                }, {
-                    cls: "del",
-                    w: 100.5
-                }, {
-                    cls: "go",
-                    w: 120
-                }], r = 0; r < n.length; r++) {
-                var s = e("div", "kb-action focusable " + n[r].cls);
-                s.style.width = n[r].w + "px", "go" === n[r].cls ? s.textContent = "Buscar" : s.appendChild(e("div", "ico")), s._activate = function(e) {
-                    return function() {
-                        "clear" === e ? lvClear() : "del" === e ? lvBackspace() : lvSearchGo()
-                    }
-                }(n[r].cls), a.appendChild(s)
-            }
-            i.appendChild(a);
-            for (var l = [
-                    ["A", "Á", "B", "C", "D", "E", "É"],
-                    ["F", "G", "H", "I", "Í", "J", "K"],
-                    ["L", "M", "N", "Ñ", "O", "Ó", "P"],
-                    ["Q", "R", "S", "T", "U", "Ú", "Ü"],
-                    ["V", "W", "X", "Y", "Z", " "],
-                    ["1", "2", "3", "4", "5", "6", "7"],
-                    ["8", "9", "0", "+", "-", "/", "."]
-                ], d = 0; d < l.length; d++) {
-                var c = e("div", "kb-row");
-                c.style.top = 264 + 88.5 * d + "px";
-                for (var p = 0; p < l[d].length; p++) {
-                    var u = e("div", "kb-key focusable" + (" " === l[d][p] ? " space" : ""), " " === l[d][p] ? "" : l[d][p]);
-                    u._char = l[d][p], u._activate = function(e) {
-                        return function() {
-                            lvType(e)
-                        }
-                    }(l[d][p]), c.appendChild(u)
-                }
-                i.appendChild(c)
-            }
-            var v = e("div", "kb-feedback focusable", "Cerrar búsqueda");
-            v._activate = function() {
-                lvCloseSearch()
-            }, i.appendChild(v)
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasLiveMenuRuntime && runtime.hasLiveMenuRuntime() && runtime.toggleFavorites) return void runtime.toggleFavorites();
+        return !1
     }
 
     function lvOpenSearch() {
-        j.liveCategoriesOpen && lvCloseCats(!0), j.liveSearchOpen = !0, j.liveSearchReturn = j.focus;
-        var e = t("live-search");
-        if (e) {
-            liveSearchBuilt || (lvBuildKb(), liveSearchBuilt = !0), liveSearchQuery = "", lvUpdateQuery(), lvRenderResults(), e.classList.add("is-active");
-            var i = e.querySelector(".kb-key") || it(e);
-            i && tt(i)
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasLiveMenuRuntime && runtime.hasLiveMenuRuntime() && runtime.openSearch) return void runtime.openSearch();
+        return !1
     }
 
     function lvCloseSearch(e) {
-        j.liveSearchOpen = !1;
-        var i = t("live-search");
-        if (i && i.classList.remove("is-active"), !e) {
-            var a = j.liveSearchReturn;
-            a && Ye(a) ? tt(a) : lvFocusList()
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasLiveMenuRuntime && runtime.hasLiveMenuRuntime() && runtime.closeSearch) return void runtime.closeSearch(e);
+        return !1
     }
 
     function jt() {
-        Pt = !0;
-        var e = t("dialog-addons");
-        if (e) {
-            e.classList.add("is-active"), $t();
-            var i = e.querySelector(".focusable");
-            i && tt(i)
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasAddonsDialogRuntime && runtime.hasAddonsDialogRuntime() && runtime.openAddons) return void runtime.openAddons();
+        return !1
     }
-
     function Wt() {
-        Pt = !1;
-        var e = t("dialog-addons");
-        if (e && (e.classList.remove("is-active"), j.channelsOpen)) {
-            var i = Ce ? Ce.querySelector("#pc-btn-addons") : null;
-            tt(i || ye)
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasAddonsDialogRuntime && runtime.hasAddonsDialogRuntime() && runtime.closeAddons) return void runtime.closeAddons();
+        return !1
     }
-
-    function $t() {
-        var a = t("da-presets-list"),
-            n = t("da-installed-list"),
-            r = wt();
-        if (a) {
-            i(a);
-            for (var l = 0; l < Ct.length; l++)(function(t) {
-                var i = e("div", "da-preset-item"),
-                    n = e("div", "da-preset-info");
-                n.appendChild(e("div", "da-preset-name", t.name)), n.appendChild(e("div", "da-preset-desc", t.desc)), i.appendChild(n);
-                var installed = legacyHasAddonUrl(r, t.url),
-                    s = e("button", "da-preset-btn focusable" + (installed ? " is-installed" : ""), installed ? "✔ Instalado" : "+ Instalar");
-                s._activate = function() {
-                    installed || (s.textContent = "Instalando…", Xt(t, function(e, t) {
-                        e ? (s.textContent = "Error", setTimeout(function() {
-                            s.textContent = "+ Instalar"
-                        }, 2e3)) : ($t(), _t && _t.isAddon && Ft())
-                    }))
-                }, i.appendChild(s), a.appendChild(i)
-            })(Ct[l])
-        }
-        if (n)
-            if (i(n), r.length)
-                for (var d = 0; d < r.length; d++)(function(t, i) {
-                    var a = e("div", "da-installed-item"),
-                        o = e("div", "da-installed-info"),
-                        s = e("div", "da-preset-name", t.name),
-                        l = e("div", "da-preset-desc", (t.count ? t.count + " canales • " : "") + t.url);
-                    o.appendChild(s), o.appendChild(l), a.appendChild(o);
-                    var d = e("button", "da-del-btn focusable", "Eliminar");
-                    d._activate = function() {
-                        r = legacyRemoveAddonAt(r, i), xt(r), $t(), _t && _t.isAddon && Ft()
-                    }, a.appendChild(d), n.appendChild(a)
-                })(r[d], d);
-            else n.appendChild(e("div", "da-installed-empty", "No hay addons personalizados instalados aún. Instala una lista recomendada arriba o escribe una URL."));
-        var c = t("da-btn-add-custom");
-        c && (c._activate = function() {
-            var e = t("da-custom-url"),
-                i = e ? (e.value || "").trim() : "";
-            i && legacyIsAddonUrl(i) ? (c.textContent = "Descargando…", Xt({
-                id: "custom_" + Date.now(),
-                name: "Lista Personalizada",
-                url: i
-            }, function(t, i) {
-                c.textContent = "Agregar", t ? alert("No se pudo cargar la lista M3U: " + t) : (e && (e.value = ""), $t(), _t && _t.isAddon && Ft())
-            })) : alert("Por favor introduce una URL válida (http:// o https://)")
-        });
-        var p = t("da-btn-exit");
-        p && (p._activate = function() {
-            Wt()
-        })
-    }
-
     function Xt(e, t) {
         q("fetchM3u", {
             url: e.url
@@ -3188,99 +2591,8 @@
             } else t && t(i || "No se encontraron canales en la lista")
         })
     }
-    var Gt = {
-        bigW: 831,
-        bigH: 534,
-        bigY: 38.5,
-        smallW: 413,
-        smallH: 222,
-        smallY: 578.5,
-        bigX: [192, 1029],
-        smallX: [192, 609, 1028, 1446]
-    };
-
-    function Jt(t, i, n, r, o, s) {
-        s = s || {};
-        var l = e("div", "bento focusable");
-        a(l, i, n, r, o);
-        var d = t ? t.landscape || t.poster : "";
-        if (d) {
-            var c = e("img", "bento-img");
-            c.setAttribute("data-poster-src", d), c.onerror = function() {
-                this.style.display = "none"
-            }, l.appendChild(c)
-        }
-        return s.shade && l.appendChild(e("div", "bento-shade")), s.title && t && l.appendChild(e("div", "bento-title", t.title)), s.badge && l.appendChild(e("div", "bento-badge", s.badge)), l._item = t, t && (l._activate = function() {
-            ei(t)
-        }), mt(), l
-    }
-
-    function Qt(t, i, n, r) {
-        var o = e("div", "bento-dots");
-        a(o, t, i, 21 + 40 * Math.max(0, n - 1), 11);
-        for (var s = 0; s < n; s++) o.appendChild(e("span", "bento-dot" + (s === r ? " is-active" : "")));
-        return o
-    }
-
-    function Kt(pageEl, t, i) {
-        i = i || {};
-        var list = t.length ? t : l;
-        if (!list.length) return;
-        pageEl._bentoTimer && (clearInterval(pageEl._bentoTimer), pageEl._bentoTimer = null);
-        var heroItems = list.slice(0, 4),
-            heroIndex = 0,
-            hero = Jt(heroItems[0], Gt.bigX[0], Gt.bigY, Gt.bigW, Gt.bigH, {
-                shade: !1 !== i.shade,
-                title: i.titles
-            });
-        pageEl.appendChild(hero);
-        hero._activate = function() {
-            ei(hero._item)
-        }, hero._onMove = function(direction) {
-            if ("left" === direction && Re[j.tab]) return tt(Re[j.tab]), !0;
-            return !1
-        };
-        pageEl.appendChild(Jt(list[4] || list[0], Gt.bigX[1], Gt.bigY, Gt.bigW, Gt.bigH, {
-            shade: !1 !== i.shade,
-            title: i.titles
-        }));
-        for (var n = 0; n < 4; n++) pageEl.appendChild(Jt(list[5 + n] || list[(5 + n) % list.length], Gt.smallX[n], Gt.smallY, Gt.smallW, Gt.smallH, {}));
-        if (heroItems.length > 1) pageEl._bentoTimer = setInterval(function() {
-            if (!hero.parentNode || !pageEl.classList.contains("is-current") || "home" !== j.screen) return;
-            heroIndex = (heroIndex + 1) % heroItems.length;
-            var item = heroItems[heroIndex],
-                previous = hero.querySelector(".bento-img"),
-                source = item.landscape || item.poster || "",
-                next = e("img", "bento-img");
-            hero._item = item, next.setAttribute("data-poster-src", source), source ? next.src = source : next.style.display = "none", next.style.transition = "opacity .55s ease", next.style.opacity = "0", next.style.zIndex = "2", hero.appendChild(next), previous && (previous.style.transition = "opacity .55s ease", previous.style.zIndex = "1"), setTimeout(function() {
-                next.style.opacity = "1", previous && (previous.style.opacity = "0")
-            }, 20), setTimeout(function() {
-                previous && previous.parentNode && previous.parentNode.removeChild(previous), next.style.opacity = "", next.style.transition = "", next.style.zIndex = ""
-            }, 650);
-            var title = hero.querySelector(".bento-title");
-            title && setTimeout(function() {
-                title.textContent = item.title || ""
-            }, 260)
-        }, 5e3)
-    }
-
     function Yt(e) {
         return legacyFilterCatalogCategory(l, e)
-    }
-
-    function Zt(t, i, n, r) {
-        if (i && i.length) {
-            var o = n || 860,
-                s = e("div", "kids-subtitle", r || "Catálogo");
-            a(s, 192, o, 1249, 40), t.appendChild(s), o += 50;
-            for (var l = Math.min(i.length, 60), d = 0; d < l; d++) {
-                var c = 192 + 276 * (d % 6),
-                    p = o + 390 * Math.floor(d / 6);
-                t.appendChild(bt(i[d], c, p, 250, 360, {
-                    gold: !0
-                }))
-            }
-        }
     }
 
     function ei(e) {
@@ -3327,50 +2639,15 @@
     }
 
     function askResume(item, episode, pos, dur, cb) {
-        j.resumeOpen = !0, j.resumeReturn = j.focus, j.resumeOpenedAt = Date.now();
-        var root = t("app"),
-            dialog = t("dialog-resume");
-        dialog || (dialog = document.createElement("div"), dialog.id = "dialog-resume", dialog.className = "resume-overlay", root.appendChild(dialog)), i(dialog), dialog.classList.add("is-active");
-        var card = document.createElement("div");
-        card.className = "resume-card";
-        var poster = item.poster || item.landscape || item.backdrop || item.cover || "assets/original/common/bg_placehoder_vertical.png",
-            posterBox = document.createElement("div");
-        posterBox.className = "resume-poster";
-        var img = document.createElement("img");
-        img.src = poster, img.alt = "", posterBox.appendChild(img), posterBox.appendChild(e("div", "resume-poster-shade"));
-        var body = document.createElement("div");
-        body.className = "resume-body", body.appendChild(e("div", "resume-kicker", "CONTINUAR VIENDO")), body.appendChild(e("div", "resume-title", item.title || "Contenido"));
-        var sub = episode && (episode.number || episode.seriesNumber) ? "Episodio " + (episode.number || episode.seriesNumber) : (item.type === "teleplay" || item.kind === "serie" ? "Serie" : "Película");
-        body.appendChild(e("div", "resume-sub", sub));
-        if (dur > 0) {
-            var prog = document.createElement("div"),
-                bar = document.createElement("div");
-            prog.className = "resume-progress", bar.className = "resume-progress-bar", bar.style.width = Math.min(100, Math.max(0, pos / dur * 100)).toFixed(1) + "%", prog.appendChild(bar), body.appendChild(prog), body.appendChild(e("div", "resume-time", "Te quedaste en " + ki(pos)))
-        }
-        var actions = document.createElement("div");
-        actions.className = "resume-actions";
-        var cont = document.createElement("div");
-        cont.className = "focusable resume-btn resume-continue", cont.appendChild(e("span", "resume-play")), cont.appendChild(document.createTextNode("Reanudar · " + ki(pos))), cont._activate = function() {
-            Date.now() - j.resumeOpenedAt < 300 || (closeResume(), cb(!0))
-        };
-        var restart = e("div", "focusable resume-btn resume-restart", "Empezar desde el principio");
-        restart._activate = function() {
-            Date.now() - j.resumeOpenedAt < 300 || (closeResume(), cb(!1))
-        }, actions.appendChild(cont), actions.appendChild(restart), body.appendChild(actions);
-        var close = e("div", "focusable resume-close", "×");
-        close._activate = function() {
-            closeResume()
-        }, card.appendChild(posterBox), card.appendChild(body), card.appendChild(close), dialog.appendChild(card), tt(cont)
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasResumeRuntime && runtime.hasResumeRuntime() && runtime.openResume) return runtime.openResume(item, episode, pos, dur, cb);
+        return !1
     }
-
     function closeResume() {
-        j.resumeOpen = !1;
-        var dialog = t("dialog-resume");
-        dialog && dialog.classList.remove("is-active");
-        var back = j.resumeReturn;
-        back && Ye(back) && tt(back), j.resumeReturn = null
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasResumeRuntime && runtime.hasResumeRuntime() && runtime.closeResume) return runtime.closeResume();
+        return !1
     }
-
     function startDetail(item) {
         item._detailPlaybackHandled = !0;
         var hist = findHistory(item),
@@ -3397,695 +2674,84 @@
     }
 
     function ti(n) {
-        ne = t("detail-left"), re = t("detail-player"), oe = t("detail-buttons"), se = t("detail-bottom"), i(ne), i(oe), i(se);
-        var r, o = e("div", "detail-titlewrap");
-        if (o.appendChild(e("div", "detail-title", n.title)), o.appendChild(e("div", "detail-score", n.score)), ne.appendChild(o), n.country || n.releaseDate || n.tagline) {
-            var s = [];
-            n.country && s.push(n.country), n.releaseDate && s.push(n.releaseDate), n.tagline && s.push(n.tagline), r = s.join(" | ")
-        } else {
-            var d = [];
-            n.year && "—" !== n.year && d.push(n.year), n.duration && "—" !== n.duration && d.push(n.duration), d.push("HD"), r = d.join("  ·  ")
-        }
-        if (ne.appendChild(e("div", "detail-meta", r)), S(n)) {
-            var c = 0,
-                p = /S(\d+)/i.exec(n.alias || "") || /T(\d+)/i.exec(n.title || "");
-            if (p && (c = parseInt(p[1], 10) || 0), !c && n.seasons && n.seasons.length) {
-                var u = n.seasons[j.detailSeason] || n.seasons[0];
-                c = u && u.number || 1
-            }
-            c || (c = 1);
-            var v = n.updateCount || n.volumeCount || (n.episodes ? n.episodes.length : 0);
-            v && ne.appendChild(e("div", "detail-update", "T" + c + " - E" + v))
-        }
-        var f = e("div", "detail-genres");
-        f.appendChild(e("span", "label", "Género : "));
-        for (var h = 0; h < n.genres.length; h++) {
-            var g = e("div", "chip", n.genres[h]);
-            f.appendChild(g)
-        }
-        ne.appendChild(f);
-        var m = e("div", "detail-row");
-        m.appendChild(document.createTextNode("Director : "));
-        var y = e("span", "val", n.director);
-        m.appendChild(y), ne.appendChild(m);
-        var b = e("div", "detail-row");
-        b.appendChild(document.createTextNode("Actors : "));
-        var C = e("span", "val", n.actors);
-        b.appendChild(C), ne.appendChild(b);
-        var w = e("div", "detail-synopsis");
-        w.appendChild(e("span", "label", "Sinopsis : ")), w.appendChild(e("div", "text", n.synopsis));
-        var x = e("div", "detail-more", "Más");
-        w.appendChild(x), ne.appendChild(w), i(re), re.classList.add("focusable"), re._activate = function() {
-            lr(n, j.detailEpisode)
-        }, re._onMove = function() {
-            return !1
-        };
-        var _ = [{
-            icon: "icon_detail_fullscreen.png",
-            label: "Pantalla completa",
-            kind: "fullscreen"
-        }, {
-            icon: "icon_detail_subtitle_audio.png",
-            label: "Idioma",
-            kind: "language"
-        }, {
-            icon: "icon_detail_favorite.png",
-            label: "Favorito",
-            kind: "favorite"
-        }];
-        S(n) && _.push({
-            icon: "icon_detail_subscribe.png",
-            label: "Recordatorios",
-            kind: "subscribe"
-        });
-        for (var L = 0; L < _.length; L++) {
-            var k = e("div", "detail-btn focusable"),
-                M = e("img");
-            M.src = "assets/original/vod/" + _[L].icon, M.alt = "", k.appendChild(M), k.appendChild(e("span", null, _[L].label)), k._kind = _[L].kind, "favorite" === _[L].kind && j.favs[String(n.id)] ? (k.classList.add("is-selected"), k.querySelector("span").textContent = "En favoritos") : "subscribe" === _[L].kind && reminderOn(n) && (k.classList.add("is-selected"), k.querySelector("span").textContent = "En recordatorios", M.src = "assets/original/vod/icon_detail_subscribed.png"), k._activate = function(e, t) {
-                return function() {
-                    if ("fullscreen" === e) lr(t, j.detailEpisode);
-                    else if ("language" === e) Sn(t);
-                    else if ("favorite" === e) {
-                        var i = K(t);
-                        this.classList.toggle("is-selected", i);
-                        var a = this.querySelector("span");
-                        a && (a.textContent = i ? "En favoritos" : "Favorito")
-                    } else if ("subscribe" === e) {
-                        var img = this.querySelector("img"),
-                            on = toggleReminder(t);
-                        img && (img.src = "assets/original/vod/icon_detail_" + (on ? "subscribed" : "subscribe") + ".png"), this.classList.toggle("is-selected", on);
-                        var lbl = this.querySelector("span");
-                        lbl && (lbl.textContent = on ? "En recordatorios" : "Recordatorios"), toast(on ? "Recordatorio activado" : "Recordatorio eliminado")
-                    }
-                }
-            }(_[L].kind, n), oe.appendChild(k)
-        }
-        var I = e("div", "detail-btn focusable"),
-            T = e("img");
-        T.src = "assets/original/vod/icon_detail_quality.png", T.alt = "", I.appendChild(T);
-        var E = e("span", null, "smooth" === j.streamMode ? "Modo fluido: Sí" : "Modo fluido: No");
-        I.appendChild(E), I._activate = function() {
-                $a(n, "smooth" !== j.streamMode), E.textContent = "smooth" === j.streamMode ? "Modo fluido: Sí" : "Modo fluido: No"
-            }, oe.appendChild(I),
-            function(t) {
-                var i = S(t) && t.episodes ? t.episodes : [],
-                    n = i.length > 0,
-                    r = ii(i.length);
-                j.detailRange >= r.length && (j.detailRange = 0);
-                if (S(t)) {
-                    var o = e("div", "detail-season focusable");
-                    a(o, 80, 42, 280, 53), o.appendChild(e("span", "season-text", function(e) {
-                        var t = 0;
-                        if (e.seasons && e.seasons.length > 0) {
-                            var i = e.seasons[j.detailSeason] || e.seasons[0];
-                            t = i && i.number ? i.number : j.detailSeason + 1
-                        }
-                        if (!t) {
-                            var a = /S(\d+)/i.exec(e.alias || "") || /T(\d+)/i.exec(e.title || "");
-                            a && (t = parseInt(a[1], 10) || 0)
-                        }
-                        return "Temporada " + (t || 1)
-                    }(t)));
-                    var s = e("img", "season-arrow");
-                    s.src = "assets/original/vod/ic_down_icon.png", s.alt = "▼", o.appendChild(s), o._activate = function() {
-                        !t.seasons || t.seasons.length < 2 || function(t, i) {
-                            if (ni) return void ri();
-                            if (!i.seasons || i.seasons.length < 2) return;
-                            var n = t.querySelector(".season-arrow");
-                            n && n.classList.add("is-open");
-                            a(ni = e("div", "season-popup"), 80, 100, 280, Math.min(320, 54 * i.seasons.length));
-                            for (var r = 0; r < i.seasons.length; r++)(function(t) {
-                                var a = i.seasons[t],
-                                    n = e("div", "season-popup-item focusable" + (t === j.detailSeason ? " is-selected" : "")),
-                                    r = "Temporada " + (a.number || t + 1);
-                                n.appendChild(e("span", "season-item-text", r));
-                                var o = e("img", "season-item-check");
-                                o.src = "assets/original/vod/icon_nation_selected.png", o.alt = "", n.appendChild(o), n._activate = function() {
-                                    if (ri(), j.detailSeason !== t) {
-                                        j.detailSeason = t, j.detailRange = 0, j.detailEpisode = null;
-                                        var e = i.seasons[t];
-                                        e && e.id && (nr("Cargando temporada…"), q("detail", {
-                                            contentId: e.id
-                                        }, function(t, a) {
-                                            !t && a && !1 !== a.returnValue && (a.item && R(i, a.item), i.episodes = a.episodes || [], i.seasonId = e.id, e._episodes = i.episodes, j.detailEpisode = i.episodes[0] || null), ti(i), j.detailEpisode && sr(i, j.detailEpisode);
-                                            var n = se ? se.querySelector(".detail-season") : null;
-                                            n && tt(n)
-                                        }))
-                                    } else {
-                                        var a = se ? se.querySelector(".detail-season") : null;
-                                        a && tt(a)
-                                    }
-                                }, ni.appendChild(n)
-                            })(r);
-                            se.appendChild(ni);
-                            var o = ni.children[j.detailSeason] || ni.children[0];
-                            o && tt(o)
-                        }(o, t)
-                    }, se.appendChild(o)
-                }
-                if (n && i.length > 20) {
-                    var d = e("div", "detail-ranges");
-                    a(d, 398, 51, 1522, 46);
-                    for (var c = 0; c < r.length; c++)(function(i) {
-                        var n = e("div", "detail-range focusable" + (i === j.detailRange ? " is-selected" : ""), r[i].start + 1 + "-" + r[i].end);
-                        a(n, 160 * i, 0, 150, 46), n._activate = function() {
-                            ai(i, t)
-                        }, d.appendChild(n)
-                    })(c);
-                    se.appendChild(d)
-                }
-                if (n) {
-                    var p = r[j.detailRange] || {
-                            start: 0,
-                            end: i.length
-                        },
-                        u = e("div", "detail-episodes scrollable");
-                    a(u, 80, 149, 1840, 65);
-                    for (var v = p.start; v < p.end; v++)(function(i, n) {
-                        var r = e("div", "detail-episode focusable" + (j.detailEpisode && (j.detailEpisode.id === i.id || j.detailEpisode === i) ? " is-playing" : ""));
-                        a(r, 160 * n, 0, 150, 65);
-                        var o = void 0 !== i.number && null !== i.number ? String(i.number) : String(v + 1);
-                        r.appendChild(e("span", "ep-num", o)), r._ep = i, r._activate = function() {
-                            gn(t, i)
-                        }, u.appendChild(r)
-                    })(i[v], v - p.start);
-                    se.appendChild(u)
-                }
-                var f = n ? 240 : 25,
-                    h = n ? 290 : 91,
-                    g = e("div", "detail-related", "Quizás te guste");
-                a(g, 80, f, 400, 44), se.appendChild(g);
-                var m = e("div", "detail-grid scrollable");
-                a(m, 72, h - 8, 1750, 388);
-                var y = parseInt(t.id, 10);
-                if (isNaN(y)) {
-                    y = 0;
-                    for (var b = 0; b < l.length; b++)
-                        if (l[b] === t) {
-                            y = b;
-                            break
-                        }
-                }
-                for (var C = 3 * y % Math.max(1, l.length - 6), w = 0; w < 16; w++) {
-                    var x = l[(C + w) % l.length];
-                    if (x) {
-                        var _ = e("div", "cell");
-                        _.appendChild(bt(x, 0, 0, 210, 308, {
-                            gold: !0
-                        })), _.appendChild(e("div", "d-name", x.title)), m.appendChild(_)
-                    }
-                }
-                se.appendChild(m)
-            }(n)
+        oe = t("detail-buttons"), se = t("detail-bottom");
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasDetailRuntime && runtime.hasDetailRuntime() && runtime.renderDetail) return runtime.renderDetail(n);
+        return !1
     }
-
     function ii(e) {
         return legacyBuildEpisodeRanges(e)
     }
 
-    function ai(e, t) {
-        j.detailRange = e, ti(t);
-        var i = se.querySelector(".detail-range.is-selected");
-        i && tt(i)
-    }
     var ni = null;
 
     function ri() {
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasDetailRuntime && runtime.hasDetailRuntime() && runtime.closeSeasonPopup) return void runtime.closeSeasonPopup();
         ni && ni.parentNode && (ni.parentNode.removeChild(ni), ni = null);
         var e = se ? se.querySelector(".season-arrow") : null;
         e && e.classList.remove("is-open")
     }
 
-    function oi() {
-        le = t("search-keyboard"), de = t("search-hot"), ce = t("search-results"), pe = t("search-empty"), ue = t("search-hot-grid"), ve = t("search-result-grid"), he = t("search-nav"), i(le), i(ue), i(ve), ce && ce.classList.add("scrollable"), (fe = e("div", "kb-edit focusable"))._activate = function() {}, le.appendChild(fe);
-        for (var a = e("div", "kb-actions"), n = [{
-                cls: "switch",
-                w: 100.5
-            }, {
-                cls: "clear",
-                w: 100.5
-            }, {
-                cls: "del",
-                w: 100.5
-            }, {
-                cls: "go",
-                w: 120
-            }], r = 0; r < n.length; r++) {
-            var o = e("div", "kb-action focusable " + n[r].cls);
-            o.style.width = n[r].w + "px", "go" === n[r].cls ? o.textContent = "Busca" : o.appendChild(e("div", "ico")), o._kind = n[r].cls, o._activate = function(e) {
-                return function() {
-                    "switch" === e ? gi() : "clear" === e ? ci("") : "del" === e ? ci(j.searchQuery.slice(0, -1)) : ui()
-                }
-            }(n[r].cls), a.appendChild(o)
-        }
-        le.appendChild(a), Fe = [];
-        for (var s = [
-                ["A", "Á", "B", "C", "D", "E", "É"],
-                ["F", "G", "H", "I", "Í", "J", "K"],
-                ["L", "M", "N", "Ñ", "O", "Ó", "P"],
-                ["Q", "R", "S", "T", "U", "Ú", "Ü"],
-                ["V", "W", "X", "Y", "Z", " "]
-            ], l = 0; l < s.length; l++) {
-            var d = e("div", "kb-row");
-            d.style.top = 264 + 88.5 * l + "px";
-            for (var c = 0; c < s[l].length; c++) {
-                var p = e("div", "kb-key focusable" + (" " === s[l][c] ? " space" : ""), " " === s[l][c] ? "" : s[l][c]);
-                p._char = s[l][c], p._activate = function(e) {
-                    return function() {
-                        ci(j.searchQuery + e)
-                    }
-                }(s[l][c]), d.appendChild(p), Fe.push(p)
-            }
-            le.appendChild(d)
-        }
-        var u = e("div", "kb-feedback focusable", "Feedback");
-        u._activate = function() {}, le.appendChild(u);
-        var v = function() {
-            for (var e = T(), t = [], i = 0; i < e.length; i++) - 1 !== String(e[i] && e[i].category || "").toLowerCase().indexOf("busqueda") && t.push(_(e[i], i + 1));
-            return t
-        }();
-        v.length || (v = I("busqueda", 10, 0));
-        for (var f = 0; f < v.length; f++) ue.appendChild(si(v[f], f));
-        ce.classList.remove("is-active"), pe.classList.remove("is-active"), de.classList.remove("is-hidden"), di()
-    }
-
-    function si(t, i) {
-        var n = e("div", "search-cell");
-        return a(n, i % 5 * 246, 437 * Math.floor(i / 5), 246, 437), n.appendChild(bt(t, 0, 0, 222, 329, {
-            gold: !0
-        })), n.appendChild(e("div", "s-name", t.title)), n
-    }
-
     function li() {
-        le || oi();
-        var e = t("screen-search");
-        e && e.classList.remove("is-filter-results");
-        var i = t("search-keyboard"),
-            a = t("search-hot");
-        i && (i.style.display = ""), a && (a.style.display = ""), nt("search"), tt(fe)
-    }
-
-    function di() {
-        fe && (j.searchQuery ? (fe.textContent = j.searchQuery, fe.classList.remove("is-placeholder")) : (fe.textContent = "Buscar películas, series, directores y actores.", fe.classList.add("is-placeholder")))
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasSearchRuntime && runtime.hasSearchRuntime() && runtime.openSearchScreen) return void runtime.openSearchScreen();
+        return !1
     }
 
     function ci(e) {
-        j.searchQuery = e, di(), ui()
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasSearchRuntime && runtime.hasSearchRuntime() && runtime.setSearchQuery) return void runtime.setSearchQuery(e);
+        return !1
     }
 
     function pi() {
-        j.searchTimer && (clearTimeout(j.searchTimer), j.searchTimer = null), j.searchQuery = "", di(), ve && i(ve), j.searchMatches = [], j.searchPage = 0, he && (he.textContent = ""), ce && ce.classList.remove("is-active"), pe && pe.classList.remove("is-active"), de && de.classList.remove("is-hidden")
-    }
-
-    function ui() {
-        var e = j.searchQuery || "",
-            t = o(e.trim());
-        if (t) {
-            var i = legacyFindLocalSearchMatches(l, e);
-            if (fi(i), j.searchTimer && clearTimeout(j.searchTimer), "portal" === p.mode && t.length >= 2) {
-                var s = ++j.searchSeq;
-                j.searchTimer = setTimeout(function() {
-                    q("search", {
-                        value: e.trim()
-                    }, function(e, t) {
-                        if (s === j.searchSeq && !e && t && !1 !== t.returnValue && t.items && t.items.length) {
-                            fi(legacyCombineSearchResults(i, t.items, function(item, index) {
-                                return _(item, index)
-                            }))
-                        }
-                    })
-                }, 350)
-            }
-        } else pi()
-    }
-    var vi = 10;
-
-    function fi(e) {
-        j.searchMatches = e || [], j.searchPage = 0, hi(0, -1)
-    }
-
-    function filterMatches(item, value) {
-        var _core = window.TutyCore;
-        if (_core && _core.filterMatches) return _core.filterMatches(item, value);
-        if ("*" === value) return !0;
-        if (0 === value.indexOf("cat:")) {
-            for (var cat = value.slice(4), cats = String(item.category || "").split(","), i = 0; i < cats.length; i++)
-                if (o(cats[i]) === o(cat)) return !0;
-            return o(item.kind || "") === o(cat)
-        }
-        if (0 === value.indexOf("gen:")) {
-            for (var gen = value.slice(4), gs = item.genres || [], j = 0; j < gs.length; j++)
-                if (o(gs[j]) === o(gen)) return !0
-        }
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasSearchRuntime && runtime.hasSearchRuntime() && runtime.resetSearch) return void runtime.resetSearch();
         return !1
     }
 
     function openFilter() {
-        if ("home" !== j.screen) return;
-        j.filterOpen = !0, j.filterReturn = j.focus;
-        var root = t("app"),
-            panel = t("filter-panel");
-        panel || (panel = e("div", "filter-panel"), panel.id = "filter-panel", root.appendChild(panel)), i(panel), panel.classList.add("is-active");
-        var head = e("div", "pcat-head");
-        head.appendChild(e("div", "pcat-title", "Filtrar contenido")), head.appendChild(e("div", "pcat-sub", "Elige una categoría o género para ver solo esos títulos")), panel.appendChild(head);
-        var close = e("div", "filter-close focusable", "Cerrar");
-        close._activate = function() {
-            closeFilter()
-        }, panel.appendChild(close);
-        var grid = e("div", "pcat-grid");
-        panel.appendChild(grid);
-        for (var vals = [{
-                label: "Todos",
-                value: "*"
-            }, {
-                label: "Destacados",
-                value: "cat:destacado"
-            }, {
-                label: "Películas",
-                value: "cat:pelicula"
-            }, {
-                label: "Series",
-                value: "cat:serie"
-            }, {
-                label: "Gratis",
-                value: "cat:gratis"
-            }, {
-                label: "Infantil",
-                value: "cat:infantil"
-            }, {
-                label: "UHD",
-                value: "cat:uhd"
-            }, {
-                label: "Extra",
-                value: "cat:extra"
-            }], seen = {}, v = 0; v < vals.length; v++) seen[o(vals[v].label)] = !0;
-        var counts = {},
-            order = [];
-        for (var ci = 0; ci < l.length; ci++)
-            for (var gs = l[ci].genres || [], gj = 0; gj < gs.length; gj++) {
-                var name = gs[gj];
-                if (!name) continue;
-                var key = o(name);
-                counts[key] || (counts[key] = {
-                    name: name,
-                    n: 0
-                }, order.push(key)), counts[key].n++
-            }
-        order.sort(function(e, t) {
-            return counts[t].n - counts[e].n
-        });
-        for (var oi = 0; oi < order.length && vals.length < 34; oi++) {
-            var genre = counts[order[oi]];
-            !genre || seen[o(genre.name)] || (seen[o(genre.name)] = !0, vals.push({
-                label: genre.name,
-                value: "gen:" + genre.name
-            }))
-        }
-        for (var k = 0; k < vals.length; k++) {
-            var tile = e("div", "pcat-tile focusable");
-            tile.appendChild(e("div", "pcat-name", vals[k].label)), tile._filterValue = vals[k].value, tile._filterLabel = vals[k].label, tile._activate = function() {
-                applyFilter(this._filterLabel, this._filterValue)
-            }, grid.appendChild(tile)
-        }
-        var first = panel.querySelector(".pcat-tile") || it(panel);
-        first && tt(first)
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasSearchRuntime && runtime.hasSearchRuntime() && runtime.openFilterPanel) return void runtime.openFilterPanel();
+        return !1
     }
 
     function closeFilter() {
-        j.filterOpen = !1;
-        var panel = t("filter-panel");
-        panel && panel.classList.remove("is-active");
-        var back = j.filterReturn;
-        if (back && Ye(back)) tt(back);
-        else {
-            var notify = t("home-notify"),
-                first = notify ? it(notify) : null;
-            first && tt(first)
-        }
-    }
-
-    function applyFilter(label, value) {
-        j.filterOpen = !1;
-        var panel = t("filter-panel");
-        panel && panel.classList.remove("is-active");
-        for (var items = [], i = 0; i < l.length; i++) filterMatches(l[i], value) && items.push(l[i]);
-        le || oi(), j.searchMatches = items, j.searchPage = 0;
-        var screen = t("screen-search");
-        screen && screen.classList.add("is-filter-results");
-        var kb = t("search-keyboard"),
-            hot = t("search-hot");
-        kb && (kb.style.display = "none"), hot && (hot.style.display = "none"), nt("search"), hi(0, -1), he && (he.textContent = "Filtro: " + label + " · " + items.length + " títulos");
-        var first = ve ? it(ve) : null;
-        first && tt(first)
-    }
-
-    function hi(e, t) {
-        var a = j.searchMatches || [];
-        if (de.classList.add("is-hidden"), ce.classList.add("is-active"), i(ve), 0 === a.length) return pe.classList.add("is-active"), void(he && (he.textContent = ""));
-        pe.classList.remove("is-active");
-        var r = Math.ceil(a.length / vi),
-            o = Math.max(0, Math.min(r - 1, e || 0));
-        j.searchPage = o;
-        var s = o * vi,
-            l = Math.min(a.length, s + vi);
-        he && (he.textContent = "Resultados " + (s + 1) + "-" + l + " de " + a.length + (r > 1 ? "  ·  Página " + (o + 1) + "/" + r : ""));
-        for (var d = s; d < l; d++) {
-            var c = d - s,
-                p = si(_(a[d], d + 1), c),
-                u = p.querySelector(".poster");
-            u && function(e, t) {
-                u._onMove = function(i) {
-                    return "down" === i && e >= 5 && l < a.length ? (hi(o + 1, t), !0) : "up" === i && e < 5 && s > 0 && (hi(o - 1, 5 + t), !0)
-                }
-            }(c, c % 5), ve.appendChild(p)
-        }
-        if (ve.style.height = "874px", t >= 0) {
-            var v = ve.querySelectorAll(".poster.focusable")[t];
-            v || (v = it(ve)), v && tt(v)
-        } else if ("search" === j.screen && (n(j.focus, ".search-hot") || n(j.focus, ".search-results"))) {
-            var f = it(ve);
-            f && tt(f)
-        }
-    }
-
-    function gi() {
-        j.searchNumeric = !j.searchNumeric;
-        var t = le.querySelector(".kb-action.switch .ico");
-        t && (t.style.backgroundImage = "url(assets/original/search/" + (j.searchNumeric ? "ic_vod_search_abc.png" : "ic_vod_search_123.png") + ")");
-        var i = le.querySelectorAll(".kb-row:not(.kb-row-num)");
-        if (j.searchNumeric) {
-            for (var a = 0; a < i.length; a++) i[a].classList.add("hidden");
-            if (!le.querySelector(".kb-row-num"))
-                for (var n = [
-                        ["1", "2", "3", "4", "5", "6", "7"],
-                        ["8", "9", "0", " "]
-                    ], r = 0; r < n.length; r++) {
-                    var o = e("div", "kb-row kb-row-num");
-                    o.style.top = 264 + 88.5 * r + "px";
-                    for (var s = 0; s < n[r].length; s++) {
-                        var l = e("div", "kb-key focusable" + (" " === n[r][s] ? " space" : ""), " " === n[r][s] ? "" : n[r][s]);
-                        l._activate = function(e) {
-                            return function() {
-                                ci(j.searchQuery + e)
-                            }
-                        }(n[r][s]), o.appendChild(l)
-                    }
-                    le.appendChild(o)
-                }
-            for (var d = le.querySelectorAll(".kb-row-num"), c = 0; c < d.length; c++) d[c].classList.remove("hidden")
-        } else {
-            for (var p = 0; p < i.length; p++) i[p].classList.remove("hidden");
-            Fe.forEach(function(e) {
-                e.classList.remove("hidden")
-            });
-            for (var u = le.querySelectorAll(".kb-row-num"), v = 0; v < u.length; v++) u[v].classList.add("hidden")
-        }
-    }
-
-    function mi() {
-        ge = t("settings-menu"), me = t("settings-right"), i(ge), i(me), He = [];
-        for (var n = 0; n < z.length; n++) {
-            var r = e("div", "settings-item focusable");
-            r.innerHTML = '<span class="settings-icon">' + (V[z[n].id] || "") + '</span><span class="settings-label">' + z[n].label + "</span>", r._index = n, r._activate = function(e) {
-                return function() {
-                    bi(e, !0)
-                }
-            }(n), r._onMove = function(e) {
-                if ("right" === e) {
-                    var t = it(me.querySelector(".settings-panel.is-active"));
-                    return t && tt(t), !0
-                }
-                return !1
-            }, ge.appendChild(r), He.push(r)
-        }
-        var o;
-        for (var s in (Be = {}).profile = xi(), Be.history = Si(), Be.share = ((o = Ci("Compartir APP")).appendChild(e("div", "sp-hr")), o.appendChild(e("div", "share-copy", "Instala TutyTV en otro televisor desde tu propia IPK. El historial de este perfil permanece privado en este TV.")), o), Be.playback = function() {
-                var t = Ci("Configuración global de reproducción");
-                t.appendChild(e("div", "sp-hr")), t.appendChild(e("div", "sp-global-note", "Estas preferencias se aplican automáticamente a todas las películas y series nuevas.")), wi(t, 198, "Reproductor", ["Normal (directo)", "Modo fluido"], "streamMode", "smooth" === j.playback.streamMode ? 1 : 0), wi(t, 307, "Formato de pantalla", ["Pantalla completa", "Normal", "16:9", "4:3"], "screen", j.playback.screen), wi(t, 416, "Audio preferido", ["Español", "Portugués", "Inglés"], "audio", j.playback.audio), t.appendChild(a(e("div", "sp-hr"), 0, 535, 1498, 1)), t.appendChild(e("div", "sp-subtitle-h", "Subtitulos"));
-                var i = e("div", "sp-switch focusable " + (j.playback.subtitle ? "on" : "off"));
-                return i._activate = function() {
-                        j.playback.subtitle = !j.playback.subtitle, i.className = "sp-switch focusable " + (j.playback.subtitle ? "on" : "off"), Q(), tt(i)
-                    }, t.appendChild(i), wi(t, 680, "Idioma", ["Español", "Portugués", "Inglés"], "subLang", j.playback.subLang), wi(t, 793, "Tamaño", ["Normal", "Grande", "Pequeño"], "size", j.playback.size),
-                    function(t, i) {
-                        var a = e("div", "pb-row");
-                        a.style.top = i + "px", a.appendChild(e("div", "pb-label", "Estilo"));
-                        for (var n = ["#ffffff", "#f6e33f", "#ffffff"], r = 0; r < 3; r++) {
-                            var o = e("div", "pb-opt focusable" + (r === j.playback.style ? " is-checked" : ""));
-                            o.style.marginLeft = (0 === r ? 0 : 28) + "px", o.appendChild(e("div", "radio"));
-                            var s = e("span", null, "Aa");
-                            s.style.color = n[r], 2 === r && (s.style.background = "#000000", s.style.display = "inline-block", s.style.width = "94px", s.style.height = "50px", s.style.lineHeight = "50px", s.style.fontSize = "28px"), o.appendChild(s), o._group = "style", o._index = r, o._activate = function() {
-                                j.playback.style = this._index, ka(), Q();
-                                for (var e = t.querySelectorAll(".pb-opt"), i = 0; i < e.length; i++) "style" === e[i]._group && e[i].classList.toggle("is-checked", e[i]._index === this._index)
-                            }, a.appendChild(o)
-                        }
-                        t.appendChild(a)
-                    }(t, 906), t
-            }(), Be.parent = function() {
-                var t = e("div", "settings-panel");
-                t.appendChild(e("div", "pl-title", "Configuraciones del Control Parental")), t.appendChild(e("div", "pl-tip", "Ingrese la contraseña de cuatro dígitos e ingrese viendo el programa de bloqueo.")), t.appendChild(e("div", "pl-label", "Contraseña inicial:"));
-                for (var i = e("div", "pl-boxes"), a = 0; a < 4; a++) {
-                    var n = e("div", "pl-box focusable");
-                    n._activate = function() {}, i.appendChild(n), a < 3 && i.appendChild(e("div", "pl-sep"))
-                }
-                t.appendChild(i), t.appendChild(e("div", "pl-note", ""));
-                var r = e("div", "pl-ok focusable", "OK");
-                return r._activate = function() {}, t.appendChild(r), t
-            }(), Be.feedback = function() {
-                var t = e("div", "settings-panel");
-                t.appendChild(e("div", "fb-title", "Ayuda y Feedback")), t.appendChild(e("div", "fb-hr")), t.appendChild(e("div", "fb-contact", "Si tiene alguna duda, puede ponerse en contacto con nosotros a través de los siguientes medios:")), t.appendChild(e("div", "fb-qr-note", "Escanee el código QR para enviar sugerencias o comentarios."));
-                var i = e("div", "fb-qr");
-                t.appendChild(i);
-                var a = e("div", "fb-help focusable", "Ayuda");
-                return a._activate = function() {}, t.appendChild(a), t
-            }(), Be.about = function() {
-                var t = e("div", "settings-panel");
-                t.appendChild(e("div", "sp-title plain", "Sobre nosotros")), t.appendChild(a(e("div", "sp-hr soft"), 0, 165, 1498, 1)), t.appendChild(e("div", "sp-about-body", "TutyTV se dedica a ofrecer a los usuarios una amplia variedad de recursos de alta calidad. Aquí encontrarás miles de películas, series, animes y canales en vivo, todo reunido en un solo lugar. Brindamos una experiencia estable, diversa y siempre actualizada, además de contenidos gratuitos para disfrutar.")), t.appendChild(e("div", "sp-about-port", "Port para LG webOS realizado por CristiancoDEV"));
-                var i = e("div", "sp-about-mail"),
-                    n = e("img");
-                return n.src = "assets/original/settings/vod_email_icon.png", n.alt = "", i.appendChild(n), i.appendChild(e("span", null, "escuchamos-tv@outlook.com")), t.appendChild(i), t
-            }(), Be) Be.hasOwnProperty(s) && me.appendChild(Be[s])
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasSearchRuntime && runtime.hasSearchRuntime() && runtime.closeFilterPanel) return void runtime.closeFilterPanel();
+        return !1
     }
 
     function yi() {
-        ge || mi(), nt("settings"), bi(0, !1), tt(He[0])
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasSettingsRuntime && runtime.hasSettingsRuntime() && runtime.openSettings) return void runtime.openSettings();
+        return !1
     }
 
     function bi(e, i) {
-        var a = z[e] && z[e].id || "profile",
-            n = t("screen-settings");
-        if (n && n.classList.toggle("is-history-view", "history" === a), "profile" === a && Be.profile && me) {
-            var r = xi();
-            me.replaceChild(r, Be.profile), Be.profile = r
-        } else if ("history" === a && Be.history && me) {
-            var o = Si();
-            me.replaceChild(o, Be.history), Be.history = o
-        }
-        for (var s = 0; s < He.length; s++) He[s].classList.toggle("is-selected", s === e);
-        for (var l in Be) Be.hasOwnProperty(l) && Be[l].classList.toggle("is-active", l === a);
-        i && tt(it(Be[a]) || He[e])
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasSettingsRuntime && runtime.hasSettingsRuntime() && runtime.selectSettingsTab) return void runtime.selectSettingsTab(e, i);
+        return !1
     }
 
-    function Ci(t) {
-        var i = e("div", "settings-panel");
-        return i.appendChild(e("div", "sp-title", t)), i
+    function Di() {
+        if (we)
+            if (we.paused) {
+                try {
+                    var e = legacyPlayVideo(we);
+                    e && e.catch && e.catch(function() {})
+                } catch (e) {}
+                qi("none"), Pi()
+            } else {
+                try {
+                    legacyPauseVideo(we)
+                } catch (e) {}
+                qi("pause"), Pi()
+            }
     }
 
-    function wi(t, i, a, n, r, o) {
-        var s = e("div", "pb-row");
-        s.style.top = i + "px", s.appendChild(e("div", "pb-label", a));
-        for (var l = 0; l < n.length; l++) {
-            var d = e("div", "pb-opt focusable" + (l === o ? " is-checked" : ""));
-            d.style.marginLeft = (0 === l ? 0 : 28) + "px", d.appendChild(e("div", "radio")), d.appendChild(e("span", null, n[l])), d._group = r, d._index = l, d._activate = function() {
-                "streamMode" === this._group ? (j.playback.streamMode = 1 === this._index ? "smooth" : "normal", za = {}, j.playerItem && Wa(j.playerItem)) : (j.playback[this._group] = this._index, "audio" === this._group ? j.playback.audioCode = "" : "subLang" === this._group && (j.playback.subCode = "")), ka(), Q();
-                for (var e = t.querySelectorAll(".pb-opt"), i = 0; i < e.length; i++) e[i]._group === this._group && e[i].classList.toggle("is-checked", e[i]._index === this._index)
-            }, s.appendChild(d)
-        }
-        t.appendChild(s)
-    }
-
-    function xi() {
-        var t = e("div", "settings-panel account-panel"),
-            i = e("div", "account-avatar");
-        i.innerHTML = V.profile, t.appendChild(i), t.appendChild(e("div", "account-number", X.id)), t.appendChild(e("div", "account-type", "Perfil local de este televisor"));
-        var a = e("div", "account-card");
-        a.appendChild(e("div", "account-card-title", "Tu cuenta está lista")), a.appendChild(e("div", "account-card-text", "Las preferencias, el historial y el capítulo que estabas viendo se guardan automáticamente en este TV.")), t.appendChild(a);
-        var n = e("div", "account-history-btn focusable", "Ver mi lista");
-        n._activate = function() {
-            bi(1, !0)
-        }, t.appendChild(n);
-        var r = e("div", "account-card account-card-small");
-        return r.appendChild(e("div", "account-card-title", "Sin registro ni contraseña")), r.appendChild(e("div", "account-card-text", "Este perfil no envía tus datos a ningún servidor.")), t.appendChild(r), t
-    }
-
-    function Si() {
-        for (var t = e("div", "settings-panel history-panel"), i = e("div", "history-tabs"), a = [{
-                id: "history",
-                label: "Historia"
-            }, {
-                id: "favs",
-                label: "Mi favoritos"
-            }, {
-                id: "reminders",
-                label: "Recordatorios"
-            }], n = 0; n < a.length; n++)(function(t) {
-            var a = e("div", "history-tab focusable" + (ze === t.id ? " is-selected" : ""), t.label);
-            a._activate = function() {
-                ze = t.id, bi(1, !0)
-            }, i.appendChild(a)
-        })(a[n]);
-        t.appendChild(i), t.appendChild(e("div", "history-rule"));
-        var r = [];
-        if ("history" === ze) r = X.history || [];
-        else if ("favs" === ze)
-            for (var o = 0; o < l.length; o++) j.favs && j.favs[l[o].id] && r.push({
-                id: l[o].id,
-                title: l[o].title,
-                poster: l[o].poster || l[o].cover,
-                series: S(l[o]),
-                position: 0
-            });
-        else if ("reminders" === ze) {
-            for (var seenR = {}, ro = 0; ro < l.length; ro++)
-                if (X.reminders && X.reminders[String(l[ro].id)]) {
-                    seenR[String(l[ro].id)] = !0, r.push({
-                        id: l[ro].id,
-                        title: l[ro].title,
-                        poster: l[ro].poster || l[ro].cover,
-                        series: !0,
-                        reminder: !0,
-                        position: 0
-                    })
-                } for (var rid in X.reminders)
-                if (X.reminders.hasOwnProperty(rid) && !seenR[rid]) {
-                    var rec = X.reminders[rid];
-                    r.push({
-                        id: rid,
-                        title: rec.title || "Contenido",
-                        poster: rec.poster || "",
-                        series: !0,
-                        reminder: !0,
-                        position: 0
-                    })
-                }
-        }
-        var s = e("div", "history-total", "Total ");
-        s.appendChild(e("span", null, String(r.length))), t.appendChild(s);
-        var d = e("div", "history-grid");
-        if (r.length)
-            for (var c = 0; c < r.length && c < 15; c++)(function(t) {
-                var i = e("div", "history-card focusable"),
-                    a = document.createElement("img");
-                a.className = "history-poster", a.alt = "", a.src = t.poster || "assets/original/common/bg_placehoder_vertical.png", i.appendChild(a);
-                var n = t.reminder ? "Recordatorio activo" : t.series ? "Ya miró " + (t.episodeNumber ? "epis. " + t.episodeNumber : "un episodio") + (t.position ? " · " + ki(t.position) : "") : "Ya miró hasta " + ki(t.position || 0);
-                i.appendChild(e("div", "history-progress", n)), i.appendChild(e("div", "history-card-title", t.title || "Contenido")), i._activate = function() {
-                    Oa(t)
-                }, d.appendChild(i)
-            })(r[c]);
-        else d.appendChild(e("div", "history-grid-empty", "No hay títulos para mostrar todavía."));
-        return t.appendChild(d), t
-    }
-    var _i = 5e3,
-        Li = null;
+    var _i = 5e3;
 
     function ki(e) {
         return legacyFormatPlaybackTime(e)
@@ -4111,14 +2777,14 @@
                 we && isFinite(we.duration) && we.duration > 0 ? zn + we.duration : 0,
                 t,
                 legacyInferEpisodeDuration(j.playerItem && j.playerItem.episodes, j.playerEpisode),
-                Da && Da.length && Da[Da.length - 1] && Da[Da.length - 1].end > 0 ? Math.round(Da[Da.length - 1].end + 60) : 0
+                subtitleEnd()
             ] : [
                 t,
                 j.playerEpisode && j.playerEpisode.duration,
                 j.playerItem && j.playerItem.duration,
                 we && isFinite(we.duration) && we.duration > 0 ? we.duration : 0,
                 legacyInferEpisodeDuration(j.playerItem && j.playerItem.episodes, j.playerEpisode),
-                Da && Da.length && Da[Da.length - 1] && Da[Da.length - 1].end > 0 ? Math.round(Da[Da.length - 1].end + 60) : 0
+                subtitleEnd()
             ], S(j.playerItem), e);
             Ie.textContent = ki(e), Te.textContent = ki(i);
             var n = legacyPlaybackPercent(e, i);
@@ -4132,74 +2798,37 @@
     }
 
     function qi(e) {
-        Ae || (Ae = t("player-osd-icon")), Ae && (Li && (clearTimeout(Li), Li = null), "pause" === e ? (Ae.style.backgroundImage = "url(assets/original/common/icon_status_pause.png)", Ae.classList.add("is-active")) : "forward" === e ? (Ae.style.backgroundImage = "url(assets/original/common/icon_status_forward.png)", Ae.classList.add("is-active"), Li = setTimeout(function() {
-            Ae.classList.remove("is-active")
-        }, 900)) : "backward" === e ? (Ae.style.backgroundImage = "url(assets/original/common/icon_status_backward.png)", Ae.classList.add("is-active"), Li = setTimeout(function() {
-            Ae.classList.remove("is-active")
-        }, 900)) : Ae.classList.remove("is-active"))
-    }
-
-    function Oi(e) {
-        if (we) {
-            var t = we.duration;
-            (isNaN(t) || t <= 0) && (t = 86400);
-            var i = we.currentTime || 0,
-                a = Math.max(0, Math.min(t, i + e));
-            try {
-                legacySeekVideo(we, a)
-            } catch (e) {}
-            Ei(a, we.duration), Pi(), qi(e > 0 ? "forward" : "backward")
-        }
-    }
-
-    function Di() {
-        if (we)
-            if (we.paused) {
-                try {
-                    var e = legacyPlayVideo(we);
-                    e && e.catch && e.catch(function() {})
-                } catch (e) {}
-                qi("none"), Pi()
-            } else {
-                try {
-                    legacyPauseVideo(we)
-                } catch (e) {}
-                qi("pause"), Pi()
-            }
+        var runtime = window.TutyUI;
+        return runtime && runtime.showPlaybackOsd ? runtime.showPlaybackOsd(e) : !1
     }
 
     function Ai() {
-        j.infoTimer && clearTimeout(j.infoTimer), j.infoTimer = setTimeout(function() {
-            j.infoTimer = null, "player" !== j.screen || j.channelsOpen || Ni()
-        }, _i)
+        var runtime = window.TutyUI;
+        return runtime && runtime.schedulePlayerInfobarHide ? runtime.schedulePlayerInfobarHide() : !1
     }
 
     function Pi() {
-        j.infobar = !0, "vod" === j.playerMode ? (Le && Le.classList.add("is-active"), be && be.classList.remove("is-active")) : (be && be.classList.add("is-active"), Le && Le.classList.remove("is-active")), Ai()
+        var runtime = window.TutyUI;
+        return runtime && runtime.showPlayerInfobar ? runtime.showPlayerInfobar() : !1
     }
 
     function Ni() {
-        j.infoTimer && (clearTimeout(j.infoTimer), j.infoTimer = null), j.infobar = !1, be && be.classList.remove("is-active"), Le && Le.classList.remove("is-active")
+        var runtime = window.TutyUI;
+        return runtime && runtime.hidePlayerInfobar ? runtime.hidePlayerInfobar() : !1
     }
 
     function Ri() {
-        Pi()
+        var runtime = window.TutyUI;
+        return runtime && runtime.refreshPlayerInfobar ? runtime.refreshPlayerInfobar() : !1
     }
 
     function Ui() {
-        Ni()
+        return Ni()
     }
     var Fi = null,
-        Bi = null,
-        Hi = null,
-        zi = null,
-        Vi = null,
         ji = null,
         Wi = null,
-        $i = null,
-        Xi = null,
         Gi = null,
-        Ji = null,
         Qi = null,
         Ki = null,
         Yi = null,
@@ -4208,35 +2837,20 @@
         ta = null,
         ia = null,
         aa = null,
-        na = null,
-        ra = null,
-        oa = null,
-        sa = null,
-        la = null,
-        da = null,
-        ca = null,
-        pa = null,
         ua = null,
         va = !1,
         fa = !1,
-        ha = null,
         ga = 0,
         ma = !1,
         ya = null,
         ba = !1,
         Ca = !1,
-        wa = 0,
         xa = "normal",
         Sa = "white",
-        _a = "contain",
         La = 0;
 
     function ka() {
         xa = ["normal", "big", "small"][Number(j.playback.size) || 0] || "normal", Sa = ["white", "yellow", "black"][Number(j.playback.style) || 0] || "white", Ca || (ba = !!j.playback.subtitle), xn(["cover", "contain", "16-9", "4-3"][Number(j.playback.screen) || 0] || "contain"), Fa()
-    }
-
-    function Ma() {
-        return ["es", "pt", "en"][Number(j.playback.subLang) || 0] || "es"
     }
 
     function Ia(e, t) {
@@ -4372,45 +2986,37 @@
         } catch (err) {}
         openFallback()
     }
-    var Da = [],
-        Aa = {},
-        Pa = {},
-        Na = null;
-
-    function Ra(e) {
-        return legacyParseSubtitleTimestamp(e)
-    }
+    var Aa = {},
+        Pa = {};
 
     function Ua(e) {
-        var t = ++wa;
-        if (!e || !e.url) return Da = [], void(ua && (ua.innerHTML = ""));
-        try {
-            var i = new XMLHttpRequest;
-            i.open("GET", e.url, !0), i.onload = function() {
-                t === wa && i.status >= 200 && i.status < 300 && (Da = legacyParseSubtitleCues(i.responseText))
-            }, i.send()
-        } catch (e) {}
+        var runtime = window.TutyUI;
+        return runtime && runtime.loadPlayerSubtitle ? runtime.loadPlayerSubtitle(e) : !1
     }
-
     function Fa() {
-        ua && (ua.classList.remove("size-small", "size-normal", "size-big"), ua.classList.add("size-" + xa), ua.classList.remove("color-white", "color-yellow", "color-black"), ua.classList.add("color-" + Sa))
+        var runtime = window.TutyUI;
+        return runtime && runtime.applyPlayerSubtitleStyle ? runtime.applyPlayerSubtitleStyle(xa, Sa) : !1
     }
-
     function Ba(e) {
-        if (ua)
-            if (ba && Da && Da.length) {
-                var t = legacyFindSubtitleCue(Da, e);
-                if (t) {
-                    var a = '<span class="player-subtitles-text">' + t.text + "</span>";
-                    ua.innerHTML !== a && (ua.innerHTML = a)
-                } else "" !== ua.innerHTML && (ua.innerHTML = "")
-            } else "" !== ua.innerHTML && (ua.innerHTML = "")
+        var runtime = window.TutyUI;
+        return runtime && runtime.renderPlayerSubtitle ? runtime.renderPlayerSubtitle(e, ba) : !1
     }
-
     function Ha() {
         return "detail" === j.screen ? j.detail || null : j.playerItem || j.detail || null
     }
-    var za = {},
+    function resetSubtitles() {
+        ua && (ua.innerHTML = "");
+        var runtime = window.TutyUI;
+        runtime && runtime.hasPlayerSubtitleRuntime && runtime.hasPlayerSubtitleRuntime() && runtime.resetPlayerSubtitles && runtime.resetPlayerSubtitles()
+    }
+
+    function subtitleEnd() {
+        var runtime = window.TutyUI;
+        if (runtime && runtime.hasPlayerSubtitleRuntime && runtime.hasPlayerSubtitleRuntime() && runtime.getPlayerSubtitleEnd) return runtime.getPlayerSubtitleEnd();
+        return 0
+    }
+
+    var za = j.playback.streamModes && "object" == typeof j.playback.streamModes ? j.playback.streamModes : (j.playback.streamModes = {}),
         Va = "";
 
     function ja(e) {
@@ -4424,11 +3030,11 @@
 
     function $a(e, t) {
         var i = ja(e);
-        j.streamMode = t ? "smooth" : "normal", i && (za[i] = !!t)
+        j.streamMode = t ? "smooth" : "normal", i && (za[i] = !!t), j.playback.streamModes = za, Q()
     }
 
     function Xa() {
-        Va = "", ga = 0, ma = !1, ya = null, ba = !1, Ca = !1, wa++, j.trackIndex = 0, Da = [], ua && (ua.innerHTML = "")
+        Va = "", ga = 0, ma = !1, ya = null, ba = !1, Ca = !1, j.trackIndex = 0, resetSubtitles()
     }
 
     function Ga(e) {
@@ -4518,94 +3124,23 @@
     }
 
     function en() {
-        ha && clearTimeout(ha), ha = setTimeout(function() {
-            an()
-        }, 8e3)
+        var runtime = window.TutyUI;
+        return runtime && runtime.schedulePlaySettingsClose ? runtime.schedulePlaySettingsClose() : !1
     }
 
     function tn() {
-        if (Fi || En(), Fi) {
-            va = !0, fa = !1, Ni(), nn(), Fi.classList.add("is-active"), ua && ua.classList.add("shift-up"), Qa(j.playerItem, function() {
-                va && nn()
-            }), en();
-            var e = j.playerItem;
-            if (S(e) && zi) {
-                var t = zi.querySelector(".psv-ep-btn");
-                if (t) return void tt(t)
-            }
-            S(e) && Ji ? tt(Ji) : Vi && tt(Vi)
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.openPlaySettings ? runtime.openPlaySettings() : !1
     }
 
     function an() {
-        ha && (clearTimeout(ha), ha = null), va = !1, Fi && Fi.classList.remove("is-active"), ua && ua.classList.remove("shift-up"), "player" !== j.screen || fa || tt(ye)
-    }
-
-    function nn() {
-        var e = j.focus ? n(j.focus, ".psv-row") : null,
-            t = e ? e.id : "",
-            i = e && j.focus ? j.focus.textContent : "";
-        if (on(), function() {
-                if (!$i) return;
-                $i.classList.remove("is-hidden")
-            }(), Cn(), wn(), rn(), va && t && Fi)
-            for (var a = Fi.querySelectorAll(".psv-row"), r = 0; r < a.length; r++)
-                if (a[r].id === t) {
-                    for (var o = a[r].querySelectorAll(".focusable"), s = null, l = 0; l < o.length; l++)
-                        if (o[l].textContent === i) {
-                            s = o[l];
-                            break
-                        } var d = s || it(a[r]);
-                    d && tt(d, !0);
-                    break
-                }
+        var runtime = window.TutyUI;
+        return runtime && runtime.closePlaySettings ? runtime.closePlaySettings() : !1
     }
 
     function rn() {
-        if (Fi) {
-            for (var e = Fi.querySelectorAll(".psv-row"), t = 0; t < e.length; t++) e[t].classList.remove("is-row-focused");
-            var i = j.focus ? n(j.focus, ".psv-row") : null;
-            i && i.classList.add("is-row-focused")
-        }
-    }
-
-    function on() {
-        if (Hi) {
-            var t = j.playerItem;
-            if (t && S(t)) {
-                if (Hi.style.display = "block", zi) {
-                    i(zi);
-                    var a = sn(t),
-                        n = a[j.playerSeasonIndex] || a[0],
-                        r = n && n.id === (t.seasonId || t.id) && t.episodes && t.episodes.length ? t.episodes : n && n._episodes || t.episodes || [];
-                    if (r.length) {
-                        for (var o = 0, s = 0; s < r.length; s++)
-                            if (j.playerEpisode && (r[s].id === j.playerEpisode.id || r[s].number === j.playerEpisode.number)) {
-                                o = s;
-                                break
-                            } var l = ii(r.length);
-                        (void 0 === j.playerEpisodeRange || j.playerEpisodeRange >= l.length) && (j.playerEpisodeRange = Math.floor(o / 20));
-                        for (var d = l[j.playerEpisodeRange] || l[0], c = e("div", "psv-episode-numbers"), p = d.start; p < d.end; p++)(function(t, i) {
-                            var a = i === o ? "▶" : String(void 0 !== t.number && null !== t.number ? t.number : i + 1),
-                                n = e("button", "psv-ep-btn focusable" + (i === o ? " is-selected" : ""), a);
-                            n._activate = function() {
-                                hn(t)
-                            }, c.appendChild(n)
-                        })(r[p], p);
-                        zi.appendChild(c);
-                        for (var u = e("div", "psv-episode-ranges"), v = 0; v < l.length; v++)(function(t, i) {
-                            var a = e("button", "psv-range-btn focusable" + (t === j.playerEpisodeRange ? " is-selected" : ""), i.start + 1 + "-" + i.end);
-                            a._activate = function() {
-                                j.playerEpisodeRange = t, on();
-                                var e = zi.querySelector(".psv-ep-btn");
-                                e && tt(e)
-                            }, u.appendChild(a)
-                        })(v, l[v]);
-                        zi.appendChild(u)
-                    } else zi.appendChild(e("div", "psv-selection-empty", "Temporadas y episodios"))
-                }
-            } else Hi.style.display = "none"
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.syncPlaySettingsRowFocus ? runtime.syncPlaySettingsRowFocus() : !1
     }
 
     function sn(e) {
@@ -4637,108 +3172,16 @@
     }
 
     function pn() {
-        var t = j.playerItem;
-        if (t && S(t) && (va && an(), Qi || En(), Qi)) {
-            if (!(t.episodes && t.episodes.length || t._detailsLoaded)) return nr("Cargando capítulos…"), void U(t, function() {
-                "player" === j.screen && (!j.playerEpisode && t.episodes && t.episodes.length && (j.playerEpisode = t.episodes[0], j.detailEpisode = t.episodes[0]), pn())
-            });
-            !j.playerEpisode && t.episodes && t.episodes.length && (j.playerEpisode = t.episodes[0], j.detailEpisode = t.episodes[0], j.playerSeasonIndex = j.detailSeason || 0), j.episodeBrowserOpen = !0, j.browserSeason = j.playerSeasonIndex || 0, Qi.classList.add("is-active"), Ui(),
-                function() {
-                    var t = j.playerItem;
-                    if (!t || !Qi) return;
-                    var a = sn(t);
-                    j.browserSeason >= a.length && (j.browserSeason = 0);
-                    j.browserSeason < 0 && (j.browserSeason = 0);
-                    var n = a[j.browserSeason],
-                        r = a[j.playerSeasonIndex] || a[0],
-                        o = j.playerEpisode;
-                    Ki && (Ki.textContent = t.title || "");
-                    if (Yi)
-                        if (o) {
-                            var s = [];
-                            r && r.number && s.push("T" + r.number), o.number && s.push("E" + o.number), Yi.textContent = "Reproduciendo " + s.join(" ") + " · " + dn(t, o)
-                        } else Yi.textContent = "Elige un episodio";
-                    ia && (ia.textContent = "Episodios · Temporada " + (n && n.number || j.browserSeason + 1));
-                    (function(t, a) {
-                        if (!Zi || !ea) return;
-                        i(Zi), ea.style.display = "flex";
-                        for (var n = 0; n < a.length; n++)(function(t) {
-                            var i = e("div", "pe-season focusable", "Temporada " + (a[t].number || t + 1));
-                            t === j.browserSeason && i.classList.add("is-selected"), i._onFocus = function() {
-                                j.browserSeason !== t && fn(t, !1)
-                            }, i._activate = function() {
-                                fn(t, !0)
-                            }, Zi.appendChild(i)
-                        })(n)
-                    })(0, a), vn(t, n)
-                }();
-            var a = (ta ? ta.querySelector(".pe-ep.is-current") : null) || (ta ? it(ta) : null) || (ea && "none" !== ea.style.display ? it(Zi) : null);
-            a && tt(a)
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.openEpisodeBrowser ? runtime.openEpisodeBrowser() : !1
     }
-
     function un(e) {
-        Qi && j.episodeBrowserOpen && (j.episodeBrowserOpen = !1, Qi.classList.remove("is-active"), !e && "player" === j.screen && ye && tt(ye))
+        var runtime = window.TutyUI;
+        return runtime && runtime.closeEpisodeBrowser ? runtime.closeEpisodeBrowser(e) : !1
     }
-
-    function vn(t, a) {
-        if (ta && a) {
-            i(ta);
-            var r = a.id === (t.seasonId || t.id) && t.episodes && t.episodes.length ? t.episodes : a._episodes || [];
-            if (!r.length) return ta.appendChild(e("div", "pe-loading", "Cargando episodios…")), void ln(t, a, function(e) {
-                if (j.episodeBrowserOpen && (sn(t)[j.browserSeason] === a && (vn(t, a), n(j.focus, "#pe-episodes")))) {
-                    var i = ta.querySelector(".pe-ep.is-current") || it(ta);
-                    i && tt(i)
-                }
-            });
-            for (var o = Math.min(r.length, 24), s = 0; s < o; s++)(function(i, a) {
-                var n = e("div", "pe-ep focusable"),
-                    r = void 0 !== i.number && null !== i.number ? i.number : a + 1;
-                n.appendChild(e("div", "pe-num", String(r)));
-                var o = e("div", "pe-thumb"),
-                    s = e("div", "pe-thumb-play", "▶");
-                o.appendChild(s), n.appendChild(o);
-                var l = e("div", "pe-info");
-                l.appendChild(e("div", "pe-name", dn(t, i, a)));
-                var d = [],
-                    c = cn(i);
-                c && d.push(c), i.quality && d.push(String(i.quality).split(",")[0].toUpperCase()), l.appendChild(e("div", "pe-meta", d.join("   ·   "))), i.description && l.appendChild(e("div", "pe-desc", i.description)), n.appendChild(l);
-                var p = j.playerEpisode && (j.playerEpisode.id === i.id || void 0 !== j.playerEpisode.number && j.playerEpisode.number === i.number);
-                n.appendChild(e("div", "pe-badge", "▶ REPRODUCIENDO")), p && n.classList.add("is-current"), n._activate = function() {
-                    hn(i)
-                }, ta.appendChild(n)
-            })(r[s], s);
-            r.length > o && ta.appendChild(e("div", "pe-loading", "Mostrando los primeros " + o + " capítulos"))
-        }
-    }
-
-    function fn(e, t) {
-        var i = j.playerItem,
-            a = sn(i);
-        if (a[e] && (j.browserSeason = e, function() {
-                if (Zi)
-                    for (var e = Zi.children, t = 0; t < e.length; t++) e[t].classList.toggle("is-selected", t === j.browserSeason)
-            }(), ia && (ia.textContent = "Episodios · Temporada " + (a[e].number || e + 1)), vn(i, a[e]), t)) {
-            var n = ta ? ta.querySelector(".pe-ep.is-current") || it(ta) : null;
-            n && tt(n)
-        }
-    }
-
-    function hn(e) {
-        var t = j.playerItem;
-        if (t && e) {
-            var i = sn(t),
-                a = i[j.playerSeasonIndex];
-            a && a.id === (t.seasonId || t.id) && t.episodes && t.episodes.length && (a._episodes = t.episodes);
-            var n = void 0 !== j.playerSeasonIndex && null !== j.playerSeasonIndex ? j.playerSeasonIndex : j.browserSeason || 0,
-                r = i[n];
-            r && (j.detailSeason !== n && (j.detailSeason = n, j.detailNeedsRebuild = !0), r.id && (t.seasonId = r.id), r._episodes && (t.episodes = r._episodes)), un(), va && an(), gn(t, e)
-        }
-    }
-
     function gn(e, t, saveHistory) {
         if (e && t) {
-            j.nextEpisodeGuardUntil = Date.now() + 3e3, !1 !== saveHistory && ar(), j.playerItem = e, j.playerEpisode = t, j.detailEpisode = t, j.playerSeasonIndex = j.detailSeason || 0, ye && be && vr(), bn(e), j.episodeSwitchTimer && clearTimeout(j.episodeSwitchTimer), j.episodeSwitchSeq = (j.episodeSwitchSeq || 0) + 1;
+            closeNextEpisodePrompt(!1), j.nextEpisodeDismissed = !1, j.nextEpisodeGuardUntil = Date.now() + 3e3, !1 !== saveHistory && ar(), j.playerItem = e, j.playerEpisode = t, j.detailEpisode = t, j.playerSeasonIndex = j.detailSeason || 0, ye && be && vr(), bn(e), j.episodeSwitchTimer && clearTimeout(j.episodeSwitchTimer), j.episodeSwitchSeq = (j.episodeSwitchSeq || 0) + 1;
             var i = j.episodeSwitchSeq;
             nr("Cambiando capítulo…"), j.episodeSwitchTimer = setTimeout(function() {
                 j.episodeSwitchTimer = null, i === j.episodeSwitchSeq && ("player" === j.screen || "detail" === j.screen) && (j.resumePosition = 0, sr(e, t))
@@ -4755,72 +3198,29 @@
     }
 
     function closeNextEpisodePrompt(restoreFocus) {
-        j.nextEpisodeOpen = !1, j.nextEpisodeTimer && (clearTimeout(j.nextEpisodeTimer), j.nextEpisodeTimer = null);
-        var prompt = t("next-episode-prompt");
-        prompt && prompt.classList.remove("is-active"), j.nextEpisodeTarget = null, restoreFocus && ye && tt(ye)
+        var runtime = window.TutyUI;
+        return runtime && runtime.closeNextEpisodePrompt ? runtime.closeNextEpisodePrompt(restoreFocus) : !1
     }
-
     function cancelNextEpisodePrompt() {
-        j.nextEpisodeDismissed = !0, closeNextEpisodePrompt(!0)
+        var runtime = window.TutyUI;
+        return runtime && runtime.cancelNextEpisodePrompt ? runtime.cancelNextEpisodePrompt() : !1
     }
-
-    function updateNextEpisodeCountdown() {
-        var count = t("next-episode-count");
-        count && (count.textContent = String(j.nextEpisodeCountdown))
-    }
-
     function startNextEpisode(target) {
-        var item = j.playerItem;
-        if (!item || !target) return;
-        var seq = ++j.nextEpisodeSeq;
-        j.nextEpisodeGuardUntil = Date.now() + 3e3;
-        window.TUTYTV_WEB && window.console && console.log("[TUTYTV] next target", {
-            kind: target.kind,
-            seasonIndex: target.seasonIndex,
-            seasonId: target.season && target.season.id,
-            episodeId: target.episode && target.episode.id
-        }), ar(), showNextEpisodeLoading(item);
-        if ("episode" === target.kind) return j.detailSeason = target.seasonIndex, j.playerSeasonIndex = target.seasonIndex, void gn(item, target.episode, !1);
-        var seasons = sn(item),
-            season = target.season;
-        if (!season) return void mn();
-        ln(item, season, function(episodes, detail) {
-            if (seq !== j.nextEpisodeSeq || j.playerItem !== item || "player" !== j.screen) return;
-            window.TUTYTV_WEB && window.console && console.log("[TUTYTV] next season loaded", {
-                seasonId: season.id,
-                episodes: episodes && episodes.length
-            });
-            if (!episodes || !episodes.length) return void mn();
-            detail && R(item, detail), item.seasons = seasons, j.detailSeason = target.seasonIndex, j.playerSeasonIndex = target.seasonIndex, item.seasonId = season.id || item.seasonId, item.episodes = episodes, season._episodes = episodes, j.detail === item && (j.detailNeedsRebuild = !0), gn(item, episodes[0], !1)
-        })
+        var runtime = window.TutyUI;
+        return runtime && runtime.startNextEpisode ? runtime.startNextEpisode(target) : !1
     }
-
-    function confirmNextEpisodePrompt() {
-        if (!j.nextEpisodeOpen) return;
-        var target = j.nextEpisodeTarget;
-        closeNextEpisodePrompt(!1), startNextEpisode(target)
-    }
-
     function showNextEpisodePrompt(target, seconds) {
-        if (!target || j.nextEpisodeOpen || j.nextEpisodeDismissed) return;
-        var prompt = t("next-episode-prompt");
-        if (!prompt) return void startNextEpisode(target);
-        j.nextEpisodeOpen = !0, j.nextEpisodeTarget = target, j.nextEpisodeCountdown = Math.max(1, Math.min(7, Math.ceil(Number(seconds) || 7)));
-        var item = j.playerItem,
-            kicker = t("next-episode-kicker"),
-            title = t("next-episode-title"),
-            play = t("next-episode-play"),
-            cancel = t("next-episode-cancel");
-        kicker && (kicker.textContent = "season" === target.kind ? "Siguiente temporada" : "Siguiente episodio"), title && (title.textContent = "season" === target.kind ? "Temporada " + (target.season && target.season.number || target.seasonIndex + 1) : dn(item, target.episode) || "Episodio siguiente");
-        play && (play._activate = confirmNextEpisodePrompt), cancel && (cancel._activate = cancelNextEpisodePrompt), updateNextEpisodeCountdown(), prompt.classList.add("is-active"), play && tt(play);
-
-        function tick() {
-            if (!j.nextEpisodeOpen) return;
-            j.nextEpisodeCountdown = Math.max(0, j.nextEpisodeCountdown - 1), updateNextEpisodeCountdown(), j.nextEpisodeCountdown ? j.nextEpisodeTimer = setTimeout(tick, 1e3) : confirmNextEpisodePrompt()
-        }
-        j.nextEpisodeTimer && clearTimeout(j.nextEpisodeTimer), j.nextEpisodeTimer = setTimeout(tick, 1e3)
+        var runtime = window.TutyUI;
+        return runtime && runtime.showNextEpisodePrompt ? runtime.showNextEpisodePrompt(target, seconds) : !1
     }
-
+    function findNextPlaybackTarget() {
+        var runtime = window.TutyUI;
+        return runtime && runtime.findNextPlaybackTarget ? runtime.findNextPlaybackTarget() : null
+    }
+    function canOfferNextEpisode(position, total) {
+        var runtime = window.TutyUI;
+        return runtime && runtime.canOfferNextEpisode ? runtime.canOfferNextEpisode(j, position, total) : !1
+    }
     function refreshNextSeasons(item) {
         if (!item || item._nextSeasonsLoading || item._nextSeasonsTried) return;
         item._nextSeasonsLoading = !0;
@@ -4847,55 +3247,38 @@
         }
     }
 
-    function findNextPlaybackTarget() {
-        var item = j.playerItem;
-        if (!item || !S(item) || "player" !== j.screen) return null;
-        var seasons = sn(item),
-            preferred = Number(j.playerSeasonIndex) || 0,
-            targetId = String(item.seasonId || item.id || ""),
-            fallback = Number(j.detailSeason) || 0;
-        if (seasons[preferred] && targetId && String(seasons[preferred].id || "") !== targetId)
-            for (var index = 0; index < seasons.length; index++)
-                if (String(seasons[index].id || "") === targetId) {
-                    preferred = index;
-                    break
-                }
-        var episodes = legacySeasonEpisodes(item, preferred);
-        if (legacyFindEpisodeIndex(episodes, j.playerEpisode) < 0 && fallback !== preferred) {
-            var fallbackEpisodes = legacySeasonEpisodes(item, fallback);
-            legacyFindEpisodeIndex(fallbackEpisodes, j.playerEpisode) >= 0 && (preferred = fallback, episodes = fallbackEpisodes)
-        }
-        var target = legacyResolveNextPlaybackTarget(seasons, preferred, fallback, episodes, j.playerEpisode);
-        !target && seasons.length <= 1 && refreshNextSeasons(item);
-        window.TUTYTV_WEB && window.console && !target && console.log("[TUTYTV] next target not found", {
-            item: item && item.id,
-            seasonId: item && item.seasonId,
-            preferred: preferred,
-            fallback: fallback,
-            episodes: episodes.length,
-            episode: j.playerEpisode && j.playerEpisode.id,
-            seasons: seasons.map(function(season) {
-                return {
-                    id: season && season.id,
-                    number: season && season.number
-                }
-            })
-        });
-        return target
-    }
-
     function maybeShowNextEpisodePrompt(position, total) {
-        if (j.nextEpisodeDismissed || j.nextEpisodeOpen || Date.now() < j.nextEpisodeGuardUntil || "vod" !== j.playerMode || !(total > 0) || position < total - 7) return;
+        if (!canOfferNextEpisode(position, total)) return;
         var target = findNextPlaybackTarget();
-        target && showNextEpisodePrompt(target, total - position)
+        if (!target) return;
+        window.TUTYTV_WEB && window.console && console.log("[TUTYTV] next prompt", {
+            trigger: "timeupdate",
+            position: position,
+            total: total,
+            remaining: total - position,
+            current: j.playerEpisode && j.playerEpisode.id,
+            target: target.episode && target.episode.id,
+            kind: target.kind
+        }), showNextEpisodePrompt(target, total - position)
     }
 
     function yn() {
         var item = j.playerItem;
         if (item && S(item) && "player" === j.screen) {
-            if (j.nextEpisodeDismissed || Date.now() < j.nextEpisodeGuardUntil) return void mn();
+            var position = Yn(),
+                total = Zn();
+            if (!canOfferNextEpisode(position, total)) return void mn();
             var target = findNextPlaybackTarget();
-            target ? showNextEpisodePrompt(target) : mn()
+            if (!target) return void mn();
+            window.TUTYTV_WEB && window.console && console.log("[TUTYTV] next prompt", {
+                trigger: "ended",
+                position: position,
+                total: total,
+                remaining: total - position,
+                current: j.playerEpisode && j.playerEpisode.id,
+                target: target.episode && target.episode.id,
+                kind: target.kind
+            }), showNextEpisodePrompt(target)
         }
     }
 
@@ -4908,110 +3291,31 @@
     }
 
     function Cn() {
-        var e = legacyRelayStreamMode(j.streamMode);
-        if (ji) {
-            ji.classList.toggle("is-selected", e);
-            var t = ji.querySelector(".psv-check");
-            t && (t.style.display = e ? "block" : "none")
-        }
-        if (Wi) {
-            Wi.classList.toggle("is-selected", !e);
-            var i = Wi.querySelector(".psv-check");
-            i && (i.style.display = e ? "none" : "block")
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.refreshStreamModeButtons ? runtime.refreshStreamModeButtons() : !1
     }
-
     function wn() {
-        if (Gi)
-            for (var e = Gi.querySelectorAll(".psv-btn"), t = 0; t < e.length; t++) {
-                var i = e[t].getAttribute("data-aspect") === _a;
-                e[t].classList.toggle("is-selected", i);
-                var a = e[t].querySelector(".psv-check");
-                a && (a.style.display = i ? "block" : "none")
-            }
+        var runtime = window.TutyUI;
+        return runtime && runtime.refreshAspectButtons ? runtime.refreshAspectButtons() : !1
     }
-
     function xn(e) {
-        _a = e || "contain", we && (we.classList.remove("aspect-cover", "aspect-contain", "aspect-16-9", "aspect-4-3"), we.classList.add("aspect-" + _a)), wn()
+        var runtime = window.TutyUI;
+        return runtime && runtime.applyPlayerAspect ? runtime.applyPlayerAspect(e) : !1
     }
-
     function Sn(e) {
-        if (Bi || En(), Bi) {
-            ha && (clearTimeout(ha), ha = null), fa = !0, Na = j.focus;
-            var t = e || Ha();
-            "detail" === j.screen && (t = j.detail || t), Ln(), kn(), Fa(), Bi.classList.add("is-active"), Qa(t, function() {
-                fa && (Ln(), kn())
-            });
-            var i = aa && aa.querySelector(".focusable") || na || pa;
-            i && tt(i)
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.openPlaySettingsDialog ? runtime.openPlaySettingsDialog(e) : !1
     }
 
     function _n() {
-        fa = !1, Bi && Bi.classList.remove("is-active"), va ? (Vi && tt(Vi), en()) : Na && Ye(Na) ? tt(Na) : "player" === j.screen && tt(ye), Na = null
+        var runtime = window.TutyUI;
+        return runtime && runtime.closePlaySettingsDialog ? runtime.closePlaySettingsDialog() : !1
     }
 
     function Ln() {
-        if (aa) {
-            i(aa);
-            var t = Aa[Ja(Ha())];
-            t && !ma && (ga = Ka(t.audio));
-            var _core = window.TutyCore,
-                a = _core && typeof _core.parseAudioTracks === "function" ? _core.parseAudioTracks(t && t.audio) : function(e) {
-                    for (var t = [], i = (e && e.audio || "").split(/[,\/]/), a = 0; a < i.length; a++) {
-                        var n = i[a].trim();
-                        n && t.push({
-                            index: a,
-                            code: n,
-                            label: Mn(n)
-                        })
-                    }
-                    return t
-                }(t);
-            a.length || (a = [{
-                index: ga || 0,
-                label: "Español"
-            }]);
-            for (var n = 0; n < a.length; n++)(function(t) {
-                var i = e("button", "dps-btn focusable");
-                i.textContent = t.label, ga === t.index && i.classList.add("is-selected"), i._activate = function() {
-                    In(t.index, t.code), Ln(), en()
-                }, aa.appendChild(i)
-            })(a[n])
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.renderAudioTracks ? runtime.renderAudioTracks() : !1
     }
-
-    function kn() {
-        var t = Ya(Aa[Ja(Ha())]);
-        if (na) {
-            var a = na.parentNode;
-            a && a.classList.toggle("is-hidden", !t.length), na.classList.toggle("is-on", ba);
-            var n = na.querySelector(".dps-switch-text");
-            n && (n.textContent = ba ? "ON" : "OFF")
-        }
-        if (ra && ra.classList.toggle("is-visible", ba && t.length > 0), oa && oa.classList.toggle("is-visible", ba && t.length > 0), sa && sa.classList.toggle("is-visible", ba && t.length > 0), ba) {
-            if (la) {
-                i(la);
-                for (var r = 0; r < t.length; r++)(function(t) {
-                    var i = e("button", "dps-btn focusable");
-                    i.textContent = Mn(t.lang || "Sub"), ya && ya.url === t.url && i.classList.add("is-selected"), i._activate = function() {
-                        ya = t, ba = !0, Ca = !0, j.playback.subtitle = !0, j.playback.subCode = t.lang || "", j.playback.subLang = legacyLanguagePreference(t.lang, j.playback.subLang), Q(), Ua(t), kn(), en()
-                    }, la.appendChild(i)
-                })(t[r])
-            }
-            if (da)
-                for (var o = da.querySelectorAll(".dps-btn"), s = 0; s < o.length; s++) {
-                    var l = o[s].getAttribute("data-size");
-                    o[s].classList.toggle("is-selected", l === xa)
-                }
-            if (ca)
-                for (var d = ca.querySelectorAll(".dps-btn"), c = 0; c < d.length; c++) {
-                    var p = d[c].getAttribute("data-style");
-                    d[c].classList.toggle("is-selected", p === Sa)
-                }
-        }
-    }
-
     function Mn(e) {
         var _core = window.TutyCore;
         if (_core && typeof _core.describeLanguageLabel === "function") return _core.describeLanguageLabel(e);
@@ -5019,218 +3323,31 @@
         return /^(spa|esp|es|castellano|latino)$/.test(t) ? "Español" : /^(eng|ing|en)$/.test(t) ? "Inglés" : /^(jpn|jap|ja)$/.test(t) ? "Japonés" : /^(kor|cor|ko)$/.test(t) ? "Coreano" : /^(por|pt)$/.test(t) ? "Portugués" : /^(fra|fre|fr|franc)$/.test(t) ? "Francés" : /^(ita|it)$/.test(t) ? "Italiano" : /^(deu|ger|de)$/.test(t) ? "Alemán" : /^(chi|zho|zh)$/.test(t) ? "Chino" : t ? t.charAt(0).toUpperCase() + t.slice(1) : "Pista"
     }
 
-    function In(e, code) {
-        ga = e, ma = !0, j.playback.audioCode = code || "", j.playback.audio = legacyLanguagePreference(code, j.playback.audio), Q(), "player" === j.screen && we && (Hn ? rr(Hn + "?start=" + Math.floor(zn + (we.currentTime || 0)) + "&a=" + e) : ("relay" !== j.streamMode && "smooth" !== j.streamMode && (j.streamMode = "relay", Cn()), Tn()))
-    }
-
     function Tn() {
-        if (we) {
-            var e = Hn ? zn + (we.currentTime || 0) : we.currentTime || 0,
-                t = j.playerItem;
-            ar(), nr("Cambiando reproductor…"), or(t, function(t) {
-                if (t) {
-                    if (/\/s\/[0-9a-f]+\.mp4/i.test(t)) {
-                        var i = t + "?start=" + Math.floor(e);
-                        ga && (i += "&a=" + ga), rr(i)
-                    } else if (rr(t), e > 0) try {
-                        legacySeekVideo(we, e)
-                    } catch (e) {}
-                } else j.streamError || nr("Sin fuente de reproducción")
-            })
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.reloadPlayerStream ? runtime.reloadPlayerStream() : !1
     }
 
     function En() {
-        if (ye = t("player-stage"), be = t("player-infobar"), Le = t("player-vod-infobar"), Ce = t("player-channels"), je = t("player-categories"), We = t("pcat-grid"), $e = t("pcat-sub"), we = t("player-video"), Se = t("player-status"), _e = t("next-episode-loading"), Ae = t("player-osd-icon"), xe = ye ? ye.querySelector(".player-frame") : null, ke = t("vod-infobar-poster"), Me = t("vod-infobar-title"), Ie = t("vod-time-current"), Te = t("vod-time-total"), Ee = t("vod-seekbar"), qe = t("vod-seek-progress"), Oe = t("vod-seek-buffered"), De = t("vod-seek-thumb"), Ee && (Ee.classList.add("focusable"), Ee._activate = function() {
-                er(!0)
-            }, Ee._onMove = function(e) {
-                return "left" === e ? (ir(-1), !0) : "right" === e ? (ir(1), !0) : ("down" === e || "up" === e) && (er(!1), !0)
-            }), Fi = t("player-playsetting-view"), Hi = t("psv-sec-selection"), zi = t("psv-episodes-row"), Ji = t("psv-btn-episodes"), Vi = t("psv-btn-config"), ji = t("psv-btn-p1"), Wi = t("psv-btn-p2"), $i = t("psv-sec-audio"), t("psv-sec-quality"), t("psv-quality-row"), t("psv-sec-aspect"), t("psv-sec-player"), Xi = t("psv-btn-feedback"), Gi = t("psv-aspect-row"), Qi = t("player-episodes"), Ki = t("pe-title"), Yi = t("pe-sub"), Zi = t("pe-seasons"), ea = t("pe-seasons-col"), ta = t("pe-episodes"), ia = t("pe-season-label"), Ji && (Ji._activate = function() {
-                pn()
-            }), Xi && (Xi._activate = function() {
-                en()
-            }), Vi && (Vi._activate = function() {
-                Sn()
-            }), ji && (ji._activate = function() {
-                $a(Ha(), !0), Cn(), en(), Tn()
-            }), Wi && (Wi._activate = function() {
-                $a(Ha(), !1), Cn(), en(), Tn()
-            }), Gi)
-            for (var a = Gi.querySelectorAll(".psv-btn"), n = 0; n < a.length; n++)(function(e) {
-                e._activate = function() {
-                    xn(e.getAttribute("data-aspect"))
-                }
-            })(a[n]);
-        if (Bi = t("dialog-playsettings"), aa = t("dps-audio-options"), na = t("dps-sub-switch"), ra = t("dps-row-lang"), oa = t("dps-row-size"), sa = t("dps-row-style"), la = t("dps-lang-options"), da = t("dps-size-options"), ca = t("dps-style-options"), pa = t("dps-btn-exit"), ua = t("player-subtitles"), na && (na._activate = function() {
-                if (Ca = !0, ba = !ba) {
-                    var e = Ya(Aa[Ja(Ha())]);
-                    !ya && e.length && (ya = e[0]), ya && Ua(ya)
-                } else Ua(null);
-                j.playback.subtitle = ba, Q(), kn(), en()
-            }), da)
-            for (var r = da.querySelectorAll(".dps-btn"), o = 0; o < r.length; o++)(function(e) {
-                e._activate = function() {
-                    var value = e.getAttribute("data-size") || "normal";
-                    xa = value, j.playback.size = Math.max(0, ["normal", "big", "small"].indexOf(value)), Q(), Fa(), kn()
-                }
-            })(r[o]);
-        if (ca)
-            for (var s = ca.querySelectorAll(".dps-btn"), l = 0; l < s.length; l++)(function(e) {
-                e._activate = function() {
-                    var value = e.getAttribute("data-style") || "white";
-                    Sa = value, j.playback.style = Math.max(0, ["white", "yellow", "black"].indexOf(value)), Q(), Fa(), kn()
-                }
-            })(s[l]);
-        pa && (pa._activate = function() {
-            _n()
-        }), Fa(), ka(), i(be), i(Ce), ye.classList.add("focusable"), ye._onMove = function(e) {
-            return "vod" === j.playerMode ? "left" === e ? (Oi(-10), !0) : "right" === e ? (Oi(10), !0) : "down" === e ? (tn(), !0) : "up" === e && (tr(), !0) : "left" === e ? (hr(), !0) : "right" === e ? (gr(), !0) : "up" === e ? (Vt(j.channel - 1), !0) : "down" === e && (Vt(j.channel + 1), !0)
-        }, ye._activate = function() {
-            "vod" !== j.playerMode ? j.infobar ? Ni() : Pi() : Di()
-        }, be.appendChild(e("div", "pi-logo")), be.appendChild(e("div", "pi-index"));
-        var d = e("div", "pi-namerow"),
-            c = e("div", "pi-name");
-        d.appendChild(c);
-        var p = e("div", "pi-uhd");
-        p.style.left = "20px", d.appendChild(p), be.appendChild(d), be.appendChild(e("div", "pi-date")), be.appendChild(e("div", "pi-range")), be.appendChild(e("div", "pi-now")), be.appendChild(e("div", "pi-next"));
-        var u = e("div", "pi-seek");
-        u.appendChild(e("div", "bar")), be.appendChild(u), be.appendChild(e("div", "pi-menu", "info")), be.appendChild(e("div", "pi-quality", "HD")), be.appendChild(e("div", "pi-scale", "Normal")), be.appendChild(e("div", "pi-func", "Selecion de función"));
-        for (var v = e("div", "pi-actions"), f = [{
-                label: "Pip",
-                right: 446,
-                w: 67,
-                hidden: !0
-            }, {
-                label: "HD",
-                right: 389,
-                w: 67
-            }, {
-                label: "Anterior",
-                right: 333,
-                w: 67
-            }, {
-                label: "Formato",
-                right: 249,
-                w: 120
-            }, {
-                label: "Favorito",
-                right: 219,
-                w: 67
-            }, {
-                label: "Reproductor 1",
-                right: 151,
-                w: 90
-            }, {
-                label: "Bloquear",
-                right: 107,
-                w: 67
-            }, {
-                label: "Feedback",
-                right: 50,
-                w: 67
-            }], h = 0; h < f.length; h++) {
-            var g = f[h];
-            if (!g.hidden) {
-                var m = e("div", "pi-act focusable", g.label);
-                m.style.width = 1.5 * g.w + "px", m.style.left = 1920 - 1.5 * g.right - 1.5 * g.w + "px", m._kind = g.label, m._activate = function(e) {
-                    return function() {
-                        if ("Anterior" === e) Vt(j.channel - 1);
-                        else if ("Formato" === e) {
-                            var t = be.querySelector(".pi-scale");
-                            t.textContent = "Normal" === t.textContent ? "16:9" : "16:9" === t.textContent ? "4:3" : "Normal", fr()
-                        } else if ("Favorito" === e) {
-                            var i = F[j.channel];
-                            i && (liveToggleFav(i), Ht(liveFavFilter))
-                        }
-                    }
-                }(g.label), v.appendChild(m)
-            }
-        }
-        be.appendChild(v);
-        var y = e("div", "pc-header");
-        y.appendChild(e("div", "pc-title", "Canales de TV")), Ce.appendChild(y);
-        var b = e("div", "pc-categories scrollable");
-        b.id = "pc-categories", Ce.appendChild(b), Ce.appendChild(e("div", "pc-div"));
-        var C = e("div", "pc-list scrollable");
-        Ce.appendChild(C), qn(), Rn();
-        var w = e("div", "pc-menu");
-        w.appendChild(e("div", "ic")), w.appendChild(e("div", "l1", "Presione [OK] para reproducir")), w.appendChild(e("div", "l2", "(Arriba: Categorías · OK: Filtrar)")), Ce.appendChild(w)
+        var runtime = window.TutyUI;
+        if (!runtime || !runtime.buildPlayerStage) return;
+        var refs = runtime.buildPlayerStage(getPlayerStageHost());
+        ye = refs.stage, be = refs.infobar, Le = refs.vodInfobar, Ce = refs.channels, je = refs.categories, We = refs.categoryGrid, $e = refs.categorySub;
+        we = refs.video, Se = refs.status, _e = refs.nextEpisodeLoading, Ae = refs.osd, xe = refs.frame;
+        ke = refs.vodPoster, Me = refs.vodTitle, Ie = refs.vodCurrent, Te = refs.vodTotal, Ee = refs.seekbar, qe = refs.seekProgress, Oe = refs.seekBuffered, De = refs.seekThumb;
+        Fi = refs.playSettingsView, ji = refs.btnPlayer1, Wi = refs.btnPlayer2, Gi = refs.aspectRow;
+        Qi = refs.episodeBrowser, Ki = refs.episodeTitle, Yi = refs.episodeSub, Zi = refs.episodeSeasons, ea = refs.episodeSeasonsColumn, ta = refs.episodeEpisodes, ia = refs.episodeSeasonLabel;
+        aa = refs.audioOptions, ua = refs.subtitles
     }
 
     function qn() {
-        if (Ce) {
-            var t = Ce.querySelector(".pc-categories");
-            if (t) {
-                for (var a = St && St.length ? St : [{
-                        id: 76182,
-                        name: "Todos"
-                    }, {
-                        id: 76206,
-                        name: "Deportes"
-                    }, {
-                        id: 76205,
-                        name: "Cine y Series"
-                    }, {
-                        id: 76188,
-                        name: "Colombia"
-                    }, {
-                        id: 76191,
-                        name: "España"
-                    }, {
-                        id: 76197,
-                        name: "México"
-                    }, {
-                        id: "addons",
-                        name: "➕ Addons M3U",
-                        isAddon: !0
-                    }], n = "", r = 0; r < a.length; r++) n += a[r].id + "|";
-                var o = j.focus && j.focus._cat ? j.focus._cat : null;
-                if (n !== Xe) {
-                    i(t);
-                    for (var s = [], l = 0; l < a.length; l++) {
-                        var d = a[l],
-                            c = e("button", "pc-cat-pill focusable", d.name);
-                        c._cat = d, c._idx = l, c._activate = function(e) {
-                            return function() {
-                                Ut(e)
-                            }
-                        }(d), c._onMove = function(e) {
-                            return function(i) {
-                                if ("left" === i) return e > 0 && s[e - 1] && (tt(s[e - 1]), Pn(t, s[e - 1])), !0;
-                                if ("right" === i) return e < s.length - 1 && s[e + 1] ? (tt(s[e + 1]), Pn(t, s[e + 1])) : tt(ye), !0;
-                                if ("up" === i) return Dn(), !0;
-                                if ("down" === i) {
-                                    var a = Ce.querySelector(".pc-row-addon-promo");
-                                    if (a) return tt(a), !0;
-                                    if (F.length) return Nn(j.channel), !0
-                                }
-                                return !1
-                            }
-                        }(l), t.appendChild(c), s.push(c)
-                    }
-                    t._pills = s, Xe = n
-                }
-                for (var p = _t || a[0], u = t._pills || [], v = 0; v < u.length; v++) {
-                    var f = u[v];
-                    f._cat && p && f._cat.id === p.id ? f.classList.add("is-selected") : f.classList.remove("is-selected")
-                }
-                if (o) {
-                    for (var h = null, g = 0; g < u.length; g++)
-                        if (u[g]._cat && u[g]._cat.id === o.id) {
-                            h = u[g];
-                            break
-                        } h && (j.focus !== h && tt(h), Pn(t, h))
-                }
-            }
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.renderLiveCategories ? runtime.renderLiveCategories() : !1
     }
 
     function On() {
-        if (Ce) {
-            var e = Ce.querySelector(".pc-categories"),
-                t = e ? e.querySelector(".pc-cat-pill.is-selected") : null;
-            e && t && Pn(e, t)
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.layoutLiveSelectedCategory ? runtime.layoutLiveSelectedCategory() : !1
     }
 
     function Dn() {
@@ -5272,66 +3389,15 @@
     }
 
     function Nn(e) {
-        F.length && (e = Math.max(0, Math.min(F.length - 1, Number(e) || 0)), Ve[e] || Rn(e), Ve[e] && tt(Ve[e]))
+        var runtime = window.TutyUI;
+        return runtime && runtime.focusLiveChannelRow ? runtime.focusLiveChannelRow(e) : !1
     }
 
     function Rn(t) {
-        if (Ce) {
-            var a = Ce.querySelector(".pc-list");
-            if (a) {
-                if (i(a), Ve = {}, _t && _t.isAddon) {
-                    var n = e("div", "pc-row-addon-promo focusable");
-                    n.appendChild(e("div", "promo-icon", "⚙️"));
-                    var o = e("div", "promo-info");
-                    o.appendChild(e("div", "promo-text", "➕ Administrar Addons y Listas M3U")), o.appendChild(e("div", "promo-sub", "Instala listas recomendadas o agrega tu enlace")), n.appendChild(o), n._activate = function() {
-                        jt()
-                    }, n._onMove = function(e) {
-                        if ("up" === e) {
-                            var t = Ce.querySelector(".pc-cat-pill.is-selected") || Ce.querySelector(".pc-cat-pill");
-                            return t && tt(t), !0
-                        }
-                        return "down" === e ? (F.length && Nn(0), !0) : "right" === e && (tt(ye), !0)
-                    }, a.appendChild(n)
-                }
-                if (!F.length) {
-                    var s = e("div", "pc-empty-channels", "No hay canales disponibles en esta categoría");
-                    return s.style.padding = "30px", s.style.color = "#888", s.style.fontSize = "20px", void a.appendChild(s)
-                }
-                t = Number(t), isFinite(t) || (t = j.channel), t = Math.max(0, Math.min(F.length - 1, t || 0));
-                for (var l = Math.max(0, t - Math.floor(Ge / 2)), d = Math.min(F.length, l + Ge), c = l = Math.max(0, d - Ge); c < d; c++) {
-                    var p = e("div", "pc-row focusable");
-                    p._channel = c;
-                    var u = e("div", "ic");
-                    F[c].logo && (u.style.backgroundImage = "url(" + F[c].logo + ")", u.style.backgroundSize = "contain", u.style.backgroundRepeat = "no-repeat", u.style.backgroundPosition = "center");
-                    var v = e("div", "num", r(F[c].index || c + 1)),
-                        f = e("div", "nm", F[c].name),
-                        h = e("div", "epg", F[c].now || "En vivo");
-                    p.appendChild(u), p.appendChild(v), p.appendChild(f), p.appendChild(h), c === j.channel && p.classList.add("is-current"), p._activate = function(e) {
-                        return function() {
-                            Vt(e, !0), gr(), tt(ye)
-                        }
-                    }(c), p._onMove = function(e) {
-                        return function(t) {
-                            if ("right" === t) return tt(ye), !0;
-                            if ("up" === t) {
-                                if (e > 0) Nn(e - 1);
-                                else if (0 === e) {
-                                    var i = Ce.querySelector(".pc-row-addon-promo");
-                                    if (i) tt(i);
-                                    else {
-                                        var a = Ce.querySelector(".pc-cat-pill.is-selected") || Ce.querySelector(".pc-cat-pill");
-                                        a && tt(a)
-                                    }
-                                }
-                                return !0
-                            }
-                            return "down" === t && (e < F.length - 1 && Nn(e + 1), !0)
-                        }
-                    }(c), a.appendChild(p), Ve[c] = p
-                }
-            }
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.renderLiveChannels ? runtime.renderLiveChannels(t) : !1
     }
+
     var Un = "",
         Fn = "",
         Bn = 0,
@@ -5449,34 +3515,8 @@
     }
 
     function ar() {
-        legacyShouldSaveHistoryBeforeReset(j.playerMode, !!we) && Ta(legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn), legacyResolvePlaybackTotal(we.duration, j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0, j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0), !0);
-        j.streamError = "", $n(), nr(""), qi("none"), Ti(), jn && (clearTimeout(jn), jn = null, Vn = 0), Qn(), Hn = "", zn = 0, Hd = 0, Bn++;
-        var e = legacyResolveAbortServiceBase(Un, Fn);
-        if (e) try {
-            var i = new XMLHttpRequest;
-            i.open("GET", e + "/media/abort", !0), i.send()
-        } catch (e) {}
-        try {
-            q("abortMedia", {}, function() {})
-        } catch (e) {}
-        legacyDestroyHls("__tutyHls");
-        if (Fn = "", Un = "", we) {
-            try {
-                we.onerror = null
-            } catch (e) {}
-            try {
-                legacyPauseVideo(we)
-            } catch (e) {}
-            try {
-                legacySeekVideo(we, 0)
-            } catch (e) {}
-            we.removeAttribute("src");
-            try {
-                legacySetVideoSource(we, "")
-            } catch (e) {}
-            for (; we.firstChild;) we.removeChild(we.firstChild);
-            legacyApplyPlaybackSurface(we, xe, !1)
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.resetPlayerStream ? runtime.resetPlayerStream() : !1
     }
 
     function nr(e) {
@@ -5698,152 +3738,31 @@
     }
 
     function or(e, t) {
-        var i = Bn;
-
-        function a() {
-            var resumeAt = Number(j.resumePosition) || 0,
-                media = Aa[Ja(e)];
-            media && !ma && (ga = Ka(media.audio));
-            var built = legacyBuildPlaybackResolveRequest(e, j.playerEpisode, {
-                streamMode: j.streamMode,
-                resumePosition: resumeAt,
-                trackIndex: j.trackIndex || 0,
-                audioTrack: ga || 0,
-                isSeries: S(e)
-            });
-            if (built.missingEpisodes) return t("");
-            j.playerEpisode = built.episode, j.resumePosition = built.resumePosition;
-            var request = built.request;
-
-            function done(n, s) {
-                if (i === Bn) {
-                    if (n || !s || !1 === s.returnValue) return j.resumePosition = 0, j.streamError = "No se pudo resolver el título" + (n ? ": " + n : ""), nr(j.streamError), t("");
-                    var applied = legacyApplyResolvedPlayback(e, j.playerEpisode, s, resumeAt);
-                    try {
-                        window.__tutyStreamInfo = applied.streamInfo
-                    } catch (e) {}
-                    j.resumePosition = applied.resumePosition, t(applied.url)
-                }
-            }
-
-            function resolveCall(r) {
-                q(r ? "resolveSmooth" : "resolve", request, function(e, t) {
-                    if (e && r) return request.forceRelay = !1, resolveCall(!1);
-                    done(e, t)
-                })
-            }
-            resolveCall(request.forceRelay)
-        }
-        if (legacyShouldLoadSeriesEpisodesBeforePlay(e, j.playerEpisode)) return nr("Cargando capítulos…"), void U(e, function() {
-            i === Bn && a()
-        });
-        a()
+        var runtime = window.TutyUI;
+        return runtime && runtime.resolvePlayerPlayback ? runtime.resolvePlayerPlayback(e, t) : !1
     }
-
     function sr(e, t) {
-        if (j.resumeOpen) return;
-        if (e || t) j.playerMode = "vod";
-        if (we) {
-            t && (j.playerEpisode = t, j.playerSeasonIndex = j.detailSeason || 0), e && (j.playerItem = e);
-            var i = e || j.playerItem;
-            if (i && Wa(i), j.noHistorySave = !0, ar(), j.noHistorySave = !1, i) {
-                if (ma = !1, ga = 0, Qa(i), i._portal) {
-                    var a = t && (t.number || t.seriesNumber) || "";
-                    return nr(a ? "Cargando capítulo " + a + "…" : "Cargando capítulo…"), void or(i, function(e) {
-                        e ? rr(e) : j.streamError || nr("Sin fuente de reproducción")
-                    })
-                }
-                i.streamUrl && rr(i.streamUrl)
-            }
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.startPlayerPlayback ? runtime.startPlayerPlayback(e, t) : !1
     }
-
     function lr(e, i) {
-        ye || En();
-        var a = !i || !j.playerEpisode || j.playerEpisode === i || j.playerEpisode.id === i.id,
-            sameItem = j.playerItem === e,
-            hasSession = !!we && legacyHasPlaybackSession(we.src, we.currentSrc, Fn, j.streamError),
-            n = legacyShouldReusePlaybackSession("detail" === j.screen, hasSession, sameItem, a);
-        if (!n && sameItem && a && we) {
-            var currentPosition = legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn);
-            currentPosition > 0 && (j.resumePosition = currentPosition)
-        }
-        j.playerMode = "vod", e && j.playerItem !== e && Xa(), e && (j.playerItem = e), i && (j.playerEpisode = i, j.playerSeasonIndex = j.detailSeason || 0), e && Wa(e), j.playerReturn = {
-            screen: "detail",
-            focus: j.focus
-        };
-        var r = t("screen-player"),
-            o = t("screen-detail");
-        legacyApplyDetailPlayerTransition(r, o), j.screen = "player", legacyApplyPlayerModeClass(ye, !0), vr(), tt(ye), Ri(), n || sr(j.playerItem, j.playerEpisode)
+        var runtime = window.TutyUI;
+        return runtime && runtime.openFullscreenPlayer ? runtime.openFullscreenPlayer(e, i) : !1
     }
-
     function dr(e, t, i) {
-        "vod" !== e || "detail" !== j.screen ? (ye || En(), "live" === e && Nt(), j.playerMode = e, t && j.playerItem !== t && Xa(), j.playerItem = t || null, j.playerEpisode = i || null, "vod" === e && (j.playerSeasonIndex = j.detailSeason || 0, t && Wa(t)), j.playerReturn = {
-            screen: j.screen,
-            focus: j.focus
-        }, j.channelsOpen = !1, be.classList.remove("is-active"), Ce.classList.remove("is-active"), legacyApplyPlayerModeClass(ye, "vod" === e), vr(), nt("player"), tt(ye), vr(), "vod" === e ? (Ri(), sr(j.playerItem, j.playerEpisode)) : (Pi(), ur(F[j.channel]))) : lr(t, i)
+        var runtime = window.TutyUI;
+        return runtime && runtime.openPlayer ? runtime.openPlayer(e, t, i) : !1
     }
-    var cr = 0,
-        pr = null;
+    var cr = 0;
 
     function ur(e, t) {
-        if (pr && (clearTimeout(pr), pr = null), e || (e = F[j.channel]), e && (e.channelCode || e.streamUrl)) {
-            var i = function() {
-                var t = ++cr;
-                nr("Cargando señal " + (e.name || "") + "…"), q("resolveLive", e.streamUrl ? {
-                    streamUrl: e.streamUrl
-                } : {
-                    channelCode: e.channelCode
-                }, function(e, i) {
-                    if (t === cr) {
-                        if (e || !i || !1 === i.returnValue) return j.streamError = "No se pudo conectar con la señal" + (e ? ": " + e : ""), void nr(j.streamError);
-                        var a = i.proxyPath || i.url;
-                        if (!a) return j.streamError = "Señal no disponible", void nr(j.streamError);
-                        nr(""), Pi(), rr(a)
-                    }
-                })
-            };
-            t ? i() : pr = setTimeout(i, legacyResolveLiveResolveDelay(!1))
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.playLiveChannel ? runtime.playLiveChannel(e, t) : !1
     }
-
     function vr() {
-        var e = "live" === j.playerMode,
-            t = F[j.channel] || {},
-            i = be.querySelector(".pi-index"),
-            a = be.querySelector(".pi-name"),
-            n = be.querySelector(".pi-date"),
-            o = be.querySelector(".pi-range"),
-            s = be.querySelector(".pi-now"),
-            d = be.querySelector(".pi-next"),
-            c = be.querySelector(".pi-uhd"),
-            p = be.querySelector(".pi-logo");
-        if (e) Le && Le.classList.remove("is-active"), be && (be.style.display = ""), i.style.display = "block", i.textContent = r(t.index || j.channel + 1), a.textContent = t.name || "",
-            function() {
-                var e = be.querySelector(".pi-namerow");
-                if (!e) return;
-                be.querySelector(".pi-index");
-                var t = e.querySelector(".pi-name"),
-                    i = e.querySelector(".pi-uhd"),
-                    a = 165;
-                e.style.position = "absolute", e.style.left = 367.5 + a + "px", e.style.top = "13.5px", e.style.width = "480px", e.style.height = "58px", e.style.display = "block", t.style.position = "absolute", t.style.left = "0px", t.style.top = "8px", t.style.width = "480px", t.style.height = "50px", t.style.lineHeight = "50px", i && (i.style.left = t.offsetWidth + 30 + "px", i.style.top = "18.5px")
-            }(), n.textContent = "Hoy", o.textContent = t.time || "", s.style.display = "block", s.textContent = t.now || "En vivo", d.style.display = t.next ? "block" : "none", t.next && (d.textContent = "Siguiente: " + t.next), c.style.display = t.uhd ? "block" : "none", p.style.display = "block", p && (t.logo ? p.style.backgroundImage = "url(" + t.logo + ")" : p.style.backgroundImage = "");
-        else {
-            be && (be.classList.remove("is-active"), be.style.display = "none");
-            var u = j.playerItem || l[0];
-            if (Me)
-                if (S(u) && j.playerEpisode) {
-                    var v = j.playerEpisode.title || j.playerEpisode.name,
-                        f = j.playerEpisode.number || j.playerEpisode.seriesNumber,
-                        h = v || (f ? "Capítulo " + f : "");
-                    Me.textContent = h ? u.title + " - " + h : u.title
-                } else Me.textContent = u.title;
-            ke && (ke.src = u.poster || u.cover || "assets/original/common/bg_placehoder_vertical.png"), Ei(we ? we.currentTime : 0, we ? we.duration : 0)
-        }
-        for (var g in Ve) Ve.hasOwnProperty(g) && Ve[g].classList.toggle("is-current", Ve[g]._channel === j.channel);
-        fr()
+        var runtime = window.TutyUI;
+        return runtime && runtime.renderPlayerInfoContent ? runtime.renderPlayerInfoContent() : !1
     }
-
     function fr() {
         var e = be.querySelector(".pi-quality"),
             t = be.querySelector(".pi-scale"),
@@ -5852,24 +3771,19 @@
     }
 
     function hr() {
-        if ("live" === j.playerMode) {
-            j.channelsOpen = !0, Ce.classList.add("is-active"), qn(), Rn(j.channel), On();
-            var e = Ve[j.channel];
-            if (e) {
-                tt(e);
-                var t = e.parentNode,
-                    i = 111 * j.channel;
-                (i < t.scrollTop || i + 109.5 > t.scrollTop + t.clientHeight) && (t.scrollTop = Math.max(0, i - 120))
-            }
-        }
+        var runtime = window.TutyUI;
+        return runtime && runtime.openLiveChannelPanel ? runtime.openLiveChannelPanel() : !1
     }
 
     function gr() {
-        j.channelsOpen = !1, Ce.classList.remove("is-active"), "player" === j.screen && tt(ye)
+        var runtime = window.TutyUI;
+        return runtime && runtime.closeLiveChannelPanel ? runtime.closeLiveChannelPanel() : !1
     }
 
     function mr() {
-        var e = t("app");
+        var e = t("app"),
+            runtime = window.TutyUI;
+        if (e && runtime && runtime.fitCanvas) return void runtime.fitCanvas(e, window.innerWidth || document.documentElement && document.documentElement.clientWidth || 1920, window.innerHeight || document.documentElement && document.documentElement.clientHeight || 1080);
         if (e) {
             var i = window.innerWidth || document.documentElement && document.documentElement.clientWidth || 1920,
                 a = window.innerHeight || document.documentElement && document.documentElement.clientHeight || 1080,
@@ -5881,110 +3795,1053 @@
         }
     }
 
-    function yr() {
-        var e, i;
-        mr(), window.addEventListener("resize", mr, !1), legacyInstallNavigation(document, lt), window.addEventListener("popstate", function() {
-                ot()
-            }, !1), document.addEventListener("click", function(e) {
-                var t = n(e.target, ".focusable");
-                t && (tt(t, !0), t._activate && t._activate())
-            }), oi(),
-            function() {
-                if (legacyCanUseLuna()) {
-                    var e = p.serviceId || "com.webosflux.xuptertv.fidelity.service";
-                    try {
-                        window.webOS.service.request("luna://" + e, {
-                            method: "keepAlive",
-                            parameters: {
-                                subscribe: !0
-                            },
-                            resubscribe: !0,
-                            onSuccess: function() {},
-                            onFailure: function() {}
-                        })
-                    } catch (e) {}
-                    setInterval(function() {
-                        try {
-                            window.webOS.service.request("luna://" + e, {
-                                method: "heartbeat",
-                                parameters: {},
-                                onSuccess: function() {},
-                                onFailure: function() {}
-                            })
-                        } catch (e) {}
-                    }, 15e3)
-                }
-            }(), Ke = setTimeout(dt, 2600), N(), Bt(), window.__tuty = {
-                version: "4.34.4",
-                state: j,
-                vod: l,
-                channels: F,
-                api: v,
-                portal: f,
-                service: q,
-                refreshPortal: D,
-                reloadVod: N,
-                skipWelcome: dt,
-                show: function(e) {
-                    "home" === e ? dt() : "detail" === e ? ei(l[0]) : "search" === e ? li() : "settings" === e ? yi() : "player" === e ? dr("live") : nt(e)
-                },
-                selectTab: function(e) {
-                    dt(), ht(e, !0)
-                },
-                openDetail: function(e) {
-                    ei(l[e] || l[0])
-                },
-                openSearch: li,
-                openSettings: yi,
-                openLiveCategories: lvOpenCats,
-                openLiveSearch: lvOpenSearch,
-                toggleLiveFavorites: lvToggleFav,
-                openPlayer: function(e, t) {
-                    dr(e || "live", l[t] || null)
-                },
-                focus: function(e) {
-                    var t = "string" == typeof e ? document.querySelector(e) : e;
-                    t && tt(t)
-                },
-                key: function(e) {
-                    lt({
-                        keyCode: e,
-                        preventDefault: function() {}
-                    })
-                },
-                search: function(e) {
-                    li(), ci(e)
-                },
-                settingsPanel: function(e) {
-                    yi(), bi(e, !0)
+    function attachTutyUiRuntime() {
+        var runtime = window.TutyUI;
+        if (!runtime) return;
+        runtime.attachNavigation && runtime.attachNavigation(getNavigationHost());
+        runtime.attachPlayerCleanup && runtime.attachPlayerCleanup(getPlayerCleanupHost());
+        if (!runtime.attachFocus) return;
+        runtime.attachFocus({
+            state: j,
+            byId: t,
+            getFocusables: Ze,
+            getTabFocus: function() {
+                return tabFocus
+            },
+            getTabItems: function() {
+                return Re
+            },
+            scrollIntoView: et,
+            onFocusChanged: rn,
+            afterFocus: mt,
+            score: function(direction, current, candidate) {
+                var core = window.TutyCore;
+                if (!core || typeof core.scoreLegacyFocus !== "function") return null;
+                var value = core.scoreLegacyFocus(direction, current, candidate);
+                return null === value || void 0 === value ? null : value
+            }
+        }), runtime.attachLiveList && runtime.attachLiveList({
+            state: j,
+            getChannels: function() {
+                return F
+            },
+            getRows: function() {
+                return Ue
+            },
+            getListContainer: function() {
+                return ae
+            },
+            getChannelLabel: function() {
+                return ee
+            },
+            getTabs: function() {
+                return Re
+            },
+            getLiveFocus: function() {
+                return ie
+            },
+            getFastAll: function() {
+                return liveFastAll
+            },
+            isFavoritesOnly: function() {
+                return liveFavFilter
+            },
+            isLoading: function() {
+                return kt
+            },
+            filterChannels: function(favoritesOnly) {
+                return legacyFilterLiveChannels(F, favoritesOnly, liveIsFav)
+            },
+            isFavorite: liveIsFav,
+            toggleFavorite: liveToggleFav,
+            focus: tt,
+            focusLiveList: lvFocusList,
+            canFocus: Ye,
+            el: e,
+            clear: i,
+            openPlayer: dr,
+            isPlayerScreen: function() {
+                return "player" === j.screen
+            },
+            isLiveMode: function() {
+                return "live" === j.playerMode
+            },
+            isHomeLive: function() {
+                return "home" === j.screen && 0 === j.tab
+            },
+            canRefreshPlayerChannels: function() {
+                return !!ye
+            },
+            refreshPlayerChannels: vr,
+            playPlayerChannel: ur,
+            previewChannel: Rt,
+            updateLabel: liveUpdateLabel
+        }), runtime.attachPreview && runtime.attachPreview({
+            isHomeLive: function() {
+                return "home" === j.screen && 0 === j.tab
+            },
+            getChannel: function() {
+                return F[j.channel] || null
+            },
+            getVideo: function() {
+                return Et
+            },
+            getContainer: function() {
+                return te
+            },
+            getStatus: function() {
+                return qt
+            },
+            resolveLive: function(channel, done) {
+                q("resolveLive", channel.streamUrl ? {
+                    streamUrl: channel.streamUrl
+                } : {
+                    channelCode: channel.channelCode
+                }, done)
+            },
+            play: function(video) {
+                return legacyPlayVideo(video)
+            },
+            pause: function(video) {
+                legacyPauseVideo(video)
+            },
+            setSource: function(video, url) {
+                legacySetVideoSource(video, url)
+            },
+            load: function(video) {
+                legacyLoadVideo(video)
+            },
+            loadHls: function(video, hls, url) {
+                legacyLoadHls(video, hls, url)
+            },
+            destroyHls: function() {
+                legacyDestroyHls("__tutyPreviewHls")
+            },
+            setHls: function(hls) {
+                window.__tutyPreviewHls = hls
+            },
+            createHls: function() {
+                return new window.Hls({
+                    enableWorker: !0,
+                    backBufferLength: 10
+                })
+            },
+            hlsEvents: function() {
+                return window.Hls && window.Hls.Events || null
+            },
+            canUseHls: function() {
+                return !!(window.Hls && window.Hls.isSupported())
+            },
+            nativeTvPlayback: legacyNativeTvPlayback,
+            nativePreviewHls: legacyNativePreviewHls
+        }), runtime.attachLiveMenu && runtime.attachLiveMenu({
+            state: j,
+            getCategories: function() {
+                return St
+            },
+            getSelectedCategory: function() {
+                return _t
+            },
+            getChannels: function() {
+                return F
+            },
+            getRows: function() {
+                return Ue
+            },
+            getFastFav: function() {
+                return liveFastFav
+            },
+            getFastAll: function() {
+                return liveFastAll
+            },
+            getLiveFocus: function() {
+                return ie
+            },
+            isFavoritesOnly: function() {
+                return liveFavFilter
+            },
+            setFavoritesOnly: function(value) {
+                liveFavFilter = value
+            },
+            byId: t,
+            el: e,
+            clear: i,
+            firstFocus: it,
+            canFocus: Ye,
+            focus: tt,
+            renderList: Ht,
+            selectCategory: function(category, first, complete) {
+                Ut(category, first, complete)
+            },
+            selectChannel: Vt,
+            openPlayer: dr,
+            updateLabel: liveUpdateLabel
+        }), runtime.attachAddonsDialog && runtime.attachAddonsDialog({
+            getPresets: function() {
+                return Ct
+            },
+            getAddons: wt,
+            saveAddons: xt,
+            installAddon: Xt,
+            getSelectedCategory: function() {
+                return _t
+            },
+            reloadChannels: Ft,
+            byId: t,
+            el: e,
+            clear: i,
+            firstFocus: it,
+            focus: tt,
+            isChannelsOpen: function() {
+                return j.channelsOpen
+            },
+            getChannelsPanel: function() {
+                return Ce
+            },
+            getPlayerFocus: function() {
+                return ye
+            },
+            setOpen: function(value) {
+                Pt = value
+            }
+        }), runtime.attachSearch && runtime.attachSearch({
+            state: j,
+            getCatalog: function() {
+                return l
+            },
+            getHotSearches: function() {
+                for (var source = T(), items = [], index = 0; index < source.length; index++) -1 !== String(source[index] && source[index].category || "").toLowerCase().indexOf("busqueda") && items.push(_(source[index], index + 1));
+                return items.length ? items : I("busqueda", 10, 0)
+            },
+            isPortal: function() {
+                return "portal" === p.mode
+            },
+            searchRemote: function(value, done) {
+                q("search", {
+                    value: value
+                }, done)
+            },
+            normalizeItem: _,
+            buildPoster: bt,
+            byId: t,
+            el: e,
+            clear: i,
+            place: a,
+            focus: tt,
+            canFocus: Ye,
+            firstFocus: it,
+            showScreen: nt,
+            getAppRoot: function() {
+                return t("app")
+            },
+            getNotify: function() {
+                return t("home-notify")
+            }
+        }), runtime.attachSettings && runtime.attachSettings({
+            state: j,
+            getProfile: function() {
+                return X
+            },
+            getCatalog: function() {
+                return l
+            },
+            isSeries: S,
+            openHistory: Oa,
+            formatTime: ki,
+            refreshPlayback: function() {
+                ka(), Q()
+            },
+            onStreamModeChanged: function() {
+                za = j.playback.streamModes = {}, j.playerItem && Wa(j.playerItem)
+            },
+            byId: t,
+            el: e,
+            clear: i,
+            place: a,
+            focus: tt,
+            firstFocus: it,
+            showScreen: nt
+        }), runtime.attachDetail && runtime.attachDetail({
+            state: j,
+            getCatalog: function() {
+                return l
+            },
+            isSeries: S,
+            isFavorite: function(item) {
+                return !!(item && item.id && j.favs[String(item.id)])
+            },
+            toggleFavorite: K,
+            isReminderActive: reminderOn,
+            toggleReminder: toggleReminder,
+            toast: toast,
+            play: lr,
+            playEpisode: gn,
+            startPlayback: sr,
+            openLanguage: Sn,
+            isSmooth: function() {
+                return "smooth" === j.streamMode
+            },
+            toggleSmooth: function(item) {
+                var next = "smooth" !== j.streamMode;
+                return $a(item, next), "smooth" === j.streamMode
+            },
+            loadSeason: function(item, index, done) {
+                var season = item.seasons && item.seasons[index];
+                if (!season || !season.id) return void done();
+                nr("Cargando temporada…"), q("detail", {
+                    contentId: season.id
+                }, function(error, response) {
+                    if (!error && response && !1 !== response.returnValue) {
+                        if (response.item) R(item, response.item);
+                        item.episodes = response.episodes || [];
+                        item.seasonId = season.id;
+                        season._episodes = item.episodes;
+                        j.detailEpisode = item.episodes[0] || null
+                    }
+                    done()
+                })
+            },
+            buildPoster: bt,
+            byId: t,
+            el: e,
+            text: function(value) {
+                return document.createTextNode(value)
+            },
+            clear: i,
+            place: a,
+            focus: tt
+        }), runtime.attachResume && runtime.attachResume({
+            state: j,
+            byId: t,
+            el: e,
+            text: function(value) {
+                return document.createTextNode(value)
+            },
+            clear: i,
+            focus: tt,
+            canFocus: Ye,
+            getAppRoot: function() {
+                return t("app")
+            },
+            formatTime: ki
+        }), runtime.attachPlayerSession && runtime.attachPlayerSession({
+            state: j,
+            getMedia: function() {
+                return we
+            },
+            getDetail: function() {
+                return j.detail
+            },
+            getStreamUrl: function() {
+                return Fn
+            },
+            resetStream: ar,
+            prepareMediaInfo: function(item) {
+                ma = !1, ga = 0, Qa(item)
+            },
+            resolvePlayback: or,
+            loadSource: rr,
+            notifyStatus: nr,
+            shouldReuse: function(screen, hasSource, sameItem, sameEpisode) {
+                return legacyShouldReusePlaybackSession(screen, hasSource, sameItem, sameEpisode)
+            },
+            hasPlaybackSession: function(source, currentSource, streamUrl, streamError) {
+                return legacyHasPlaybackSession(source, currentSource, streamUrl, streamError)
+            },
+            currentPosition: function(media) {
+                return legacyCurrentPlaybackPosition(media.currentTime || 0, Hn, zn)
+            },
+            prepareItem: Wa,
+            resetPlaybackItem: Xa,
+            showFullscreenPlayer: function() {
+                var playerScreen = t("screen-player"),
+                    detailScreen = t("screen-detail");
+                legacyApplyDetailPlayerTransition(playerScreen, detailScreen), legacyApplyPlayerModeClass(ye, !0), vr(), tt(ye), Ri()
+            },
+            startPlayback: sr,
+            logTransition: function(info) {
+                window.TUTYTV_WEB && window.console && console.log("[TUTYTV] fullscreen transition", info)
+            }
+        }), runtime.attachPlayerResolve && runtime.attachPlayerResolve({
+            state: j,
+            getSequence: function() {
+                return Bn
+            },
+            getMediaInfo: function(item) {
+                return Aa[Ja(item)] || null
+            },
+            getMediaKey: Ja,
+            isAudioOverride: function() {
+                return ma
+            },
+            getAudioIndex: function() {
+                return ga
+            },
+            setAudioIndex: function(index) {
+                ga = index
+            },
+            selectAudioTrack: Ka,
+            buildRequest: legacyBuildPlaybackResolveRequest,
+            isSeries: S,
+            shouldLoadEpisodes: legacyShouldLoadSeriesEpisodesBeforePlay,
+            loadSeriesDetail: U,
+            resolve: function(request, forceRelay, done) {
+                q(forceRelay ? "resolveSmooth" : "resolve", request, done)
+            },
+            applyResolved: legacyApplyResolvedPlayback,
+            setStreamInfo: function(info) {
+                try {
+                    window.__tutyStreamInfo = info
+                } catch (e) {}
+            },
+            notify: nr
+        }), runtime.attachPlayerLive && runtime.attachPlayerLive({
+            state: j,
+            getCurrentChannel: function() {
+                return F[j.channel] || null
+            },
+            getSequence: function() {
+                return cr
+            },
+            nextSequence: function() {
+                return ++cr
+            },
+            resolveDelay: function() {
+                return legacyResolveLiveResolveDelay(!1)
+            },
+            resolveLive: function(channel, done) {
+                q("resolveLive", channel.streamUrl ? {
+                    streamUrl: channel.streamUrl
+                } : {
+                    channelCode: channel.channelCode
+                }, done)
+            },
+            notify: nr,
+            showInfobar: function() {
+                Pi()
+            },
+            loadSource: rr
+        }), runtime.attachPlayerRouting && runtime.attachPlayerRouting({
+            state: j,
+            ensurePlayerStage: function() {
+                ye || En()
+            },
+            stopPreview: Nt,
+            resetPlaybackItem: Xa,
+            prepareItem: Wa,
+            applyPlayerMode: function(isVod) {
+                legacyApplyPlayerModeClass(ye, isVod)
+            },
+            refreshPlayer: vr,
+            showPlayerScreen: function() {
+                nt("player")
+            },
+            focusPlayer: function() {
+                tt(ye)
+            },
+            closeChannelPanels: function() {
+                j.channelsOpen = !1, be && be.classList.remove("is-active"), Ce && Ce.classList.remove("is-active")
+            },
+            showInfobar: function() {
+                Pi()
+            },
+            playLive: function() {
+                ur(F[j.channel])
+            },
+            playVod: sr,
+            openFullscreen: lr
+        }), runtime.attachPlayerInfobar && runtime.attachPlayerInfobar({
+            state: j,
+            getVodBar: function() {
+                return Le
+            },
+            getLiveBar: function() {
+                return be
+            },
+            getOsd: function() {
+                return Ae || (Ae = t("player-osd-icon"))
+            },
+            hideDelayMs: _i
+        }), runtime.attachLiveChannelPanel && runtime.attachLiveChannelPanel({
+            state: j,
+            getPanel: function() {
+                return Ce
+            },
+            getCategories: function() {
+                return St
+            },
+            getSelectedCategory: function() {
+                return _t
+            },
+            getChannels: function() {
+                return F
+            },
+            getPageSize: function() {
+                return Ge
+            },
+            getCategorySignature: function() {
+                return Xe
+            },
+            setCategorySignature: function(value) {
+                Xe = value
+            },
+            getFocusCategory: function() {
+                return j.focus && j.focus._cat ? j.focus._cat : null
+            },
+            getChannelRows: function() {
+                return Ve
+            },
+            setChannelRows: function(rows) {
+                Ve = rows
+            },
+            el: e,
+            clear: i,
+            focus: tt,
+            focusAndScroll: function(container, node) {
+                tt(node), Pn(container, node)
+            },
+            scrollIntoView: Pn,
+            selectCategory: Ut,
+            openCategories: Dn,
+            openAddons: jt,
+            playChannel: Vt,
+            closePanel: gr,
+            focusCurrentChannel: function(index) {
+                var row = Ve[index];
+                if (!row) return;
+                tt(row);
+                var parent = row.parentNode,
+                    top = 111 * index;
+                (top < parent.scrollTop || top + 109.5 > parent.scrollTop + parent.clientHeight) && (parent.scrollTop = Math.max(0, top - 120))
+            },
+            focusPlayer: function() {
+                ye && tt(ye)
+            }
+        }), runtime.attachPlayerInfoContent && runtime.attachPlayerInfoContent({
+            state: j,
+            getLiveBar: function() {
+                return be
+            },
+            getVodBar: function() {
+                return Le
+            },
+            getVodTitle: function() {
+                return Me
+            },
+            getVodPoster: function() {
+                return ke
+            },
+            getChannels: function() {
+                return F
+            },
+            getCatalog: function() {
+                return l
+            },
+            getVideo: function() {
+                return we
+            },
+            isSeries: S,
+            syncChannelTabs: function() {
+                for (var key in Ve) Ve.hasOwnProperty(key) && Ve[key].classList.toggle("is-current", Ve[key]._channel === j.channel)
+            },
+            layoutLiveQuality: fr,
+            updateProgress: function(position, duration) {
+                Ei(position, duration)
+            }
+        }), runtime.attachPlayerSubtitles && runtime.attachPlayerSubtitles({
+            getContainer: function() {
+                return ua
+            },
+            fetchText: function(url, done) {
+                try {
+                    var request = new XMLHttpRequest;
+                    request.open("GET", url, !0), request.onload = function() {
+                        done(request.status >= 200 && request.status < 300 ? request.responseText : null)
+                    }, request.onerror = function() {
+                        done(null)
+                    }, request.send()
+                } catch (e) {
+                    done(null)
                 }
             },
-            function() {
-                var e = String(location.search || "").replace(/^\?/, "");
-                if (!e) return;
-                for (var t = {}, i = e.split("&"), a = 0; a < i.length; a++)
-                    if (i[a]) {
-                        var n = i[a].split("=");
-                        t[decodeURIComponent(n[0])] = decodeURIComponent(n.slice(1).join("=") || "")
-                    } if (void 0 !== t.ch) {
-                    var r = parseInt(t.ch, 10) || 0;
-                    j.channel = Math.max(0, Math.min(F.length - 1, r))
+            parseCues: function(text) {
+                return legacyParseSubtitleCues(text)
+            },
+            findCue: function(list, position) {
+                return legacyFindSubtitleCue(list, position)
+            }
+        }), runtime.attachNextEpisodePrompt && runtime.attachNextEpisodePrompt({
+            state: j,
+            getPrompt: function() {
+                return t("next-episode-prompt")
+            },
+            getElements: function() {
+                return {
+                    kicker: t("next-episode-kicker"),
+                    title: t("next-episode-title"),
+                    play: t("next-episode-play"),
+                    cancel: t("next-episode-cancel"),
+                    count: t("next-episode-count")
                 }
-                var o = t.screen || "home";
-                if ("welcome" === o) return;
-                dt(), void 0 !== t.tab ? ht(parseInt(t.tab, 10) || 0, !0) : (ht(0, !1), tt(ie));
-                "detail" === o ? ei(l[parseInt(t.vod, 10) || 0]) : "search" === o ? (li(), t.q && ci(t.q)) : "settings" === o ? (yi(), void 0 !== t.panel && bi(parseInt(t.panel, 10) || 0, !0)) : "player" === o && (dr("vod" === t.mode ? "vod" : "live", l[parseInt(t.vod, 10) || 0]), "1" === t.channels && hr());
-                if (t.focus) {
-                    var s = document.querySelector(t.focus);
-                    s && tt(s)
+            },
+            focus: tt,
+            restorePlayerFocus: function() {
+                ye && tt(ye)
+            },
+            formatTarget: function(target) {
+                return dn(j.playerItem, target.episode) || "Episodio siguiente"
+            },
+            startNext: startNextEpisode
+        }), runtime.attachNextEpisodeAdvance && runtime.attachNextEpisodeAdvance({
+            state: j,
+            isSeries: S,
+            seasons: sn,
+            seasonEpisodes: legacySeasonEpisodes,
+            findEpisodeIndex: legacyFindEpisodeIndex,
+            resolveNext: legacyResolveNextPlaybackTarget,
+            refreshSeasons: refreshNextSeasons,
+            resetStream: ar,
+            showLoading: showNextEpisodeLoading,
+            hideLoading: mn,
+            switchEpisode: gn,
+            loadSeasonEpisodes: function(item, season, done) {
+                ln(item, season, function(episodes, detail) {
+                    done(episodes || [], detail)
+                })
+            },
+            mergeDetail: R,
+            notify: nr,
+            log: function(message, payload) {
+                window.TUTYTV_WEB && window.console && console.log("[TUTYTV] " + message, payload)
+            }
+        }), runtime.attachPlayerAudio && runtime.attachPlayerAudio({
+            state: j,
+            getOptions: function() {
+                return aa
+            },
+            clear: i,
+            getMediaAudio: function() {
+                var media = Aa[Ja(Ha())];
+                return media && media.audio
+            },
+            isAudioOverride: function() {
+                return ma
+            },
+            getSelectedIndex: function() {
+                return ga
+            },
+            setSelectedIndex: function(index) {
+                ga = index
+            },
+            setAudioOverride: function(value) {
+                ma = value
+            },
+            parseTracks: function(audio) {
+                var core = window.TutyCore;
+                if (core && typeof core.parseAudioTracks === "function") return core.parseAudioTracks(audio);
+                for (var tracks = [], parts = String(audio || "").split(/[,\/]/), index = 0; index < parts.length; index++) {
+                    var code = parts[index].trim();
+                    code && tracks.push({
+                        index: index,
+                        code: code,
+                        label: Mn(code)
+                    })
                 }
-            }()
+                return tracks
+            },
+            describeTrack: Mn,
+            selectIndex: function(audio) {
+                return Ka(audio)
+            },
+            languagePreference: legacyLanguagePreference,
+            savePreferences: Q,
+            isPlayerScreen: function() {
+                return "player" === j.screen
+            },
+            hasMedia: function() {
+                return !!we
+            },
+            getRelaySource: function() {
+                return Hn
+            },
+            absolutePosition: function() {
+                return Math.floor(zn + (we ? we.currentTime || 0 : 0))
+            },
+            loadUrl: rr,
+            ensureRelayMode: function() {
+                "relay" !== j.streamMode && "smooth" !== j.streamMode && (j.streamMode = "relay", Cn())
+            },
+            reloadResolved: Tn,
+            closeSettings: en,
+            el: e
+        }), runtime.attachPlaySettings && runtime.attachPlaySettings({
+            state: j,
+            byId: t,
+            el: e,
+            clear: i,
+            focus: tt,
+            firstFocus: it,
+            getFocusRow: function() {
+                return j.focus ? n(j.focus, ".psv-row") : null
+            },
+            isSeries: S,
+            getSeasons: sn,
+            getEpisodeRanges: ii,
+            refreshMediaInfo: Qa,
+            playEpisode: function(episode, seasonIndex) {
+                var runtime = window.TutyUI;
+                runtime && runtime.playEpisodeSelection && runtime.playEpisodeSelection(episode, seasonIndex)
+            },
+            refreshStreamModeButtons: Cn,
+            refreshAspectButtons: wn,
+            hideInfobar: Ni,
+            ensureStage: function() {
+                Fi || En()
+            },
+            focusPlayer: function() {
+                ye && tt(ye)
+            },
+            isQuickOpen: function() {
+                return va
+            },
+            setQuickOpen: function(value) {
+                va = value
+            },
+            isFullOpen: function() {
+                return fa
+            },
+            setFullOpen: function(value) {
+                fa = value
+            },
+            canFocus: Ye,
+            getCurrentFocus: function() {
+                return j.focus || null
+            },
+            getCurrentItem: Ha,
+            renderAudioTracks: Ln,
+            getSubtitleTracks: function() {
+                return Ya(Aa[Ja(Ha())])
+            },
+            isSubtitleEnabled: function() {
+                return ba
+            },
+            setSubtitleEnabled: function(value) {
+                ba = value
+            },
+            getCurrentSubtitle: function() {
+                return ya
+            },
+            setCurrentSubtitle: function(track) {
+                ya = track
+            },
+            setSubtitleForced: function(value) {
+                Ca = value
+            },
+            loadSubtitle: Ua,
+            getSubtitleSize: function() {
+                return xa
+            },
+            getSubtitleStyle: function() {
+                return Sa
+            },
+            setSubtitleSize: function(value) {
+                xa = value
+            },
+            setSubtitleStyle: function(value) {
+                Sa = value
+            },
+            savePlaybackPreferences: Q,
+            applySubtitleDisplay: Fa,
+            languagePreference: legacyLanguagePreference,
+            formatLanguage: Mn
+        }), runtime.attachPlayerVideoSettings && runtime.attachPlayerVideoSettings({
+            state: j,
+            getVideo: function() {
+                return we
+            },
+            getRelayButton: function() {
+                return ji
+            },
+            getNormalButton: function() {
+                return Wi
+            },
+            getCheck: function(button) {
+                return button && button.querySelector(".psv-check")
+            },
+            getAspectButtons: function() {
+                return Gi ? Gi.querySelectorAll(".psv-btn") : []
+            },
+            isRelayMode: legacyRelayStreamMode
+        }), runtime.attachEpisodeBrowser && runtime.attachEpisodeBrowser({
+            state: j,
+            isSeries: S,
+            ensureDom: function() {
+                return Qi || (En(), Qi)
+            },
+            getOverlay: function() {
+                return Qi || (En(), Qi)
+            },
+            getTitle: function() {
+                return Ki
+            },
+            getSubtitle: function() {
+                return Yi
+            },
+            getSeasonLabel: function() {
+                return ia
+            },
+            getSeasonsContainer: function() {
+                return Zi
+            },
+            getEpisodesContainer: function() {
+                return ta
+            },
+            el: e,
+            clear: i,
+            focus: tt,
+            firstFocus: it,
+            querySelector: function(root, selector) {
+                return root && root.querySelector ? root.querySelector(selector) : null
+            },
+            querySelectorAll: function(root, selector) {
+                return root && root.querySelectorAll ? root.querySelectorAll(selector) : []
+            },
+            getSeasons: sn,
+            loadSeasonEpisodes: function(item, season, done) {
+                ln(item, season, function(episodes, detail) {
+                    done(episodes || [], detail)
+                })
+            },
+            formatEpisode: dn,
+            formatDuration: cn,
+            loadDetail: U,
+            notify: nr,
+            hideInfobar: function() {
+                Ni()
+            },
+            closePlaySettingsIfOpen: function() {
+                va && an()
+            },
+            focusPlayer: function() {
+                ye && tt(ye)
+            },
+            isFocusWithin: function(id) {
+                return !!n(j.focus, "#" + id)
+            },
+            playEpisode: gn
+        }), runtime.attachAppLifecycle && runtime.attachAppLifecycle({
+            isHidden: function() {
+                return !!document.hidden
+            },
+            getPlayer: function() {
+                return we
+            },
+            getPreview: function() {
+                return Et
+            },
+            play: function(media) {
+                return legacyPlayVideo(media)
+            },
+            stopPlayback: ar,
+            cleanup: pi
+        }), runtime.attachWebOsKeepAlive && runtime.attachWebOsKeepAlive({
+            canUseLuna: legacyCanUseLuna,
+            getServiceId: function() {
+                return p.serviceId || "com.webosflux.xuptertv.fidelity.service"
+            },
+            getBridge: function() {
+                return window.webOS && window.webOS.service ? window.webOS.service : null
+            }
+        }), runtime.attachDeepLink && runtime.attachDeepLink({
+            state: j,
+            getSearch: function() {
+                return location.search || ""
+            },
+            getChannelCount: function() {
+                return F.length
+            },
+            skipWelcome: dt,
+            selectTab: function(index, focus) {
+                ht(index, focus)
+            },
+            focusDefault: function() {
+                tt(ie)
+            },
+            openDetail: function(index) {
+                ei(l[index])
+            },
+            openSearch: li,
+            setSearchQuery: ci,
+            openSettings: yi,
+            openSettingsPanel: function(index) {
+                bi(index, !0)
+            },
+            openPlayer: function(mode, index) {
+                dr(mode, l[index] || null)
+            },
+            openChannels: hr,
+            focusSelector: function(selector) {
+                var element = document.querySelector(selector);
+                element && tt(element)
+            }
+        })
+    }
+
+    function getPlayerCleanupHost() {
+        return {
+            state: j,
+            getVideo: function() {
+                return we
+            },
+            getPosition: function() {
+                return Hn ? zn + (we.currentTime || 0) : we.currentTime || 0
+            },
+            getAudioIndex: function() {
+                return ga
+            },
+            closeNextEpisodePrompt: closeNextEpisodePrompt,
+            shouldSaveHistoryBeforeReset: function() {
+                return legacyShouldSaveHistoryBeforeReset(j.playerMode, !!we)
+            },
+            saveHistoryBeforeReset: function() {
+                Ta(legacyCurrentPlaybackPosition(we.currentTime || 0, Hn, zn), legacyResolvePlaybackTotal(we.duration, j.playerEpisode && j.playerEpisode.duration ? Mi(j.playerEpisode.duration) : 0, j.playerItem && j.playerItem.duration ? Mi(j.playerItem.duration) : 0), !0)
+            },
+            resetPlaybackState: function() {
+                j.streamError = "", $n(), nr(""), qi("none"), Ti(), jn && (clearTimeout(jn), jn = null, Vn = 0), Qn(), Hn = "", zn = 0, Hd = 0, Bn++
+            },
+            resolveAbortBase: function() {
+                return legacyResolveAbortServiceBase(Un, Fn)
+            },
+            abortMedia: function(base) {
+                if (base) try {
+                    var request = new XMLHttpRequest;
+                    request.open("GET", base + "/media/abort", !0), request.send()
+                } catch (e) {}
+                try {
+                    q("abortMedia", {}, function() {})
+                } catch (e) {}
+            },
+            destroyHls: function() {
+                legacyDestroyHls("__tutyHls")
+            },
+            clearVideo: function(video) {
+                Fn = "", Un = "";
+                try {
+                    video.onerror = null
+                } catch (e) {}
+                try {
+                    legacyPauseVideo(video)
+                } catch (e) {}
+                try {
+                    legacySeekVideo(video, 0)
+                } catch (e) {}
+                video.removeAttribute("src");
+                try {
+                    legacySetVideoSource(video, "")
+                } catch (e) {}
+                for (; video.firstChild;) video.removeChild(video.firstChild);
+                legacyApplyPlaybackSurface(video, xe, !1)
+            },
+            clearSessionSource: function() {
+                var runtime = window.TutyUI;
+                runtime && runtime.clearPlayerSessionSource && runtime.clearPlayerSessionSource()
+            },
+            notify: nr,
+            resolveTarget: function(item, done) {
+                or(item, done)
+            },
+            loadSource: function(url) {
+                rr(url)
+            },
+            seekVideo: function(position) {
+                legacySeekVideo(we, position)
+            }
+        }
+    }
+
+    function getBootstrapHost() {
+        return {
+            attachRuntime: attachTutyUiRuntime,
+            resize: mr,
+            installNavigation: function() {
+                legacyInstallNavigation(document, lt)
+            },
+            onPopState: ot,
+            onClick: function(e) {
+                var target = n(e.target, ".focusable");
+                target && (tt(target, !0), target._activate && target._activate())
+            },
+            startKeepAlive: function() {
+                var runtime = window.TutyUI;
+                runtime && runtime.startWebOsKeepAlive && runtime.startWebOsKeepAlive()
+            },
+            scheduleWelcome: function() {
+                Ke = setTimeout(dt, 2600)
+            },
+            loadCatalogs: N,
+            loadLive: Bt,
+            installDebugApi: function() {
+                var runtime = window.TutyUI;
+                runtime && runtime.installDebugApi && runtime.installDebugApi({
+                    version: "4.34.4",
+                    state: j,
+                    vod: l,
+                    channels: F,
+                    api: v,
+                    portal: f,
+                    service: q,
+                    refreshPortal: D,
+                    reloadVod: N,
+                    skipWelcome: dt,
+                    showScreen: nt,
+                    selectTab: ht,
+                    openDetail: function(index) {
+                        ei(l[index] || l[0])
+                    },
+                    openSearch: li,
+                    openSettings: yi,
+                    openLiveCategories: lvOpenCats,
+                    openLiveSearch: lvOpenSearch,
+                    toggleLiveFavorites: lvToggleFav,
+                    openPlayer: function(mode, index) {
+                        dr(mode, l[index] || null)
+                    },
+                    focus: function(target) {
+                        var element = "string" == typeof target ? document.querySelector(target) : target;
+                        element && tt(element)
+                    },
+                    handleKey: function(code) {
+                        lt({
+                            keyCode: code,
+                            preventDefault: function() {}
+                        })
+                    },
+                    search: ci,
+                    openSettingsPanel: function(panel) {
+                        bi(panel, !0)
+                    }
+                })
+            },
+            applyDeepLink: function() {
+                var runtime = window.TutyUI;
+                runtime && runtime.hasDeepLinkRuntime && runtime.hasDeepLinkRuntime() && runtime.applyDeepLink && runtime.applyDeepLink()
+            }
+        }
+    }
+
+    function yr() {
+        var runtime = window.TutyUI;
+        runtime && runtime.startBootstrap && runtime.startBootstrap(getBootstrapHost())
+    }
+
+    function handleVisibilityChange() {
+        var runtime = window.TutyUI;
+        return runtime && runtime.handleLifecycleVisibilityChange ? runtime.handleLifecycleVisibilityChange() : !1
     }
 
     function br() {
-        ar(), pi()
+        var runtime = window.TutyUI;
+        return runtime && runtime.handleLifecycleUnload ? runtime.handleLifecycleUnload() : !1
     }
-    window.addEventListener("beforeunload", br), window.addEventListener("unload", br), document.addEventListener("visibilitychange", function() {
-        document.hidden && br()
-    }), "loading" === document.readyState ? document.addEventListener("DOMContentLoaded", yr) : yr()
+    window.addEventListener("beforeunload", br), window.addEventListener("unload", br), document.addEventListener("visibilitychange", handleVisibilityChange), "loading" === document.readyState ? document.addEventListener("DOMContentLoaded", yr) : yr()
 }();

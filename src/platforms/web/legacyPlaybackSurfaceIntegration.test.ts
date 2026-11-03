@@ -34,7 +34,7 @@ describe("legacy playback surface integration", () => {
     expect(source).toMatch(/legacyApplyPlaybackSurface\(we, xe, !1\)/);
     expect(source).toMatch(/legacyApplyPlaybackSurface\(we, xe, !0\)/);
     expect(source).toMatch(/legacyApplyPlayerStatus\(Se, e\)/);
-    expect(source).toMatch(/legacyApplyDetailPlayerTransition\(r, o\)/);
+    expect(source).toMatch(/legacyApplyDetailPlayerTransition\(playerScreen, detailScreen\)/);
     expect(source).toMatch(/legacyResetDetailPlayerSurface\(r\)/);
     expect(source).toMatch(/legacyApplyPlayerModeClass\(ye, !0\)/);
   });

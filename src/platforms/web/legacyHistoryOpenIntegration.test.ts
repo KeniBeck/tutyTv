@@ -6,7 +6,7 @@ const source = readFileSync(new URL(
   "../../../source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/app.js",
   import.meta.url
 ), "utf8");
-const open = source.match(/ {4}function Oa\(e\) \{[\s\S]*?(?= {4}var Da = \[\])/)?.[0];
+const open = source.match(/ {4}function Oa\(e\) \{[\s\S]*?(?= {4}var Aa = \{\})/)?.[0];
 
 describe("legacy history opening", () => {
   it("forces detail loading when a history title is not already loaded", () => {
