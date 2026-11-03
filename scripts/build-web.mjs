@@ -15,8 +15,12 @@ export async function prepareWeb({ sourceApp, hlsFile, outDir }) {
   }
 
   const coreFile = resolve(sourceApp, "js/tuty-core.js");
+  const uiFile = resolve(sourceApp, "js/tuty-ui.js");
   await rm(outDir, { recursive: true, force: true });
-  await cp(sourceApp, outDir, { recursive: true, filter: (path) => path !== coreFile });
+  await cp(sourceApp, outDir, {
+    recursive: true,
+    filter: (path) => path !== coreFile && path !== uiFile
+  });
   await copyFile(hlsFile, resolve(outDir, "hls.min.js"));
 }
 

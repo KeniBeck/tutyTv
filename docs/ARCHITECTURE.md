@@ -79,6 +79,31 @@ src/
         focusVisibility.ts
         focusVisibility.test.ts
 
+  UI/
+    main.ts
+    dev.ts
+    runtime/
+      dom.ts
+      focus.ts
+      layout.ts
+      router.ts
+      service.ts
+      state.ts
+    screens/
+      home/
+        homePages.ts         # paginas VOD 1-6 (A2.1)
+        liveList.ts           # lista/zapping live (A2.2)
+        liveMenu.ts           # categorias/busqueda live (A2.2)
+        addonsDialog.ts       # dialog addons M3U (A2.2)
+      search/
+        searchScreen.ts       # busqueda, teclado, resultados y filtros (A3)
+      settings/
+        settingsScreen.ts     # ajustes, perfil, historial y listas (A3)
+      detail/
+        detailScreen.ts       # detalle, temporadas, rangos y episodios (A4)
+        resumeDialog.ts       # dialogo de reanudar (A4)
+      # resto de pantallas en A5-A6
+
   platforms/
     shared/
       html5PlayerAdapter.ts
@@ -117,6 +142,7 @@ scripts/
   vite-legacy-web-plugin.ts
 
 source/usr/palm/applications/.../js/tuty-core.js  # generado, no versionado
+source/usr/palm/applications/.../js/tuty-ui.js    # generado, no versionado
 ```
 
 ## 3. Principios de diseno
@@ -146,8 +172,10 @@ source/usr/palm/applications/.../js/tuty-core.js  # generado, no versionado
 - Vite: configuraciones independientes
   - `vite.web.config.ts` -> servidor web de desarrollo
   - `vite.core.web.config.ts` -> puente web en `dist/web/js/tuty-core.js`
+  - `vite.ui.web.config.ts` -> runtime UI web en `dist/web/js/tuty-ui.js`
   - `vite.webos.config.ts` -> salida `dist/webos`
   - `vite.core.config.ts` -> `js/tuty-core.js` dentro de la app legacy
+  - `vite.ui.config.ts` -> `js/tuty-ui.js` dentro de la app legacy
 - Vitest: pruebas del Core y adaptadores
 - ESLint: reglas base + TypeScript + deteccion de ciclos (`import/no-cycle`)
 
@@ -191,6 +219,7 @@ pnpm start            # sirve source/ sin build (legacy)
 
 pnpm build:webos
 pnpm build:core
+pnpm build:ui
 pnpm build:ipk
 
 pnpm test
@@ -199,9 +228,10 @@ pnpm lint
 pnpm check
 ```
 
-`build:ipk` ejecuta `build:core` antes de empaquetar y luego el script
-`source/tools/build-ipk.sh`. `build:core` genera
-`source/.../js/tuty-core.js` (artefacto ignorado por git).
+`build:ipk` ejecuta `build:core` y `build:ui` antes de empaquetar y luego el
+script `source/tools/build-ipk.sh`. `build:core` genera
+`source/.../js/tuty-core.js`; `build:ui` genera
+`source/.../js/tuty-ui.js`. Ambos artefactos estan ignorados por git.
 
 `build:web` ejecuta `scripts/build-web.mjs`, que copia la app legacy a `dist/web`
 y agrega `hls.min.js`, excluyendo el puente generado para webOS. Despues Vite
@@ -235,6 +265,25 @@ HMR; al cambiar `src/core`, se actualiza sin recargar. Los cambios en
 
 `npm` queda fuera del flujo del proyecto. No usar `npm install` ni
 `package-lock.json`.
+
+### Puente UI -> legacy
+
+`src/ui/main.ts` compila como IIFE `tuty-ui.js` con target `chrome53` en el
+IPK y `es2019` en web. `index.html` lo carga despues de `tuty-core.js` y antes
+de `app.js`.
+
+En A0-A1, `app.js` delega en `window.TutyUI`:
+
+- helpers DOM (`e`, `t`, `i`, `a`, `n`);
+- estado inicial (`j`);
+- foco (`tt`, `at`) mediante `attachFocus`;
+- cambio de pantalla (`nt`);
+- escalado 1920x1080 (`mr`);
+- cliente de servicio (`q`).
+
+Cada delegacion conserva la implementacion legacy como fallback si el
+artefacto no esta disponible. Home y el menu de TV ya viven en `src/ui`; las
+pantallas restantes se moveran en A3-A6.
 
 ## 7. Integracion con sistema existente
 

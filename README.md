@@ -34,9 +34,10 @@ pnpm dev
 
 HMR:
 
-- CSS y modulos del Core (`src/core`) se actualizan sin recargar la pagina.
-- `js/app.js` sigue siendo el monolito legacy: al editarlo, Vite hace una
-  recarga completa.
+- CSS, modulos del Core (`src/core`) y runtime UI (`src/ui`) se actualizan sin
+  recargar la pagina.
+- `js/app.js` sigue conteniendo las pantallas legacy: al editarlo, Vite hace
+  una recarga completa.
 - Si el Core no esta disponible, `app.js` conserva sus implementaciones
   originales como fallback.
 
@@ -47,8 +48,9 @@ pnpm build:web
 pnpm start:web
 ```
 
-- `build:web` prepara la app y compila el puente Core web en
-  `dist/web/js/tuty-core.js`, sin generar artefactos en `source/`.
+- `build:web` prepara la app y compila el puente Core y el runtime UI web en
+  `dist/web/js/tuty-core.js` y `dist/web/js/tuty-ui.js`, sin generar artefactos
+  en `source/`.
 - `start:web` sirve `dist/web` y la API Node en
   `http://127.0.0.1:8910/` (no abre el navegador).
 - Cambiar puerto: `pnpm start:web --port=9000`
@@ -62,7 +64,8 @@ pnpm build:webos      # bundle modular para webOS -> dist/webos
 pnpm build:ipk        # genera y valida el IPK en la raiz del repo
 ```
 
-`build:ipk` ejecuta `build:core` y luego `source/tools/build-ipk.sh`. El IPK
+`build:ipk` ejecuta `build:core`, `build:ui` y luego
+`source/tools/build-ipk.sh`. El IPK
 mantiene el identificador tecnico
 `com.webosflux.xuptertv.fidelity_1.6.6_all.ipk`.
 
@@ -82,6 +85,7 @@ pnpm check            # lint + typecheck + test
 | `pnpm dev` | Desarrollo web con Vite, HMR y API Node integrada |
 | `pnpm dev:web` | Alias de `pnpm dev` |
 | `pnpm build:core` | Compila el Core compartido como IIFE (`js/tuty-core.js`) |
+| `pnpm build:ui` | Compila el runtime UI como IIFE (`js/tuty-ui.js`) |
 | `pnpm build:web` | Build de produccion web en `dist/web` |
 | `pnpm start:web` | Sirve `dist/web` + API en modo produccion |
 | `pnpm start` | Sirve la app legacy desde `source/` sin build |
@@ -128,7 +132,7 @@ reempaquetarla con Vite. Asi se conservan las rutas de assets usadas por
 ## Estructura
 
 ```text
-src/                  Core compartido, contratos y adaptadores
+src/                  Core, adaptadores y runtime UI modular
 scripts/              Plugin Vite legacy y staging de produccion
 source/               App webOS, servicio Luna, servidor web y herramientas IPK
 docs/                 Arquitectura y plan de migracion

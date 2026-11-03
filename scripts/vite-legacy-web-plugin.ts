@@ -14,6 +14,7 @@ export interface LegacyWebPluginOptions {
   repoRoot: string;
   hlsFile: string;
   devCoreFile: string;
+  devUiFile: string;
   buildLabel?: string;
 }
 
@@ -21,6 +22,7 @@ export function legacyWebPlugin(options: LegacyWebPluginOptions): Plugin {
   const buildLabel = options.buildLabel ?? "dev";
   const requireFromRepo = createRequire(resolve(options.repoRoot, "package.json"));
   const devCoreUrl = `/@fs${pathToFileURL(options.devCoreFile).pathname}`;
+  const devUiUrl = `/@fs${pathToFileURL(options.devUiFile).pathname}`;
   const legacyAppDir = resolve(
     options.repoRoot,
     "source/usr/palm/applications/com.webosflux.xuptertv.fidelity"
@@ -87,6 +89,10 @@ export function legacyWebPlugin(options: LegacyWebPluginOptions): Plugin {
         .replace(
           '<script src="js/tuty-core.js"></script>',
           `<script type="module" src="${devCoreUrl}"></script>`
+        )
+        .replace(
+          '<script src="js/tuty-ui.js"></script>',
+          `<script type="module" src="${devUiUrl}"></script>`
         )
         .replace(
           '<script src="js/app.js"></script>',

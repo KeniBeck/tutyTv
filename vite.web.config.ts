@@ -29,7 +29,8 @@ export default defineConfig({
     legacyWebPlugin({
       repoRoot,
       hlsFile: resolve(repoRoot, "source/web/hls.min.js"),
-      devCoreFile: resolve(repoRoot, "src/platforms/web/legacyCoreDev.ts")
+      devCoreFile: resolve(repoRoot, "src/platforms/web/legacyCoreDev.ts"),
+      devUiFile: resolve(repoRoot, "src/ui/dev.ts")
     })
   ],
   build: {

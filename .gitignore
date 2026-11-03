@@ -2,6 +2,7 @@ node_modules/
 dist/
 coverage/
 source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/tuty-core.js
+source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/tuty-ui.js
 *.log
 pnpm-debug.log*
 .pnpm-store/
