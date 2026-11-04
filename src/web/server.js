@@ -276,6 +276,7 @@ function serveIndex(res) {
       '<script src="js/app.js?v=' + BUILD + '"></script>'
     ].join("\n");
     html = html.replace('href="css/style.css"', 'href="css/style.css?v=' + BUILD + '"');
+    html = html.replace('href="css/ui-glass.css"', 'href="css/ui-glass.css?v=' + BUILD + '"');
     html = html.replace('<script src="js/app.js"></script>', inject);
     const body = Buffer.from(html, "utf8");
     res.writeHead(200, {

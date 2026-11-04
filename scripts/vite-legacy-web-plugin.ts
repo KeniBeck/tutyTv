@@ -87,6 +87,10 @@ export function legacyWebPlugin(options: LegacyWebPluginOptions): Plugin {
           '<script type="module">import "/css/style.css";</script>'
         )
         .replace(
+          '<link rel="stylesheet" href="css/ui-glass.css">',
+          '<script type="module">import "/css/ui-glass.css";</script>'
+        )
+        .replace(
           '<script src="js/tuty-core.js"></script>',
           `<script type="module" src="${devCoreUrl}"></script>`
         )
