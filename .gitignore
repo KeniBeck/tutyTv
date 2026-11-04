@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+src/webos/app/js/tuty-core.js
+src/webos/app/js/tuty-ui.js
+*.log
+*.ipk
+pnpm-debug.log*
+.pnpm-store/

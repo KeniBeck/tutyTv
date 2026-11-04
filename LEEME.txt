@@ -1,11 +1,11 @@
-﻿XuperTV para LG webOS - instalador (1.6.5)
+﻿TutyTV para LG webOS - instalador (1.7.2)
 
 QUE HACER
   1. Conecta el ordenador y la TV a la MISMA red WiFi.
   2. En la TV, abre la app "Developer Mode" de LG (si no la tienes,
      instalala desde LG Content Store). Activa el modo, espera el
      reinicio y apunta la IP y la clave que muestra.
-  3. Doble clic en INSTALAR-XUPERTV.bat
+  3. Doble clic en INSTALAR-TUTYTV.bat
   4. Escribe la IP cuando te la pida.
   5. Escribe la clave de la TV UNA vez (no se ve al escribir).
      Si tu TV tiene "KEY SERVER" en ON no pasa nada: el instalador
@@ -26,10 +26,10 @@ IMPORTANTE
   completa primero. El archivo .ipk tiene que estar junto al .bat.
 
 CODIGO FUENTE Y VERSION WEB
-  source/ contiene el codigo de la app y del servicio, mas
-  tools/build-ipk.sh para generar nuevos IPK.
-  XUPER-WEB.sh (Linux) y XUPER-WEB.bat (Windows) abren la version web
+  src/webos/ contiene la app webOS y el servicio; src/web/ el servidor
+  local y src/tools/build-ipk.sh el generador de IPK.
+  TUTY-WEB.sh (Linux) y TUTY-WEB.bat (Windows) abren la version web
   local. Solo necesitan Node.js 18 o superior.
 
-Proyecto no oficial, sin relacion con XuperTV ni con LG.
+Proyecto no oficial, sin relacion con TutyTV ni con LG.
 No incluye contenido audiovisual.
