@@ -126,6 +126,20 @@ describe("playerLive", () => {
     expect(harness.showInfobar).not.toHaveBeenCalled();
   });
 
+
+  it("invalidates an older resolution as soon as a new channel is requested", () => {
+    const harness = createHarness();
+    playLiveChannel({ channelCode: "a", name: "A" }, true);
+    const first = harness.resolveLive.mock.calls[0]?.[1] as (error: string | null, response: Record<string, unknown> | null) => void;
+    playLiveChannel({ channelCode: "b", name: "B" }, true);
+    const second = harness.resolveLive.mock.calls[1]?.[1] as (error: string | null, response: Record<string, unknown> | null) => void;
+
+    first(null, { returnValue: true, url: "http://a" });
+    expect(harness.loadSource).not.toHaveBeenCalled();
+    second(null, { returnValue: true, url: "http://b" });
+    expect(harness.loadSource).toHaveBeenCalledWith("http://b");
+  });
+
   it("cancels a pending delayed resolution on reset", () => {
     vi.useFakeTimers();
     createHarness();

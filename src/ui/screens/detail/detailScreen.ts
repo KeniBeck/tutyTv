@@ -293,6 +293,7 @@ export function renderDetail(item: DetailItem | null | undefined): boolean {
   host.clear(buttons);
   host.clear(bottom);
   host.clear(player);
+  host.byId("screen-detail")?.classList.remove("is-synopsis-open");
   seasonPopup = null;
 
   const titleWrap = host.el("div", "detail-titlewrap");

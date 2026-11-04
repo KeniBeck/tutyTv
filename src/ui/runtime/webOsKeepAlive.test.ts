@@ -113,7 +113,7 @@ describe("webOS keepAlive", () => {
     startWebOsKeepAlive();
     vi.advanceTimersByTime(15000);
 
-    expect(request.mock.calls.filter(([uri, options]) =>
+    expect(request.mock.calls.filter(([_uri, options]) =>
       (options as { method?: string }).method === "heartbeat"
     )).toHaveLength(1);
   });

@@ -4,8 +4,11 @@ import type { NextEpisodeTarget } from "./nextEpisodePrompt";
 import {
   attachNextEpisodeAdvance,
   findNextPlaybackTarget,
+  offerNextEpisodeOnEnded,
+  refreshNextEpisodeSeasons,
   resetNextEpisodeAdvanceRuntime,
   startNextEpisode,
+  type AdvanceDetailResponse,
   type AdvanceEpisode,
   type AdvanceItem,
   type AdvanceSeason,
@@ -93,6 +96,10 @@ function createHarness() {
   const mergeDetail = vi.fn();
   const refreshSeasons = vi.fn();
   const notify = vi.fn();
+  const getPosition = vi.fn(() => 100);
+  const getTotal = vi.fn(() => 1000);
+  const requestDetail = vi.fn();
+  const resolveSeason = vi.fn((_items: AdvanceSeason[]) => ({ seasonIndex: 0 }));
   let pendingSeason: ((episodes: AdvanceEpisode[], detail: unknown) => void) | null = null;
 
   const host: NextEpisodeAdvanceHost = {
@@ -119,7 +126,11 @@ function createHarness() {
       pendingSeason = done;
     },
     mergeDetail,
-    notify
+    notify,
+    requestDetail,
+    resolveSeason,
+    getPosition,
+    getTotal
   };
   attachNextEpisodeAdvance(host);
   return {
@@ -279,4 +290,38 @@ describe("nextEpisodeAdvance", () => {
       .toBe(false);
     expect(harness.resetStream).not.toHaveBeenCalled();
   });
+  it("refreshes seasons and resolves the current season", () => {
+    const harness = createHarness();
+    const requestDetail = vi.fn();
+    harness.host.requestDetail = requestDetail;
+    harness.host.resolveSeason = vi.fn(() => ({ seasonIndex: 1, seasonId: "s2new" }));
+
+    expect(refreshNextEpisodeSeasons(harness.item)).toBe(true);
+    expect(harness.item._nextSeasonsLoading).toBe(true);
+    const done = requestDetail.mock.calls[0]?.[1] as
+      ((error: unknown, response: AdvanceDetailResponse | null) => void);
+    done(null, {
+      returnValue: true,
+      seasons: [
+        { id: "s2new", number: 3 },
+        { id: "s1new", number: 1 }
+      ]
+    });
+
+    expect(harness.item.seasons?.map((season) => season.id)).toEqual(["s1new", "s2new"]);
+    expect(harness.item._nextSeasonsLoading).toBe(false);
+    expect(harness.item._nextSeasonsTried).toBe(true);
+    expect(harness.item.seasonId).toBe("s2new");
+    expect(harness.state.detailSeason).toBe(1);
+    expect(refreshNextEpisodeSeasons(harness.item)).toBe(false);
+  });
+
+  it("hides loading when the ended event cannot offer a next episode", () => {
+    const harness = createHarness();
+    harness.state.nextEpisodeDismissed = true;
+
+    expect(offerNextEpisodeOnEnded()).toBe(false);
+    expect(harness.hideLoading).toHaveBeenCalled();
+  });
+
 });

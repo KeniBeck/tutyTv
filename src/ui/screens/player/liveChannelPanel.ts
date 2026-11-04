@@ -201,7 +201,15 @@ export function renderLiveCategories(): boolean {
       pill.classList.remove("is-selected");
     }
   }
-  if (focusCategory) {
+  const focusedNode = host.state.focus as (LivePanelNode & {
+    closest?: (selector: string) => LivePanelNode | null;
+  }) | null;
+  const focusInCategories = Boolean(
+    focusedNode
+    && typeof focusedNode.closest === "function"
+    && focusedNode.closest(".pc-categories")
+  );
+  if (focusCategory && focusInCategories) {
     for (const pill of pills) {
       if (pill._cat && pill._cat.id === focusCategory.id) {
         if (host.state.focus !== pill) {
@@ -225,6 +233,18 @@ export function renderLiveChannels(index?: number): boolean {
   if (!panel || !list) {
     return false;
   }
+  const focusedNode = host.state.focus as (LivePanelNode & {
+    closest?: (selector: string) => LivePanelNode | null;
+  }) | null;
+  const focusedRow = focusedNode
+    && typeof focusedNode.closest === "function"
+    && focusedNode.closest(".pc-row")
+    ? focusedNode
+    : null;
+  const preserveIndex = focusedRow && typeof focusedRow._channel === "number"
+    ? focusedRow._channel
+    : -1;
+  const restoreFocus = preserveIndex >= 0 && (index === undefined || index === null);
   host.clear(list);
   host.setChannelRows({});
   const channels = host.getChannels();
@@ -273,8 +293,8 @@ export function renderLiveChannels(index?: number): boolean {
     return true;
   }
   let target = Number(index);
-  if (!isFinite(target)) {
-    target = host.state.channel;
+  if (!isFinite(target) || (index === undefined || index === null)) {
+    target = restoreFocus ? preserveIndex : host.state.channel;
   }
   target = Math.max(0, Math.min(channels.length - 1, target || 0));
   const pageSize = host.getPageSize() || 1;
@@ -347,6 +367,9 @@ export function renderLiveChannels(index?: number): boolean {
     rows[channelIndex] = row;
   }
   host.setChannelRows(rows);
+  if (restoreFocus && rows[preserveIndex]) {
+    host.focus(rows[preserveIndex] as LivePanelNode);
+  }
   return true;
 }
 

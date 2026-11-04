@@ -404,3 +404,13 @@ function positionInfobarMeta(infobar: PlayerStageNode): void {
     func.style.left = `${(scale.offsetLeft || 0) + (scale.offsetWidth || 0) + 30}px`;
   }
 }
+
+export type PlayerStageHostDeps = Omit<PlayerStageHost, "state"> & {
+  state: AppState;
+};
+
+export function createPlayerStageHost(deps: PlayerStageHostDeps): PlayerStageHost {
+  return {
+    ...deps
+  };
+}

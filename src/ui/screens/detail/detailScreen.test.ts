@@ -97,6 +97,7 @@ function createHost() {
     "detail-player": new FakeNode(),
     "detail-buttons": new FakeNode(),
     "detail-bottom": new FakeNode(),
+    "screen-detail": new FakeNode(),
     app: new FakeNode()
   };
   const catalog: DetailItem[] = [
@@ -187,8 +188,10 @@ describe("detail screen runtime", () => {
       actors: "Actors",
       synopsis: "Syn"
     };
+    nodes["screen-detail"]!.classList.add("is-synopsis-open");
 
     expect(renderDetail(movie)).toBe(true);
+    expect(nodes["screen-detail"]!.classList.contains("is-synopsis-open")).toBe(false);
     expect(textOf(nodes["detail-left"]!)).toContain("Movie");
     expect(textOf(nodes["detail-buttons"]!)).toContain("Recordatorios");
     expect(nodes["detail-bottom"]!.children.some((node) => node.className.includes("detail-season"))).toBe(false);

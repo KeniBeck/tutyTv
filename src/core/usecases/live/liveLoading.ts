@@ -1,5 +1,3 @@
-import { selectNewLiveChannels } from "./liveChannels";
-
 export interface AddonPresetLike {
   id?: string;
   name?: string;

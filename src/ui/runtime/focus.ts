@@ -169,3 +169,23 @@ export function moveFocus(direction: string): boolean {
   }
   return true;
 }
+
+export type FocusHostDeps = Omit<FocusDependencies, "score">;
+
+interface FocusScoreCore {
+  scoreLegacyFocus?(direction: string, current: DOMRect, candidate: DOMRect): number | null | undefined;
+}
+
+export function createFocusHost(deps: FocusHostDeps): FocusDependencies {
+  return {
+    ...deps,
+    score: function score(direction: string, current: DOMRect, candidate: DOMRect) {
+      const core = (window as unknown as { TutyCore?: FocusScoreCore }).TutyCore;
+      if (!core || typeof core.scoreLegacyFocus !== "function") {
+        return null;
+      }
+      const value = core.scoreLegacyFocus(direction, current, candidate);
+      return null === value || void 0 === value ? null : value;
+    }
+  };
+}

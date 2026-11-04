@@ -175,6 +175,15 @@ export function handleNavigationBack(): boolean {
         host.focus(host.getTabs()[0] || null);
         return true;
       }
+      const focused = state.focus;
+      const inTabs = Boolean(focused && focused.closest && focused.closest(".home-tabs"));
+      if (!inTabs) {
+        const tab = host.getTabs()[0] || null;
+        if (tab) {
+          host.focus(tab);
+          return true;
+        }
+      }
       host.platformBack();
       return true;
     }
@@ -185,9 +194,9 @@ export function handleNavigationBack(): boolean {
     return true;
   }
   if (host.isSynopsisOpen()) {
+    host.toggleSynopsis();
     return true;
   }
-  host.toggleSynopsis();
   host.returnFromDetail();
   return true;
 }
@@ -467,4 +476,52 @@ function consume(event: NavigationEvent, stop = false): boolean {
     event.stopPropagation?.();
   }
   return true;
+}
+
+type NavigationDerived =
+  | "getFocus"
+  | "activateFocus"
+  | "getVideoPaused"
+  | "hasVideoSource"
+  | "isSynopsisOpen"
+  | "closeSeek"
+  | "endSeek"
+  | "handleBrowserFocus";
+
+export type NavigationHostDeps = Omit<NavigationHost, NavigationDerived> & {
+  getVideo(): { paused?: boolean; src?: string } | null;
+  closeSeek(): void;
+};
+
+export function createNavigationHost(deps: NavigationHostDeps): NavigationHost {
+  const host: NavigationHost = {
+    ...deps,
+    getFocus: function getFocus() {
+      return deps.state.focus as NavigationNode | null;
+    },
+    activateFocus: function activateFocus() {
+      const focused = deps.state.focus as { _activate?: () => void } | null;
+      if (focused && focused._activate) {
+        focused._activate();
+      }
+    },
+    getVideoPaused: function getVideoPaused() {
+      const video = deps.getVideo();
+      return !!(video && video.paused);
+    },
+    hasVideoSource: function hasVideoSource() {
+      const video = deps.getVideo();
+      return !!(video && video.src);
+    },
+    isSynopsisOpen: function isSynopsisOpen() {
+      const detail = deps.byId("screen-detail");
+      return !!(detail && detail.classList.contains("is-synopsis-open"));
+    },
+    closeSeek: deps.closeSeek,
+    endSeek: deps.closeSeek,
+    handleBrowserFocus: function handleBrowserFocus(code: number) {
+      return deps.handleBrowserHorizontal(code);
+    }
+  };
+  return host;
 }

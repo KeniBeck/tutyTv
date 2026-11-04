@@ -117,6 +117,16 @@ function renderPage(nextPage: number, focusIndex: number): void {
   }
   hot.classList.add("is-hidden");
   results.classList.add("is-active");
+  const previousFocus = host.state.focus;
+  const previousInResults = Boolean(previousFocus && previousFocus.closest(".search-results"));
+  const previousPosters = previousInResults ? resultGrid.querySelectorAll(".poster.focusable") : [];
+  let previousIndex = -1;
+  for (let index = 0; index < previousPosters.length; index += 1) {
+    if (previousPosters[index] === previousFocus) {
+      previousIndex = index;
+      break;
+    }
+  }
   host.clear(resultGrid);
   if (!matches.length) {
     empty.classList.add("is-active");
@@ -153,9 +163,10 @@ function renderPage(nextPage: number, focusIndex: number): void {
     resultGrid.appendChild(cell);
   }
   resultGrid.style.height = "874px";
-  if (focusIndex >= 0) {
+  const targetIndex = focusIndex >= 0 ? focusIndex : previousIndex;
+  if (targetIndex >= 0) {
     const posters = resultGrid.querySelectorAll(".poster.focusable");
-    const target = (posters[focusIndex] as SearchNode | null) || host.firstFocus(resultGrid);
+    const target = (posters[targetIndex] as SearchNode | null) || host.firstFocus(resultGrid);
     if (target) {
       host.focus(target);
     }

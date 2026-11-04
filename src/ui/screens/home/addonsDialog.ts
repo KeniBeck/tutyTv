@@ -1,4 +1,10 @@
-import { hasAddonUrl, isM3uAddonUrl, removeAddonAt, type M3uAddon } from "../../../core/usecases/live/addons";
+import {
+  hasAddonUrl,
+  isM3uAddonUrl,
+  removeAddonAt,
+  upsertM3uAddon,
+  type M3uAddon
+} from "../../../core/usecases/live/addons";
 import type { LiveCategory } from "./liveMenu";
 import type { LiveNode } from "./liveList";
 
@@ -22,6 +28,10 @@ export interface AddonsDialogHost {
   getAddons(): AddonEntry[];
   saveAddons(addons: M3uAddon[]): void;
   installAddon(entry: AddonPreset, done: (error: string | null, count?: number) => void): void;
+  requestM3u(
+    url: string,
+    done: (error: unknown, response: { channels?: unknown[] } | null) => void
+  ): void;
   getSelectedCategory(): LiveCategory | null;
   reloadChannels(): void;
   byId(id: string): DialogNode | null;
@@ -178,6 +188,30 @@ function refreshDialog(): void {
       closeAddons();
     };
   }
+}
+
+export function installAddonList(
+  entry: AddonPreset,
+  done?: (error: string | null, count?: number) => void
+): boolean {
+  const finish = done || function ignoreInstall() {};
+  if (!host || !entry || !entry.url) {
+    finish("URL no válida");
+    return false;
+  }
+  host.requestM3u(entry.url, function onM3u(error, response) {
+    if (!host) {
+      return;
+    }
+    const channels = !error && response && response.channels ? response.channels : [];
+    if (error || !channels.length) {
+      finish(error ? String(error) : "No se encontraron canales en la lista");
+      return;
+    }
+    host.saveAddons(upsertM3uAddon(host.getAddons(), entry, channels.length));
+    finish(null, channels.length);
+  });
+  return true;
 }
 
 export function openAddons(): boolean {

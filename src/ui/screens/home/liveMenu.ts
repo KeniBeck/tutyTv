@@ -176,12 +176,15 @@ function buildCategories(): void {
       if (liveFocus) {
         host.focus(liveFocus);
       }
+      const focusAtRequest = host.state.focus;
       host.selectCategory(category, function afterCategory() {
         if (!host) {
           return;
         }
         host.updateLabel();
-        focusList();
+        if (host.state.focus === focusAtRequest) {
+          focusList();
+        }
       });
     };
     grid.appendChild(tile);
@@ -293,12 +296,16 @@ function renderResults(): void {
       syncFavoriteButton();
       searchQuery = "";
       updateSearchEdit();
+      const focusAtRequest = host.state.focus;
       const focusResults = function focusResults() {
         if (!host) {
           return;
         }
         renderResults();
         host.updateLabel();
+        if (host.state.focus !== focusAtRequest) {
+          return;
+        }
         const resultList = host.byId("live-search-list");
         const first = resultList
           ? (resultList.querySelector(".live-sr-row:not(.live-sr-cat)") as MenuNode | null) ||

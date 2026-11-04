@@ -214,6 +214,41 @@ describe("liveChannelPanel", () => {
     expect(harness.host.focus).toHaveBeenCalledWith(rows[1]);
   });
 
+
+  it("does not steal focus from channel rows when categories re-render", () => {
+    const categories = createNode();
+    const list = createNode();
+    const harness = createHarness({ ".pc-categories": categories.node, ".pc-list": list.node });
+    const category = { id: "c2", name: "Deportes" };
+    harness.host.getCategories = () => [{ id: "c1", name: "Todos" }, category];
+    harness.host.getSelectedCategory = () => category;
+    harness.host.getFocusCategory = () => category;
+    const row = { _channel: 2, closest: (selector: string) => selector === ".pc-row" ? row : null };
+    harness.state.focus = row as never;
+    renderLiveCategories();
+    expect(harness.host.focusAndScroll).not.toHaveBeenCalled();
+  });
+
+  it("keeps the focused channel row across async channel re-renders", () => {
+    const categories = createNode();
+    const list = createNode();
+    const harness = createHarness({ ".pc-categories": categories.node, ".pc-list": list.node });
+    const rows: Record<string, LivePanelNode> = {};
+    harness.host.getChannels = () => [
+      { name: "Uno" }, { name: "Dos" }, { name: "Tres" }, { name: "Cuatro" }
+    ];
+    harness.host.getSelectedCategory = () => ({ id: "c1", name: "Todos" });
+    harness.host.getChannelRows = () => rows;
+    harness.host.setChannelRows = (value) => {
+      Object.keys(rows).forEach((key) => delete rows[key]);
+      Object.assign(rows, value);
+    };
+    const focused = { _channel: 2, closest: (selector: string) => selector === ".pc-row" ? focused : null };
+    harness.state.focus = focused as never;
+    renderLiveChannels();
+    expect(harness.host.focus).toHaveBeenCalledWith(rows[2]);
+  });
+
   it("returns false without a runtime", () => {
     resetLiveChannelPanelRuntime();
     expect(openLiveChannelPanel()).toBe(false);

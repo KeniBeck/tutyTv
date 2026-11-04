@@ -3,7 +3,7 @@ import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 
 const source = readFileSync(new URL(
-  "../../../source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/app.js",
+  "../../ui/legacy/legacyActions.js",
   import.meta.url
 ), "utf8");
 
@@ -22,12 +22,14 @@ function createRuntime(savedStreamModes: Record<string, boolean>) {
   };
   const Q = vi.fn();
   const context = {
-    j,
-    za: playback.streamModes,
-    Q
+    ctx: {
+      j,
+      za: playback.streamModes,
+      profileRuntime: { savePlayback: Q }
+    }
   };
   const runtime = runInNewContext(
-    `${itemKey}\n${readMode}\n${writeMode}\n({ Wa, $a })`,
+    `${itemKey}\n${readMode}\n${writeMode}\nfunction Q(){ ctx.profileRuntime.savePlayback(); }\n({ Wa, $a })`,
     context
   ) as {
     Wa(item: unknown): void;

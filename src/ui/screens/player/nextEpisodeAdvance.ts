@@ -1,8 +1,10 @@
 import type { AppState } from "../../runtime/state";
-import type {
-  NextEpisodeItem,
-  NextEpisodeSeason,
-  NextEpisodeTarget
+import {
+  canOfferNextEpisode,
+  showNextEpisodePrompt,
+  type NextEpisodeItem,
+  type NextEpisodeSeason,
+  type NextEpisodeTarget
 } from "./nextEpisodePrompt";
 
 export interface AdvanceEpisode extends NextEpisodeItem {
@@ -53,7 +55,23 @@ export interface NextEpisodeAdvanceHost {
   ): void;
   mergeDetail(item: AdvanceItem, detail: unknown): void;
   notify(message: string): void;
+  requestDetail(
+    itemId: string | number | undefined,
+    done: (error: unknown, response: AdvanceDetailResponse | null) => void
+  ): void;
+  resolveSeason(
+    seasons: AdvanceSeason[],
+    item: AdvanceItem
+  ): { seasonIndex: number; seasonId?: string };
+  getPosition(): number;
+  getTotal(): number;
   log?(message: string, payload: Record<string, unknown>): void;
+}
+
+export interface AdvanceDetailResponse {
+  returnValue?: boolean;
+  seasons?: AdvanceSeason[];
+  [key: string]: unknown;
 }
 
 let host: NextEpisodeAdvanceHost | null = null;
@@ -124,6 +142,102 @@ export function findNextPlaybackTarget(): NextEpisodeTarget | null {
     });
   }
   return target;
+}
+
+export function refreshNextEpisodeSeasons(item: AdvanceItem | null | undefined): boolean {
+  if (!host || !item || item._nextSeasonsLoading || item._nextSeasonsTried) {
+    return false;
+  }
+  item._nextSeasonsLoading = true;
+  try {
+    host.requestDetail(item.id, function onDetail(error, response) {
+      if (!host) {
+        return;
+      }
+      item._nextSeasonsLoading = false;
+      item._nextSeasonsTried = true;
+      if (
+        !error
+        && response
+        && response.returnValue !== false
+        && response.seasons
+        && response.seasons.length
+      ) {
+        item.seasons = response.seasons.slice().sort(function sortSeasons(left, right) {
+          return (parseInt(String(left.number), 10) || 0) - (parseInt(String(right.number), 10) || 0);
+        });
+        const resolved = host.resolveSeason(item.seasons, item);
+        host.state.detailSeason = resolved.seasonIndex;
+        if (resolved.seasonId) {
+          item.seasonId = resolved.seasonId;
+        }
+        host.log?.("seasons refreshed", {
+          item: item.id,
+          seasons: item.seasons.length,
+          seasonId: item.seasonId
+        });
+      }
+      if (host.state.screen === "player" && host.isSeries(item)) {
+        maybeShowNextEpisodePrompt(host.getPosition(), host.getTotal());
+      }
+    });
+  } catch {
+    item._nextSeasonsLoading = false;
+    item._nextSeasonsTried = true;
+  }
+  return true;
+}
+
+export function maybeShowNextEpisodePrompt(position: number, total: number): boolean {
+  if (!host || !canOfferNextEpisode(host.state, position, total)) {
+    return false;
+  }
+  const target = findNextPlaybackTarget();
+  if (!target) {
+    return false;
+  }
+  host.log?.("next prompt", {
+    trigger: "timeupdate",
+    position,
+    total,
+    remaining: total - position,
+    current: host.state.playerEpisode && (host.state.playerEpisode as AdvanceEpisode).id,
+    target: target.episode && target.episode.id,
+    kind: target.kind
+  });
+  return showNextEpisodePrompt(target, total - position);
+}
+
+export function offerNextEpisodeOnEnded(): boolean {
+  if (!host) {
+    return false;
+  }
+  const state = host.state;
+  const item = state.playerItem as AdvanceItem | null;
+  if (!item || !host.isSeries(item) || state.screen !== "player") {
+    return false;
+  }
+  const position = host.getPosition();
+  const total = host.getTotal();
+  if (!canOfferNextEpisode(state, position, total)) {
+    host.hideLoading();
+    return false;
+  }
+  const target = findNextPlaybackTarget();
+  if (!target) {
+    host.hideLoading();
+    return false;
+  }
+  host.log?.("next prompt", {
+    trigger: "ended",
+    position,
+    total,
+    remaining: total - position,
+    current: state.playerEpisode && (state.playerEpisode as AdvanceEpisode).id,
+    target: target.episode && target.episode.id,
+    kind: target.kind
+  });
+  return showNextEpisodePrompt(target);
 }
 
 export function startNextEpisode(target: NextEpisodeTarget | null | undefined): boolean {

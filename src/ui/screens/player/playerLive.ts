@@ -62,12 +62,12 @@ export function playLiveChannel(
     return false;
   }
   const target = selected;
+  const sequence = host.nextSequence();
 
   function start(): void {
     if (!host) {
       return;
     }
-    const sequence = host.nextSequence();
     host.notify(`Cargando señal ${target.name || ""}…`);
     host.resolveLive(target, (error, response) => {
       if (!host || sequence !== host.getSequence()) {

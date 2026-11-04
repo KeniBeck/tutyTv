@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { attachAddonsDialog, closeAddons, openAddons, resetAddonsDialogRuntime, type AddonsDialogHost } from "./addonsDialog";
+import {
+  attachAddonsDialog,
+  closeAddons,
+  installAddonList,
+  openAddons,
+  resetAddonsDialogRuntime,
+  type AddonsDialogHost
+} from "./addonsDialog";
 import type { M3uAddon } from "../../../core/usecases/live/addons";
 
 class FakeNode {
@@ -63,6 +70,7 @@ function createHost() {
     getAddons: () => addons,
     saveAddons: vi.fn(),
     installAddon: vi.fn((_entry, done) => done(null, 3)),
+    requestM3u: vi.fn((_url, done) => done(null, { channels: [{ name: "A" }, { name: "B" }] })),
     getSelectedCategory: () => ({ id: "addons", name: "Addons", isAddon: true }),
     reloadChannels: vi.fn(),
     byId: (id) => (nodes[id] as unknown as ReturnType<AddonsDialogHost["byId"]>) || null,
@@ -135,4 +143,18 @@ describe("addons dialog runtime", () => {
     expect(nodes["dialog-addons"]?.classList.contains("is-active")).toBe(false);
     expect(focus).toHaveBeenCalled();
   });
+  it("installs an M3U list and persists the addon count", () => {
+    const { host } = createHost();
+    attachAddonsDialog(host);
+    const done = vi.fn();
+
+    expect(installAddonList({ id: "p1", name: "Preset", url: "https://p1" }, done)).toBe(true);
+    expect(host.requestM3u).toHaveBeenCalledWith("https://p1", expect.any(Function));
+    expect(host.saveAddons).toHaveBeenCalledWith([
+      expect.objectContaining({ id: "one", count: 2 }),
+      expect.objectContaining({ id: "p1", url: "https://p1", count: 2 })
+    ]);
+    expect(done).toHaveBeenCalledWith(null, 2);
+  });
+
 });

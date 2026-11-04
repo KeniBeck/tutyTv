@@ -1,10 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const source = readFileSync(new URL(
-  "../../../source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/app.js",
-  import.meta.url
-), "utf8");
 const searchSource = readFileSync(new URL(
   "../../ui/screens/search/searchScreen.ts",
   import.meta.url

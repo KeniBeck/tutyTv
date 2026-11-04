@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppState } from "./state";
 import {
   attachNavigation,
+  createNavigationHost,
   handleNavigationBack,
   handleNavigationKey,
   resetNavigationRuntime,
@@ -34,7 +35,7 @@ function createHarness() {
   const tabs = [node(), node(), node()];
   const seekbar = node();
   let focus: NavigationNode | null = node();
-  const flags = { full: false, quick: false, addons: false, seeking: false, videoPaused: false, source: true };
+  const flags = { full: false, quick: false, addons: false, seeking: false, videoPaused: false, source: true, synopsis: false };
   const host: NavigationHost = {
     state,
     byId: () => null,
@@ -55,7 +56,7 @@ function createHarness() {
     isQuickSettingsOpen: () => flags.quick,
     isAddonsOpen: () => flags.addons,
     hasSeasonPopup: () => false,
-    isSynopsisOpen: () => false,
+    isSynopsisOpen: () => flags.synopsis,
     navigationAction: (event) => {
       if (event.key === "Back") return "back";
       const map: Record<number, string> = { 37: "left", 38: "up", 39: "right", 40: "down", 13: "enter", 457: "menu" };
@@ -172,12 +173,26 @@ describe("navigation", () => {
     expect(home.calls).toEqual(expect.arrayContaining(["tab:0:true", "focus"]));
     home.state.tab = 0;
     back();
+    expect(home.calls.filter((call) => call === "focus").length).toBeGreaterThanOrEqual(2);
+    home.state.focus = {
+      ...node(),
+      closest: (selector: string) => selector === ".home-tabs" ? node() : null
+    } as unknown as never;
+    back();
     expect(home.calls).toContain("platform-back");
 
     const detail = createHarness();
     detail.state.screen = "detail";
     back();
-    expect(detail.calls).toEqual(expect.arrayContaining(["toggle-synopsis", "return-detail"]));
+    expect(detail.calls).toEqual(expect.arrayContaining(["return-detail"]));
+    expect(detail.calls).not.toContain("toggle-synopsis");
+
+    const synopsis = createHarness();
+    synopsis.state.screen = "detail";
+    synopsis.flags.synopsis = true;
+    back();
+    expect(synopsis.calls).toEqual(expect.arrayContaining(["toggle-synopsis"]));
+    expect(synopsis.calls).not.toContain("return-detail");
   });
 
   it("routes key directions, enter, back overlays and media buttons", () => {
@@ -261,9 +276,99 @@ describe("navigation", () => {
     const harness = createHarness();
     harness.state.screen = "home";
     harness.state.tab = 0;
+    harness.state.focus = {
+      ...node(),
+      closest: (selector: string) => selector === ".home-tabs" ? node() : null
+    } as unknown as never;
     const event = { key: "Back", preventDefault: vi.fn(), stopPropagation: vi.fn() };
     expect(handleNavigationKey(event)).toBe(true);
     expect(harness.calls).toContain("platform-back");
     expect(event.preventDefault).toHaveBeenCalled();
+  });
+});
+describe("navigation host factory", () => {
+  it("derives focus, video, synopsis, seek and browser helpers", () => {
+    const harness = createHarness();
+    const base = harness.host;
+    const focused = node() as NavigationNode & { _activate?: () => void };
+    const detail = node("is-synopsis-open");
+    let activated = 0;
+    focused._activate = () => { activated += 1; };
+    harness.setFocus(focused);
+    let seekClosed = 0;
+    const created = createNavigationHost({
+      state: { ...base.state, focus: focused as never },
+      byId: (id) => (id === "screen-detail" ? detail : null),
+      closest: base.closest,
+      canFocus: base.canFocus,
+      focus: base.focus,
+      moveFocus: base.moveFocus,
+      getTabs: base.getTabs,
+      getPlayerFocus: base.getPlayerFocus,
+      getSeekbar: base.getSeekbar,
+      getChannels: base.getChannels,
+      getVideo: () => ({ paused: true, src: "" }),
+      isSeeking: base.isSeeking,
+      isFullSettingsOpen: base.isFullSettingsOpen,
+      isQuickSettingsOpen: base.isQuickSettingsOpen,
+      isAddonsOpen: base.isAddonsOpen,
+      hasSeasonPopup: base.hasSeasonPopup,
+      navigationAction: base.navigationAction,
+      mapMediaKey: base.mapMediaKey,
+      closeCategoryPicker: base.closeCategoryPicker,
+      closeSearch: base.closeSearch,
+      closeLiveSearch: base.closeLiveSearch,
+      closeLiveCategories: base.closeLiveCategories,
+      cancelNextEpisodePrompt: base.cancelNextEpisodePrompt,
+      closeEpisodeBrowser: base.closeEpisodeBrowser,
+      closeAddons: base.closeAddons,
+      closeResume: base.closeResume,
+      closeFilter: base.closeFilter,
+      closeFullSettings: base.closeFullSettings,
+      closeQuickSettings: base.closeQuickSettings,
+      closeChannels: base.closeChannels,
+      closeSeasonPopup: base.closeSeasonPopup,
+      scheduleInfobarHide: base.scheduleInfobarHide,
+      schedulePlaySettingsClose: base.schedulePlaySettingsClose,
+      hideInfobar: base.hideInfobar,
+      hideVodInfobar: base.hideVodInfobar,
+      openCategories: base.openCategories,
+      openQuickSettings: base.openQuickSettings,
+      openFullSettings: base.openFullSettings,
+      openChannels: base.openChannels,
+      showScreen: base.showScreen,
+      selectTab: base.selectTab,
+      platformBack: base.platformBack,
+      returnFromPlayer: base.returnFromPlayer,
+      returnFromDetail: base.returnFromDetail,
+      toggleSynopsis: base.toggleSynopsis,
+      handleBrowserHorizontal: base.handleBrowserHorizontal,
+      resetStream: base.resetStream,
+      resetPlayerSurface: base.resetPlayerSurface,
+      stopWebMedia: base.stopWebMedia,
+      playVideo: base.playVideo,
+      pauseVideo: base.pauseVideo,
+      togglePlayPause: base.togglePlayPause,
+      playCurrent: base.playCurrent,
+      setPlaybackStatus: base.setPlaybackStatus,
+      showInfobar: base.showInfobar,
+      vodSeek: base.vodSeek,
+      stepSeek: base.stepSeek,
+      startSeek: base.startSeek,
+      closeSeek: () => { seekClosed += 1; },
+      notifyStatus: base.notifyStatus,
+      selectLiveChannel: base.selectLiveChannel,
+      focusLiveChannelRow: base.focusLiveChannelRow
+    });
+    expect(created.getFocus()).toBe(focused);
+    created.activateFocus();
+    expect(activated).toBe(1);
+    expect(created.getVideoPaused()).toBe(true);
+    expect(created.hasVideoSource()).toBe(false);
+    expect(created.isSynopsisOpen()).toBe(true);
+    expect(created.handleBrowserFocus(39)).toBe(true);
+    created.closeSeek();
+    created.endSeek();
+    expect(seekClosed).toBe(2);
   });
 });
