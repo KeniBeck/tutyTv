@@ -27,6 +27,8 @@ export interface HomePageHostDeps {
 export interface HomeLivePageHostDeps {
   state: AppState;
   getChannels: HomeLivePageHost["getChannels"];
+  getCategories?: HomeLivePageHost["getCategories"];
+  getSelectedCategory?: HomeLivePageHost["getSelectedCategory"];
   getRows: HomeLivePageHost["getRows"];
   createVideo: HomeLivePageHost["createVideo"];
   el: HomeLivePageHost["el"];
@@ -78,6 +80,8 @@ export function createHomeLivePageHost(deps: HomeLivePageHostDeps): HomeLivePage
   return {
     state: deps.state,
     getChannels: deps.getChannels,
+    getCategories: deps.getCategories,
+    getSelectedCategory: deps.getSelectedCategory,
     getRows: deps.getRows,
     createVideo: deps.createVideo,
     el: deps.el,

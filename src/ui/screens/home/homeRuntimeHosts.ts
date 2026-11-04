@@ -55,6 +55,8 @@ export function createHomeRuntimeHosts(deps: HomeRuntimeDeps): HomeRuntimeHosts 
   const homeLivePage = createHomeLivePageHost({
     state: deps.state,
     getChannels: deps.getChannels,
+    getCategories: deps.getCategories,
+    getSelectedCategory: deps.getSelectedCategory,
     getRows: deps.getLiveRows,
     createVideo: deps.createVideo,
     el: deps.el,

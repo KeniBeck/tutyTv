@@ -25,11 +25,10 @@ describe("live category normalization", () => {
 });
 
 describe("live category label", () => {
-  it("formats the category, favorites and singular/plural counts", () => {
-    expect(formatLiveCategoryLabel("Deportes", false, 1)).toBe("TV en vivo · Deportes · 1 canal");
-    expect(formatLiveCategoryLabel("Deportes", false, 8)).toBe("TV en vivo · Deportes · 8 canales");
-    expect(formatLiveCategoryLabel("Deportes", true, 2)).toBe("TV en vivo · Favoritos · 2 canales");
-    expect(formatLiveCategoryLabel("Deportes", false, 0)).toBe("TV en vivo · Deportes");
-    expect(formatLiveCategoryLabel("", false, 0)).toBe("TV en vivo · Todos");
+  it("formats the selected category or favorites filter", () => {
+    expect(formatLiveCategoryLabel("Deportes", false, 1)).toBe("Deportes");
+    expect(formatLiveCategoryLabel("Deportes", false, 8)).toBe("Deportes");
+    expect(formatLiveCategoryLabel("Deportes", true, 2)).toBe("Deportes");
+    expect(formatLiveCategoryLabel("", false, 0)).toBe("Todos");
   });
 });

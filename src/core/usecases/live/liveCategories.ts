@@ -54,10 +54,8 @@ export function normalizeLiveCategories(
 
 export function formatLiveCategoryLabel(
   categoryName: unknown,
-  favoritesOnly: boolean,
-  count: number
+  _favoritesOnly: boolean,
+  _count: number
 ): string {
-  const name = favoritesOnly ? "Favoritos" : String(categoryName || "Todos");
-  const unit = count === 1 ? " canal" : " canales";
-  return "TV en vivo · " + name + (count ? " · " + count + unit : "");
+  return String(categoryName || "Todos");
 }

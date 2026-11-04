@@ -1,7 +1,7 @@
 import type { AppState } from "../../runtime/state";
 
 export interface HomeLiveNode {
-  style: { right?: string };
+  style: { right?: string; backgroundImage?: string; [key: string]: string | undefined };
   className?: string;
   id?: string;
   preload?: string;
@@ -17,12 +17,21 @@ export interface HomeLiveNode {
 
 export interface HomeLiveChannel {
   name?: string;
+  category?: string;
+  fav?: boolean;
+  [key: string]: unknown;
+}
+
+export interface HomeLiveCategory {
+  name?: string;
   [key: string]: unknown;
 }
 
 export interface HomeLivePageHost {
   state: AppState;
   getChannels(): HomeLiveChannel[];
+  getCategories?: (() => HomeLiveCategory[]) | undefined;
+  getSelectedCategory?: (() => HomeLiveCategory | null) | undefined;
   getRows(): HomeLiveNode[];
   createVideo(): HomeLiveNode;
   el(tag: string, className?: string, text?: string): HomeLiveNode;
@@ -49,6 +58,13 @@ export interface HomeLivePageRefs {
   fastSearch: HomeLiveNode;
 }
 
+function hint(host: HomeLivePageHost, key: string, label: string): HomeLiveNode {
+  const item = host.el("span", "hint-item");
+  item.appendChild(host.el("span", "key", key));
+  item.appendChild(host.el("span", "hint-label", label));
+  return item;
+}
+
 export function buildHomeLivePage(page: HomeLiveNode, host: HomeLivePageHost): HomeLivePageRefs {
   const video = host.createVideo();
   video.className = "live-preview-video";
@@ -59,40 +75,84 @@ export function buildHomeLivePage(page: HomeLiveNode, host: HomeLivePageHost): H
   video.setAttribute("playsinline", "");
   video.setAttribute("webkit-playsinline", "");
 
-  const container = host.el("div", "live-main");
+  const container = host.el("div", "live-main live-preview");
   container.appendChild(video);
-  container.appendChild(host.el("div", "live-frame"));
-  container.appendChild(host.el("div", "live-logo"));
   const status = host.el("div", "live-preview-status");
   container.appendChild(status);
-  page.appendChild(container);
 
-  const info = host.el("div", "live-info");
-  const category = host.el("div", "live-category");
-  category.id = "live-cat-label";
-  info.appendChild(category);
+  const copy = host.el("div", "live-copy");
+  copy.appendChild(host.el("div", "live-now", "Ahora en TV"));
   const channelLabel = host.el("div", "live-channel");
   channelLabel.style.right = "112.5px";
-  info.appendChild(channelLabel);
+  copy.appendChild(channelLabel);
+  const progress = host.el("div", "live-progress");
+  const bar = host.el("div", "bar");
+  bar.appendChild(host.el("i", ""));
+  progress.appendChild(bar);
+  const times = host.el("div", "times");
+  times.appendChild(host.el("span", "", "Ahora"));
+  times.appendChild(host.el("span", "", "TutyTV"));
+  progress.appendChild(times);
+  copy.appendChild(progress);
+
   const openFullscreen = host.el("div", "live-fullscreen");
   openFullscreen._activate = function activateFullscreen() {
     host.openPlayer();
   };
-  info.appendChild(openFullscreen);
-  container.appendChild(info);
+  copy.appendChild(openFullscreen);
+  container.appendChild(copy);
+  page.appendChild(container);
 
-  page.appendChild(host.el("div", "live-arrow-up"));
-  page.appendChild(host.el("div", "live-arrow-down"));
-  const list = host.el("div", "live-list scrollable");
-  page.appendChild(list);
+  const guide = host.el("div", "guide");
+  guide.appendChild(host.el("div", "guide-icon", "EPG"));
+  const guideMain = host.el("div", "guide-main");
+  guideMain.appendChild(host.el("b", "", "Guía de programación"));
+  guideMain.appendChild(host.el("span", "", "Selecciona un canal para ver la programación"));
+  guide.appendChild(guideMain);
+  page.appendChild(guide);
 
-  const fast = host.el("div", "live-fast live-fast-right");
+  const panel = host.el("div", "live-panel");
+  const categories = host.getCategories ? host.getCategories() : [];
+  const channels = host.getChannels();
+  const favoriteCount = channels.filter(function countFavorites(channel) {
+    return Boolean(channel.fav);
+  }).length;
+  const selectedCategory = host.getSelectedCategory ? host.getSelectedCategory() : null;
+  const head = host.el("div", "live-head");
+  const headCopy = host.el("div", "live-head-copy");
+  headCopy.appendChild(host.el("h3", "live-head-title", "TV en vivo"));
+  headCopy.appendChild(
+    host.el(
+      "p",
+      "live-head-sub",
+      String(categories.length || 1) +
+        " categorías · " +
+        String(channels.length) +
+        " canales"
+    )
+  );
+  head.appendChild(headCopy);
+  const meta = host.el("div", "live-meta");
+  meta.appendChild(host.el("div", "live-count", "Favoritos " + String(favoriteCount)));
+  const categoryLabel = host.el(
+    "div",
+    "live-cat-current",
+    selectedCategory && selectedCategory.name ? String(selectedCategory.name) : "Todos"
+  );
+  categoryLabel.id = "live-cat-label";
+  meta.appendChild(categoryLabel);
+  head.appendChild(meta);
+  panel.appendChild(head);
+
+  const actions = host.el("div", "live-actions");
   const fastList: HomeLiveNode[] = [];
   function fastButton(className: string, id: string, label: string): HomeLiveNode {
     const button = host.el("div", `fast-btn focusable ${className}`);
+    button.appendChild(host.el("i", "fast-icon"));
+    button.appendChild(host.el("span", "fast-label", label));
     button.id = id;
     button._label = label;
-    fast.appendChild(button);
+    actions.appendChild(button);
     fastList.push(button);
     return button;
   }
@@ -151,7 +211,26 @@ export function buildHomeLivePage(page: HomeLiveNode, host: HomeLivePageHost): H
   fastAll._onMove = fastMove(0);
   fastFav._onMove = fastMove(1);
   fastSearch._onMove = fastMove(2);
-  page.appendChild(fast);
+  panel.appendChild(actions);
+
+  const list = host.el("div", "live-list scrollable");
+  panel.appendChild(list);
+
+  const foot = host.el("div", "panel-foot");
+  foot.appendChild(hint(host, "OK", "Reproducir"));
+  foot.appendChild(hint(host, "ARRIBA", "Categorías"));
+  foot.appendChild(hint(host, "MENU", "Filtros"));
+  panel.appendChild(foot);
+  page.appendChild(panel);
+
+  const liveHint = host.el("div", "live-hint");
+  const liveHintLeft = host.el("div", "hint-group");
+  liveHintLeft.appendChild(hint(host, "OK", "Reproducir"));
+  liveHintLeft.appendChild(hint(host, "ARRIBA", "Categorías"));
+  liveHintLeft.appendChild(hint(host, "BACK", "Volver"));
+  liveHint.appendChild(liveHintLeft);
+  liveHint.appendChild(host.el("div", "hint-note", "TV en vivo · TutyTV"));
+  page.appendChild(liveHint);
 
   const focus = host.el("div", "live-focus focusable");
   focus._onMove = function moveLiveFocus(direction: string): boolean {

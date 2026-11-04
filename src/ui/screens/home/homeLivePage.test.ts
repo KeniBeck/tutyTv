@@ -3,7 +3,7 @@ import type { AppState } from "../../runtime/state";
 import { buildHomeLivePage, type HomeLiveNode, type HomeLivePageHost } from "./homeLivePage";
 
 class FakeNode implements HomeLiveNode {
-  style: { right?: string } = {};
+  style: Record<string, string> = {};
   className = "";
   id = "";
   preload = "";
@@ -59,7 +59,7 @@ describe("homeLivePage", () => {
     expect(refs.fastAll.id).toBe("live-btn-all");
     expect(refs.fastFav.id).toBe("live-btn-fav");
     expect(refs.fastSearch.id).toBe("live-btn-srch");
-    expect(page.children.length).toBe(6);
+    expect(page.children.length).toBe(5);
   });
 
   it("wires fast buttons and their navigation", () => {

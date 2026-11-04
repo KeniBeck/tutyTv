@@ -31,7 +31,7 @@ function setup(screen = "home", visible = true) {
   };
   const host = {
     state,
-    closest: (_node: unknown, selector: string) => selector === ".poster, .bento" ? page : selector === ".home-page" ? page : null,
+    closest: (_node: unknown, selector: string) => selector.indexOf(".hero") !== -1 ? page : selector === ".home-page" ? page : null,
     queryPosters: () => posters,
     getViewport: () => ({ width: 1920, height: 1080 })
   };

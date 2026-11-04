@@ -75,15 +75,17 @@ function createHost(overrides: Partial<HomePageHost> = {}) {
 }
 
 describe("buildHomeVodPage", () => {
-  it("builds the featured hero, secondary and small bento cards", () => {
+  it("builds the prototype hero, continue card and featured cards", () => {
     const { host, item } = createHost();
     const raw = new FakeNode("div");
     const page = raw as unknown as HomeNode;
 
     buildHomeVodPage(1, page, host);
 
-    expect(raw.children.length).toBe(6);
-    const hero = raw.children[0] as unknown as HomeNode;
+    expect(raw.children.length).toBe(1);
+    const content = raw.children[0] as unknown as HomeNode;
+    expect(content.className).toContain("home-content");
+    const hero = content.children[0] as unknown as HomeNode;
     expect(hero._item).toBe(item);
     hero._activate?.();
     expect(host.openDetail).toHaveBeenCalledWith(item);
@@ -95,7 +97,8 @@ describe("buildHomeVodPage", () => {
     const raw = new FakeNode("div");
     const page = raw as unknown as HomeNode;
     buildHomeVodPage(1, page, host);
-    const hero = raw.children[0] as unknown as HomeNode;
+    const content = raw.children[0] as unknown as HomeNode;
+    const hero = content.children[0] as unknown as HomeNode;
 
     expect(hero._onMove?.("left")).toBe(true);
     expect(host.onHeroLeft).toHaveBeenCalledOnce();
@@ -107,7 +110,7 @@ describe("buildHomeVodPage", () => {
     const raw = new FakeNode("div");
     const page = raw as unknown as HomeNode;
     buildHomeVodPage(4, page, host);
-    expect(raw.children.length).toBe(6);
+    expect(raw.children.length).toBe(1);
   });
 
   it("builds explore rows from category pages", () => {
@@ -115,7 +118,8 @@ describe("buildHomeVodPage", () => {
     const raw = new FakeNode("div");
     const page = raw as unknown as HomeNode;
     buildHomeVodPage(6, page, host);
-    expect(raw.children.length).toBeGreaterThan(6);
+    const content = raw.children[0] as unknown as FakeNode;
+    expect(content.children.length).toBeGreaterThan(6);
     expect(host.filterCategory).toHaveBeenCalledWith("pelicula");
     expect(host.filterCategory).toHaveBeenCalledWith("gratis");
   });

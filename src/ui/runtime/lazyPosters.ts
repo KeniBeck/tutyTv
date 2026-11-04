@@ -62,7 +62,7 @@ export function loadVisiblePosters(): boolean {
     if (!image) {
       continue;
     }
-    const container = host.closest(image, ".poster, .bento");
+    const container = host.closest(image, ".poster, .bento, .hero, .side-card, .card");
     const rect = container && container.getBoundingClientRect
       ? container.getBoundingClientRect()
       : null;
