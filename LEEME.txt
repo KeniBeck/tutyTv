@@ -1,4 +1,4 @@
-﻿TutyTV para LG webOS - instalador (1.6.5)
+﻿TutyTV para LG webOS - instalador (1.7.2)
 
 QUE HACER
   1. Conecta el ordenador y la TV a la MISMA red WiFi.
@@ -26,8 +26,8 @@ IMPORTANTE
   completa primero. El archivo .ipk tiene que estar junto al .bat.
 
 CODIGO FUENTE Y VERSION WEB
-  source/ contiene el codigo de la app y del servicio, mas
-  tools/build-ipk.sh para generar nuevos IPK.
+  src/webos/ contiene la app webOS y el servicio; src/web/ el servidor
+  local y src/tools/build-ipk.sh el generador de IPK.
   TUTY-WEB.sh (Linux) y TUTY-WEB.bat (Windows) abren la version web
   local. Solo necesitan Node.js 18 o superior.
 

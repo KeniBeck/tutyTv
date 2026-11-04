@@ -1,445 +1,204 @@
-# TutyTV - Arquitectura Modular Objetivo (TypeScript + Vite)
+# TutyTV - Arquitectura
 
-Fecha: 2026-11-01
+Fecha: 2026-11-03
 
-## 1. Objetivo arquitectonico
+Estado: **Fase A de migracion cerrada**. Lista para iniciar el rediseno de UI
+(`docs/UI_REDESIGN.md`). Base validada: IPK `1.7.2`, 504 pruebas.
 
-Evolucionar TutyTV hacia una arquitectura modular incremental que:
+## 1. Objetivo
 
-- comparta la mayor logica de negocio posible
-- separe capas de plataforma (Web y LG webOS)
-- preserve funcionalidad y UI actuales
-- mantenga JavaScript como artefacto final de ejecucion
-- mantenga el pipeline de empaquetado IPK existente
+Mantener una arquitectura modular incremental que:
 
-## 2. Estructura propuesta
+- concentre la logica de aplicacion en `src/`
+- separe Core, plataformas, runtime UI y capa legacy de compatibilidad
+- preserve los flujos, IDs, claves de almacenamiento y servicio webOS
+- mantenga JavaScript como artefacto final para Chromium 53
+- conserve el pipeline de empaquetado IPK
+
+## 2. Estructura actual
 
 ```text
 src/
   core/
-    contracts/
-      key-value-store.ts
-      navigation-adapter.ts
-      platform-adapter.ts
-      player-adapter.ts
-      storage-adapter.ts
-    models/
-      media.ts
-    text/
-      normalizeText.ts
-      normalizeText.test.ts
-    usecases/
-      api/
-        serviceRequest.ts
-        serviceRequest.test.ts
-      catalog/
-        filterCatalog.ts
-        filterCatalog.test.ts
-        filterMatches.ts
-        filterMatches.test.ts
-        history.ts
-        history.test.ts
-        episodeDisplay.ts
-        episodeDisplay.test.ts
-        episodeNavigation.ts
-        episodeNavigation.test.ts
-      favorites/
-        liveFavorites.ts
-        liveFavorites.test.ts
-      input/
-        mediaKeys.ts
-        mediaKeys.test.ts
-      playback/
-        duration.ts
-        duration.test.ts
-        nativeRetry.ts
-        nativeRetry.test.ts
-        languagePreference.ts
-        languagePreference.test.ts
-        playbackHistory.ts
-        playbackHistory.test.ts
-        playbackPreferences.ts
-        playbackPreferences.test.ts
-        relayDuration.ts
-        relayDuration.test.ts
-        seekPosition.ts
-        seekPosition.test.ts
-        streamMode.ts
-        streamMode.test.ts
-        subtitles.ts
-        subtitles.test.ts
-      storage/
-        jsonStore.ts
-        jsonStore.test.ts
-        viewerProfile.ts
-        viewerProfile.test.ts
-      ui/
-        focusScroll.ts
-        focusScroll.test.ts
-        focusVisibility.ts
-        focusVisibility.test.ts
-
-  UI/
-    main.ts
-    dev.ts
-    runtime/
-      dom.ts
-      focus.ts
-      layout.ts
-      router.ts
-      service.ts
-      state.ts
-    screens/
-      home/
-        homePages.ts         # paginas VOD 1-6 (A2.1)
-        liveList.ts           # lista/zapping live (A2.2)
-        liveMenu.ts           # categorias/busqueda live (A2.2)
-        addonsDialog.ts       # dialog addons M3U (A2.2)
-      search/
-        searchScreen.ts       # busqueda, teclado, resultados y filtros (A3)
-      settings/
-        settingsScreen.ts     # ajustes, perfil, historial y listas (A3)
-      detail/
-        detailScreen.ts       # detalle, temporadas, rangos y episodios (A4)
-        resumeDialog.ts       # dialogo de reanudar (A4)
-      # resto de pantallas en A5-A6
+    contracts/          Contratos de almacenamiento, navegacion, plataforma y player
+    models/             Modelos de dominio
+    text/               Normalizacion de texto
+    usecases/           Logica pura: API, catalogo, live, playback, storage, UI
 
   platforms/
-    shared/
-      html5PlayerAdapter.ts
-      html5PlayerAdapter.test.ts
-      hlsRecovery.ts
-      hlsRecovery.test.ts
-      jsonStorageAdapter.ts
-      jsonStorageAdapter.test.ts
-      legacyCoreBridge.ts
-      navigationAdapter.ts
-      navigationAdapter.test.ts
-      playbackCoordinator.ts
-      playbackCoordinator.test.ts
-      platformAdapter.ts
-      platformAdapter.test.ts
-    web/
-      adapters/
-        webStorageAdapter.ts
-      index.html
-      legacyCoreDev.ts
-      legacyAdaptersIntegration.test.ts
-      legacyHistoryIntegration.test.ts
-      legacyPlatformIntegration.test.ts
-      legacyPlayerIntegration.test.ts
-      legacyStorageIntegration.test.ts
-      main.ts
-    webos/
-      adapters/
-        webOsStorageAdapter.ts
-      legacyCoreBridge.ts
-      main.ts
+    shared/             Adaptadores y puente Core compartido
+    web/                Entrada de desarrollo web y plugin Vite
+    webos/              Entrada de validacion webOS y puente Core chrome53
 
-scripts/
-  build-web.mjs
-  build-web.test.ts
-  vite-legacy-web-plugin.ts
+  ui/
+    main.ts             API publica del bundle TutyUI
+    dev.ts              Exposicion de TutyUI en desarrollo web
+    runtime/            Estado, DOM, foco, navegacion, router, servicio, hosts
+    screens/            Home, detalle, busqueda, ajustes y reproductor
+    legacy/
+      legacyApp.js      Arranque de la capa legacy
+      legacyStore.js    Estado, inicializacion y contextos
+      legacyActions.js  Acciones de aplicacion
+      legacyWiring.js   Cableado de navegacion, stage, player y UI
+      legacyRuntime.js  Config API, servicio y alias Core/TutyUI
+      legacyAttach.js   Attach de runtimes
+      legacyBootstrap.js Arranque y carga inicial
+      legacyState.js    Estado base
 
-source/usr/palm/applications/.../js/tuty-core.js  # generado, no versionado
-source/usr/palm/applications/.../js/tuty-ui.js    # generado, no versionado
+  webos/
+    app/
+      index.html        Shell estatico de pantallas
+      css/style.css     Presentacion actual (canvas 1920x1080)
+      assets/           Imagenes, fuentes y referencias visuales
+      config/api.js     Configuracion de API
+      data/             Catalogo y portal de respaldo
+      js/app.js         Bootstrap webOS (6 lineas)
+      js/tuty-core.js   Generado por build:core
+      js/tuty-ui.js     Generado por build:ui
+    package/            Metadatos del paquete webOS
+    service/            Servicio Luna: Magis, proxy HLS y relay ffmpeg
+    control             Metadatos de control del IPK
+    debian-binary       Version de formato del IPK
+
+  web/                  Servidor local, HLS de escritorio y relay web
+  tools/build-ipk.sh    Generador, staging y validador de IPK
+
+scripts/                Plugin Vite legacy y staging del build web
+docs/                   Arquitectura, migracion y handoff de UI
 ```
 
-## 3. Principios de diseno
+## 3. Flujo de arranque
+
+`index.html` carga, en orden:
+
+1. `js/webOSTV.js`
+2. `data/portal.js` y `data/catalog.js`
+3. `config/api.js`
+4. `js/tuty-core.js` (`window.TutyCore`)
+5. `js/tuty-ui.js` (`window.TutyUI`)
+6. `js/app.js`
+
+`app.js` solo verifica `TutyUI.startLegacyApp` y lo invoca. El arranque real es:
+
+```text
+app.js
+  -> TutyUI.startLegacyApp()
+  -> src/ui/legacy/legacyApp.js
+  -> legacyStore.js
+  -> legacyActions.js + legacyWiring.js + legacyRuntime.js
+  -> src/ui/runtime y src/ui/screens
+```
+
+La capa `src/ui/legacy` conserva la semantica funcional de la app original y
+sirve como puente hasta que el rediseno de UI reemplace la presentacion. No es
+un monolito externo: vive en `src/` y se compila dentro de `tuty-ui.js`.
+
+## 4. Limites entre capas
 
 ### Core
 
-- solo logica de negocio y transformaciones puras
-- sin dependencias de DOM, `window`, `localStorage`, webOS ni Luna
-- modelos y casos de uso con contratos tipados
-
-### Contracts
-
-- definen capacidades reales de cada plataforma
-- no fuerzan metodos artificiales
-- permiten implementar adaptadores por plataforma
+- logica pura y transformaciones
+- sin DOM, `window`, `localStorage`, webOS ni Luna
+- contratos tipados y pruebas unitarias
 
 ### Platforms
 
-- `web`: integra navegador y runtime web local
-- `webos`: integra APIs webOS/Luna/remote focus
-- ambas dependen de `core`, no al reves
+- `shared`: adaptadores reutilizables y puente de funciones Core
+- `web`: desarrollo/build web con target `es2019`
+- `webos`: validacion del target modular y puente Core `chrome53`
 
-## 4. Toolchain incorporado (fase inicial)
+### UI
 
-- pnpm como gestor de paquetes (`pnpm-lock.yaml`, `packageManager` en `package.json`)
-- TypeScript: configuracion estricta progresiva (`tsconfig.base.json`)
-- Vite: configuraciones independientes
-  - `vite.web.config.ts` -> servidor web de desarrollo
-  - `vite.core.web.config.ts` -> puente web en `dist/web/js/tuty-core.js`
-  - `vite.ui.web.config.ts` -> runtime UI web en `dist/web/js/tuty-ui.js`
-  - `vite.webos.config.ts` -> salida `dist/webos`
-  - `vite.core.config.ts` -> `js/tuty-core.js` dentro de la app legacy
-  - `vite.ui.config.ts` -> `js/tuty-ui.js` dentro de la app legacy
-- Vitest: pruebas del Core y adaptadores
-- ESLint: reglas base + TypeScript + deteccion de ciclos (`import/no-cycle`)
+- runtime: estado, foco, navegacion, router, servicio y hosts
+- screens: construccion y comportamiento de pantallas
+- legacy: compatibilidad funcional y contexto de la app actual
 
-### Nota sobre Rollup y CPUs sin AVX2
+### App webOS
 
-El binding nativo `@rollup/rollup-linux-x64-gnu@4.67.x` provoca `SIGILL` en CPUs
-anteriores a Haswell (AVX sin AVX2), como el i7-3630QM de este entorno. Por eso
-`pnpm-workspace.yaml` fija `rollup@4.45.1`, version verificada como compatible.
-No eliminar ese override sin comprobar el CPU de build y volver a ejecutar
-`pnpm run test`, `pnpm run build:web` y `pnpm run build:webos`.
+- contenedor, assets, CSS, configuracion y servicio Luna
+- `app.js` no contiene logica de negocio ni pantallas
 
-### Nota de pnpm
+## 5. Builds y artefactos
 
-`pnpm` solo aprueba scripts de build declarados en `pnpm-workspace.yaml`
-(`allowBuilds`). Si se agrega una dependencia nativa nueva, ejecutar
-`pnpm approve-builds` antes de asumir que su postinstall corrio.
+| Comando | Resultado | Uso |
+|---|---|---|
+| `pnpm dev` | Vite + API Node sobre `src/webos/app` | Desarrollo web con HMR |
+| `pnpm build:core` | `src/webos/app/js/tuty-core.js` | Bundle Core `chrome53` |
+| `pnpm build:ui` | `src/webos/app/js/tuty-ui.js` | Bundle UI `chrome53` |
+| `pnpm build:web` | `dist/web` | Produccion web |
+| `pnpm start:web` | Sirve `dist/web` + API | Smoke test de produccion |
+| `pnpm build:webos` | `dist/webos` | Validacion del target modular |
+| `pnpm build:ipk` | IPK en la raiz | Instalacion en TV |
 
-## 5. Targets de compilacion
+`tuty-core.js`, `tuty-ui.js`, `dist/` y los `.ipk` son artefactos generados y
+estan ignorados por Git. El IPK se ensambla en un staging temporal desde
+`src/webos` mediante `src/tools/build-ipk.sh`; no existe una carpeta `source/`.
 
-### Web
+## 6. Compatibilidad webOS 4 / Chromium 53
 
-- target: `es2019`
-- salida HTML + assets para navegadores modernos de escritorio
+Obligatorio para todo cambio de UI:
 
-### webOS
+- target `chrome53` en Core y UI
+- sin CSS Grid, `gap`, `aspect-ratio` ni `:focus-visible` como dependencia
+- sin `backdrop-filter` obligatorio; fallback opaco
+- `outline` no sigue de forma fiable el `border-radius`: para focos
+  redondeados usar `box-shadow`
+- evitar `filter: blur()` en superficies grandes
+- no animar `width`, `height`, `filter` ni sombras grandes en listas
+- conservar el canvas de 1920x1080 y el escalado existente
+- validar en TV fisica despues de cada bloque visual
 
-- target: `chrome53`
-- formato de salida: `iife`
-- `inlineDynamicImports: true`
-- motivacion: compatibilidad con webOS TV 4.x (Chromium 53) segun tabla oficial LG Web Engine
+## 7. Foco y navegacion
 
-## 6. Comandos disponibles
+La implementacion vive en:
+
+- `src/ui/runtime/focus.ts`: foco actual y movimiento direccional
+- `src/ui/runtime/screenFocus.ts`: visibilidad, scroll y restauracion por tab
+- `src/ui/runtime/navigation.ts`: BACK, overlays, player y salida de la app
+- `src/ui/runtime/navigationActions.ts`: acciones de navegacion
+- `src/ui/screens/*`: topologia y restauracion de foco por pantalla
+
+Reglas:
+
+- el estado de foco es un solo elemento con clase `is-focused`
+- no depender de `:hover` ni `:focus-visible` para TV
+- no reordenar focusables sin validar las cuatro direcciones
+- las cargas asincronas no deben robar el foco
+- BACK cierra overlays antes de navegar; en Home vuelve al menu lateral antes
+  de salir de la app
+- el foco debe quedar completamente visible dentro de contenedores con scroll
+
+El handoff visual y las reglas de foco para la Fase 7 estan en
+`docs/UI_REDESIGN.md`, seccion 5.
+
+## 8. Compatibilidad de datos
+
+Se conservan sin cambios:
+
+- IDs `com.webosflux.xuptertv.fidelity` y su servicio
+- claves de almacenamiento (`xuper_local_profile_v1` y relacionadas)
+- formato de perfil, historial, favoritos y recordatorios
+- API Magis y metodos del servicio Luna
+- estructura y validacion del IPK
+
+## 9. Calidad
 
 ```bash
-pnpm install
-
-pnpm dev              # web real con Vite + HMR + API Node
-pnpm build:web        # build de produccion en dist/web
-pnpm start:web        # sirve dist/web con la API Node
-pnpm start            # sirve source/ sin build (legacy)
-
+pnpm check          # lint + lint legacy + typecheck + 504 pruebas
+pnpm build:web
 pnpm build:webos
-pnpm build:core
-pnpm build:ui
-pnpm build:ipk
-
-pnpm test
-pnpm typecheck
-pnpm lint
-pnpm check
+pnpm build:ipk 1.7.2
 ```
 
-`build:ipk` ejecuta `build:core` y `build:ui` antes de empaquetar y luego el
-script `source/tools/build-ipk.sh`. `build:core` genera
-`source/.../js/tuty-core.js`; `build:ui` genera
-`source/.../js/tuty-ui.js`. Ambos artefactos estan ignorados por git.
+Criterio de cierre de cada bloque:
 
-`build:web` ejecuta `scripts/build-web.mjs`, que copia la app legacy a `dist/web`
-y agrega `hls.min.js`, excluyendo el puente generado para webOS. Despues Vite
-compila el puente compartido para web (`es2019`) en `dist/web/js/tuty-core.js`.
-No se reempaqueta la app legacy porque `app.js` contiene rutas de assets fijas
-y un reempaquetado con hashes las romperia.
+- app funcional en web y TV
+- sin regresiones de foco, scroll ni reproduccion
+- `pnpm check`, builds web/webOS e IPK verdes
+- prueba fisica en TV para cambios de UI
 
-### Reparto Vite / Node
+## 10. Siguiente fase
 
-Vite, solo en desarrollo (`pnpm dev`):
-
-- sirve la app real con raiz en `source/usr/palm/applications/...`
-- inyecta HMR para CSS y para el Core
-- monta la API Node como middleware en el mismo proceso
-- transforma `tuty-core.js` y `app.js` como modulos de desarrollo
-
-Node (`source/web/server.js`), en desarrollo y produccion:
-
-- sesion Magis, proxy HLS, relay ffmpeg y rutas de API del portal
-- relay web y servicio webOS: `/duration/<token>` sondea ffmpeg y expone la duracion real de la fuente
-- inyeccion de globals de produccion y servido estatico de `dist/web`
-- sigue siendo el backend de `pnpm start:web`; no se elimino ninguna ruta
-
-`scripts/vite-legacy-web-plugin.ts` es el puente: intercepta los metodos de
-`API_METHODS`, sirve `/hls.min.js` y reescribe el HTML solo en desarrollo. Al
-agregar una ruta a `handleApi`, agregarla tambien a `API_METHODS` para que el
-middleware de Vite la reconozca.
-`src/platforms/web/legacyCoreDev.ts` expone `window.TutyCore` como modulo con
-HMR; al cambiar `src/core`, se actualiza sin recargar. Los cambios en
-`js/app.js` provocan recarga completa por ser el monolito legacy.
-
-`npm` queda fuera del flujo del proyecto. No usar `npm install` ni
-`package-lock.json`.
-
-### Puente UI -> legacy
-
-`src/ui/main.ts` compila como IIFE `tuty-ui.js` con target `chrome53` en el
-IPK y `es2019` en web. `index.html` lo carga despues de `tuty-core.js` y antes
-de `app.js`.
-
-En A0-A1, `app.js` delega en `window.TutyUI`:
-
-- helpers DOM (`e`, `t`, `i`, `a`, `n`);
-- estado inicial (`j`);
-- foco (`tt`, `at`) mediante `attachFocus`;
-- cambio de pantalla (`nt`);
-- escalado 1920x1080 (`mr`);
-- cliente de servicio (`q`).
-
-Cada delegacion conserva la implementacion legacy como fallback si el
-artefacto no esta disponible. Home y el menu de TV ya viven en `src/ui`; las
-pantallas restantes se moveran en A3-A6.
-
-## 7. Integracion con sistema existente
-
-La infraestructura moderna fue agregada en paralelo y **no reemplaza** aun:
-
-- `source/usr/palm/applications/.../index.html`
-- `source/usr/palm/applications/.../js/app.js`
-- `source/usr/palm/services/...`
-- `source/tools/build-ipk.sh`
-
-Por lo tanto, la app funcional actual sigue siendo referencia estable durante la migracion.
-
-### Frontera CommonJS del runtime legacy
-
-El `package.json` raiz declara `"type": "module"` para el toolchain moderno. El
-runtime legacy (`source/web/server.js`, servicio y modulos `require(...)`) es
-CommonJS, por lo que `source/package.json` fija `"type": "commonjs"` como
-frontera. Sin ese archivo, Node 24 trata `server.js` como ESM y el servidor web
-falla con `require is not defined`. `source/package.json` no se empaqueta en el
-IPK (el script solo incluye `control` y `usr`).
-
-### Puente Core -> legacy
-
-`src/platforms/shared/legacyCoreBridge.ts` expone las funciones y adaptadores
-compartidos. En web, Vite lo sirve como modulo en desarrollo y lo compila como
-IIFE (`es2019`) en `dist/web/js/tuty-core.js` para produccion. El puente webOS
-`src/platforms/webos/legacyCoreBridge.ts` lo reexporta; `vite.core.config.ts`
-lo compila como IIFE (`chrome53`) en `source/.../js/tuty-core.js` para el IPK.
-
-`source/.../index.html` carga `js/tuty-core.js` antes de `js/app.js`. Las
-funciones legacy `filterMatches`, `liveFavKey`, `liveIsFav`, `liveToggleFav`,
-`findHistory` y `episodeIdExists` delegan en `window.TutyCore` cuando esta
-disponible y conservan su implementacion original como fallback. Si el
-artefacto no existe (por ejemplo, servidor web sin `build:core`), la app sigue
-funcionando con el codigo legacy.
-
-Los wrappers de almacenamiento `G` y `J` tambien delegan en el adaptador JSON
-del puente, manteniendo sus implementaciones legacy como fallback. El adaptador
-preserva el comportamiento previo ante JSON invalido, `null` explicito y errores
-de almacenamiento; las claves y el formato de perfil no cambian.
-
-La navegacion registra los eventos legacy de teclado y control remoto mediante
-el adaptador y usa la puntuacion compartida de foco direccional; los casos de
-foco especificos de UI siguen en el monolito. Plataforma integra la seleccion
-HLS para TV/preview, el servicio Luna y la salida, manteniendo sus reglas
-previas. El adaptador HTML5
-realiza las operaciones de fuente, carga, HLS externo, inicio, pausa y seek
-tanto en el reproductor como en el preview. La limpieza HLS y la programacion
-de reintentos condicionados usan el coordinador compartido. Los limites de seek
-local/relay y la recuperacion de errores HLS.js estan extraidos a Core y al
-adaptador compartido respectivamente. Core tambien selecciona los reintentos
-nativos y construye el historial; el runtime conserva la coordinacion restante
-de eventos, relay, estado y persistencia. Los puntos integrados conservan
-fallback sin el puente.
-
-## 8. Modulos ya migrados (inicial)
-
-- Modelo tipado base de catalogo (`MediaItem`)
-- Contratos base de plataforma/reproduccion/almacenamiento/navegacion y
-  `KeyValueStore`
-- Normalizacion de texto compartida (`normalizeText`) extraida del monolito
-- Filtro de catalogo por consulta (`filterCatalogByQuery`)
-- Filtro por categoria/genero (`filterMatches`), paridad con `app.js`
-- Claves y estado de favoritos en vivo (`liveFavorites`)
-- Busqueda en historial y validacion de episodios (`history`)
-- TV en vivo: filtrado de canales visibles por favoritos, conservando indices,
-  deduplicacion por `channelCode` al paginar y busqueda de canales/categorias
-  con normalizacion compartida (`liveChannels`)
-- Busqueda de TV en vivo unificada: las categorias aparecen desde el inicio y
-  elegir una recarga sus canales sin cerrar la busqueda; la busqueda de canales
-  sigue acotada a la categoria activa para no descargar todo el portal
-- Favoritos de TV en vivo: corazon por canal en la lista, accesible con la
-  flecha derecha, y filtro/contador de favoritos sobre la categoria activa
-- Normalizacion de categorias del portal, fallback de categorias, entrada de
-  Addons M3U y etiqueta/estado de la categoria activa (`liveCategories`)
-- Carga live: seleccion inicial de addons, numeracion/favoritos de canales M3U
-  y clamp de indice de canal (`liveLoading`)
-- Scroll de la lista de canales al cambiar de fila (`liveFocus`)
-- Addons M3U: validacion HTTP(S), deteccion de URL instalada,
-  alta/actualizacion y eliminacion por indice (`addons`)
-- API: normalizacion de sesion, validacion, parametros de servicio, resolucion
-  de URL y descripcion de errores (`apiSession`)
-- Recordatorios: alta/baja, deteccion de recordatorio activo, throttle de
-  comprobacion, seleccion de IDs y fusion de nuevos episodios (`reminders`)
-- Adaptador JSON de almacenamiento (`createJsonStorageAdapter`) con
-  implementaciones Web y webOS
-- Puente IIFE `tuty-core.js` integrado en el runtime legacy con fallback
-- Adaptador de plataforma con deteccion de capacidades (`createPlatformAdapter`)
-- Adaptador de navegacion/teclado (`createNavigationAdapter`)
-- Adaptador HTML5/HLS con loader inyectable (`createHtml5PlayerAdapter`)
-- Normalizacion de items del portal (`catalogNormalization`): extraccion de
-  payloads anidados, series/temporadas, imagenes y metadatos
-- Agrupacion de temporadas y mezcla de raices del portal con catalogo local
-  (`catalogGrouping`)
-- Busqueda local por titulo/alias y combinacion con resultados del portal,
-  deduplicados por id (`catalogSearch`)
-- Seleccion de pagina/categoria del catalogo, fallback con relleno unico por id
-  y rangos de episodios (`catalogSelection`)
-- Merge de detalle del catalogo y favoritos de contenidos (`catalogDetail`)
-- Decisiones del ciclo de reproduccion (`playbackSession`): posicion absoluta
-  en relay, duracion total, tipo de stream y eleccion de HLS.js
-- Progreso de reproduccion (`playbackProgress`): throttle de historial, total
-  relay con prioridad de fuentes y objetivos de seek local/relay
-- Resolucion de reproduccion (`playbackResolve`): construccion de la peticion
-  y aplicacion de metadatos/URL de la respuesta
-- Siguiente reproduccion (`playbackNext`): seleccion de siguiente episodio o
-  temporada con reparacion de indice de temporada desfasado y fallback por
-  orden cuando la API repite el numero de temporada
-- Aviso de siguiente episodio 7 s antes del final con avance automatico o
-  cancelacion; tambien se activa al evento `ended` como respaldo
-- Historial: al abrir un titulo se asegura la carga de detalle si el item
-  en cache no la tenia; el cambio de episodio guarda el episodio anterior antes
-  de reemplazarlo
-- Reanudacion (`resumePlan`): decision de reanudar/reiniciar y reconstruccion
-  del episodio guardado en historial
-- Reglas de ciclo de vida (`playbackLifecycle`): guardado previo al reset, base
-  de aborto local, carga previa de episodios, deteccion de sesion activa
-  (incluye blob HLS) y reutilizacion de sesion
-- Temporizacion del reproductor (`playbackTiming`): aviso de buffer, debounce de
-  seek, heartbeat de historial, reset relay y retardo de resolucion live
-- Audio/subtitulos: seleccion de pista de audio, normalizacion y orden de
-  subtitulos, eleccion de subtitulo y etiquetas de idioma (`mediaTracks`)
-- Cableado de eventos del video y de HLS centralizado (`playbackEventWiring`)
-- Superficies y transiciones del reproductor (`playbackSurface`): video/poster,
-  estado visible, modo VOD y transicion detalle-reproductor
-- 318 pruebas automatizadas sin dependencia de televisor ni navegador
-- Validacion fisica webOS 1.6.7: navegacion/control remoto, catalogo, carga de
-  titulos, busqueda, configuracion y transicion episodio->temporada->episodio OK
-
-## 9. Modulos pendientes prioritarios
-
-- evaluar integracion adicional de navegacion/foco y capacidades de plataforma
-- migrar la coordinacion restante de live TV (carga y foco), la UI de addons y
-  los estados de UI que aun viven en `app.js`
-
-## 10. Branding y compatibilidad de datos
-
-El renombrado a TutyTV es **solo de marca visible**:
-
-- se actualizaron titulo de app, bienvenida, textos, consola, documentacion,
-  instaladores y nombre de los launchers (`TUTY-WEB.*`, `INSTALAR-TUTYTV.*`)
-- se conservan los IDs tecnicos `com.webosflux.xuptertv.fidelity` y
-  `com.webosflux.xuptertv.fidelity.service`
-- se conservan las claves de almacenamiento `xuper_local_profile_v1`,
-  `xuper_global_playback_v1` y `xuper_m3u_addons`
-- se conservan los slugs de catalogo `xuper-*` y la URL externa
-  `xuper-plugin/kino-plugin-xuper`
-
-Motivo: cambiar IDs o claves rompe la instalacion sobre la app existente y la
-continuidad de favoritos, historial y addons. Un renombrado total de IDs es una
-migracion separada que requiere decision explicita.
-
-## 11. Restricciones de seguridad funcional
-
-- no cambiar IDs de app/servicio
-- no alterar flujo de control remoto ni UX actual
-- no sustituir reproductor actual de forma abrupta
-- no debilitar validaciones de integridad IPK
-- no afirmar pruebas fisicas en TV sin ejecucion real
+La Fase A queda cerrada. La Fase 7 (rediseno UI) puede iniciar con cambios
+progresivos por pantalla. El orden recomendado, tokens, componentes, foco,
+compatibilidad y criterios de aceptacion estan en `docs/UI_REDESIGN.md`.

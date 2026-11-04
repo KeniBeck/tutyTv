@@ -1,6 +1,13 @@
+> Nota de estructura (2026-11-03): las referencias historicas a `source/` en
+> este registro corresponden a la estructura anterior. Hoy todo el arbol vivo
+> esta bajo `src/`: `src/webos/app`, `src/webos/service`, `src/web`,
+> `src/tools`, `src/core`, `src/platforms` y `src/ui`.
+
 # TutyTV - Plan de Migracion Incremental
 
 Fecha: 2026-11-01
+
+Actualizado: 2026-11-03
 
 ## Estado de partida
 
@@ -199,7 +206,7 @@ Objetivo:
 Completado:
 
 - `vite.core.config.ts` compila `src/platforms/webos/legacyCoreBridge.ts` como
-  IIFE `chrome53` en `source/.../js/tuty-core.js` (`window.TutyCore`)
+  IIFE `chrome53` en `src/webos/app/js/tuty-core.js` (`window.TutyCore`)
 - `index.html` carga el puente antes de `app.js`
 - `app.js` delega en `window.TutyCore` para `filterMatches`, `liveFavKey`,
   `liveIsFav`, `liveToggleFav`, `findHistory` y `episodeIdExists`
@@ -229,7 +236,7 @@ Completado:
   `--no-open` sin efectos al requerirlo como modulo
 - `pnpm build:web` compila el Core y prepara `dist/web`; `pnpm start:web`
   sirve `dist/web` con la API y sin abrir navegador
-- `pnpm start` conserva el modo legacy desde `source/`
+- `pnpm start` sirve la app directamente desde `src/webos/app`
 - `pnpm check` agrupa lint, typecheck y tests
 - README raiz documenta comandos, HMR, variables y el reparto Vite/Node
 
@@ -250,8 +257,9 @@ Condiciones de salida:
 
 Estado: completada para web. El usuario confirmo los flujos corregidos de
 historial, busqueda, preview->pantalla completa y catalogos. `pnpm check`
-pasa con 226 pruebas; builds web/core/webOS e IPK 1.6.6 validado
-estructuralmente. La instalacion y prueba en TV fisica quedan en Fase 6.
+paso con 226 pruebas; builds web/core/webOS e IPK validado estructuralmente.
+La instalacion y prueba en TV fisica quedaron en Fase 6 y se completaron con la
+IPK `1.7.2` (504 pruebas).
 
 ## Fase 6 - Adaptacion y validacion webOS (ultima etapa)
 
@@ -266,12 +274,13 @@ Condicion de salida:
 - prueba en TV fisica de navegacion, persistencia y reproduccion
 - retirar duplicaciones legacy solo cuando no tengan dependencias activas
 
-Estado: completada (2026-11-02). La IPK 1.6.7 fue instalada y validada en TV
-fisica: navegacion/control remoto, catalogo, carga de titulos, busqueda,
-guardado de configuracion y transicion episodio->temporada->episodio OK. La
-limpieza de duplicaciones legacy queda como mantenimiento no bloqueante.
+Estado: completada (2026-11-03). La Fase A quedo cerrada con la IPK `1.7.2`
+instalada y validada en TV fisica: navegacion/control remoto, BACK, foco,
+catalogo, live/zapping, busqueda, persistencia y transiciones del reproductor
+OK. `app.js` es bootstrap de 6 lineas; la logica vive en `src/`. La limpieza de
+duplicaciones legacy queda como mantenimiento no bloqueante.
 
-## Fase 7 - Rediseno de UI (planificada, post-migracion)
+## Fase 7 - Rediseno de UI (desbloqueada)
 
 Objetivo:
 
@@ -292,9 +301,11 @@ Enfoque:
 - cambios por pantalla/componente con paridad funcional y pruebas
 - no redisenar todo en un solo cambio
 
-Estado: lista para iniciar tras el freeze funcional 2026-11-02. Los fallbacks
-legacy se conservan como capa de compatibilidad, no como logica activa cuando
-`TutyCore` esta presente.
+Estado: **desbloqueada y lista para iniciar (2026-11-03)**. La Fase A cerro con
+504 pruebas, builds verdes e IPK `1.7.2` validada en TV fisica. La capa legacy
+de `src/ui/legacy` se conserva como compatibilidad funcional hasta que el
+rediseno reemplace cada pantalla. Las reglas de foco y compatibilidad webOS
+obligatorias estan en `docs/UI_REDESIGN.md`, seccion 5.
 
 ## Freeze funcional (2026-11-02)
 
@@ -326,8 +337,8 @@ verificacion estructural del IPK y prueba en TV fisica.
    `TUTYTV_CATALOG`, `TUTYTV_PORTAL`, `__tutyHls`, etc.).
 5. Core ampliado: normalizacion, filtros, favoritos e historial con pruebas.
 6. Adaptador JSON de almacenamiento + implementaciones Web y webOS.
-7. Detectada y corregida la frontera CommonJS: `source/package.json` evita que
-   Node 24 interprete `source/web/server.js` como ESM.
+7. Detectada y corregida la frontera CommonJS: `src/web/package.json` evita que
+   Node 24 interprete `src/web/server.js` como ESM.
 8. Smoke test del servidor web: `/`, `/js/app.js` y `/config/api.js` responden
    200 e inyectan `TUTYTV_WEB`, `TUTYTV_WEB_BUILD` y `TUTYTV_API`.
 9. Puente Core -> legacy: `tuty-core.js` IIFE cargado antes de `app.js`, con
@@ -348,7 +359,7 @@ verificacion estructural del IPK y prueba en TV fisica.
    `/js/tuty-core.js`, `/hls.min.js`, `/css/style.css` y `/ping`; el HTML dev
    carga HMR, core en modulo y `app.js` como modulo.
 16. README raiz reescrito con requisitos, comandos, HMR, variables y auditoria
-   Vite/Node; `source/README.md` apunta al flujo pnpm.
+   Vite/Node; el README raiz concentra el flujo pnpm.
 17. No se realizo instalacion fisica en TV; no se afirma prueba en hardware.
 18. Almacenamiento conectado mediante `G`/`J` al adaptador JSON para perfil,
     favoritos, historial y otras preferencias; conserva fallback legacy.
@@ -661,7 +672,7 @@ verificacion estructural del IPK y prueba en TV fisica.
 - coexistencia temporal de dos pipelines (legacy + modular)
 - la coordinacion restante de relay, persistencia, eventos y estado del
   reproductor, y las reglas de visibilidad/foco especificas, siguen en el monolito
-- `tuty-core.js` de `source/` es generado e ignorado; `build:ipk` lo genera.
+- `tuty-core.js` de `src/webos/app/js/` es generado e ignorado; `build:ipk` lo genera.
   Web dev usa el modulo compartido y `build:web` genera su propio puente en
   `dist/web`, sin depender del artefacto de webOS
 - en dev `app.js` se carga como modulo y en produccion/webOS como script

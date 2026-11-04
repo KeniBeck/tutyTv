@@ -1,9 +1,13 @@
 # TutyTV - Rediseno UI Dark Glassmorphism
 
-Fecha: 2026-11-02  
-Estado: direccion visual aprobada. **Implementacion bloqueada hasta completar la
-Fase A de migracion modular** (`docs/MIGRATION_PHASE_A.md`).  
-Base funcional congelada: 1.6.17, 318 pruebas, transicion de temporada validada.
+Fecha: 2026-11-02
+
+Actualizado: 2026-11-03
+
+Estado: direccion visual aprobada. **Fase A cerrada (2026-11-03): implementacion
+habilitada.**
+
+Base funcional: IPK `1.7.2`, 504 pruebas, flujos web/TV y foco validados.
 
 ## 1. Objetivo
 
@@ -25,47 +29,43 @@ validar los componentes del piloto.
 ### 2.1 Arquitectura actual
 
 - `src/core/`: logica pura y casos de uso, sin DOM ni webOS.
-- `src/platforms/shared/`: adaptadores compartidos, foco/navegacion, reproductor
-  HTML5, almacenamiento y puente `legacyCoreBridge`.
-- `src/platforms/web/` y `src/platforms/webos/`: entrada y adaptadores por
-  plataforma.
-- `source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/app.js`:
-  runtime legacy y UI DOM actual.
-- `source/usr/palm/applications/com.webosflux.xuptertv.fidelity/index.html`:
-  shell estatico de todas las pantallas.
-- `source/usr/palm/applications/com.webosflux.xuptertv.fidelity/css/style.css`:
-  estilos legacy, coordenadas absolutas sobre canvas de 1920x1080.
-- `js/tuty-core.js`: artefacto generado por `pnpm build:core`; no se edita.
+- `src/platforms/shared/`: adaptadores compartidos y puente `legacyCoreBridge`.
+- `src/platforms/web/` y `src/platforms/webos/`: entradas de build por target.
+- `src/ui/runtime/`: estado, DOM, foco, navegacion, router, servicio y hosts.
+- `src/ui/screens/`: pantallas Home, detalle, busqueda, ajustes y reproductor.
+- `src/ui/legacy/`: compatibilidad funcional de la app actual dentro del bundle.
+- `src/webos/app/js/app.js`: bootstrap webOS de 6 lineas.
+- `src/webos/app/index.html`: shell estatico de todas las pantallas.
+- `src/webos/app/css/style.css`: estilos actuales, canvas de 1920x1080.
+- `src/webos/app/js/tuty-core.js` y `tuty-ui.js`: artefactos generados; no se editan.
 
-La UI **no** es React ni un sistema de componentes. Es DOM creado por `app.js`,
-posicionado en pixeles absolutos y escalado desde 1920x1080 al viewport real.
+La UI **no** es React ni un sistema de componentes. Es DOM vanilla posicionado
+en pixeles absolutos y escalado desde 1920x1080 al viewport real.
 
 ### 2.2 Archivos que controlan el piloto
 
 | Responsabilidad | Archivo / referencia |
 |---|---|
-| Shell de Home | `index.html:27` `#screen-home` |
-| Contenedor de paginas | `index.html:28` `#home-pages` |
-| Rail lateral | `index.html:30` `#home-tabs` |
-| Barra de estado/utilidades | `index.html:31-32` |
-| Overlay de categorias live | `index.html:39` `#live-categories` |
-| Busqueda live | `index.html:48` `#live-search` |
-| Definicion de tabs | `js/app.js:411` `H` |
-| Paginas Home | `js/app.js:2080` `ct` |
-| Montaje de Home | `js/app.js:2221` `vt()` |
-| Cambio de tab/pagina | `js/app.js:2312` `ht()` |
-| Preview y lista live | `js/app.js:2080-2110` |
-| Lista de canales | `js/app.js:2764` `Ht()` |
-| Categorias live | `js/app.js:2893` `lvBuildCats()` |
-| Apertura de categorias | `js/app.js:2951` `lvOpenCats()` |
-| Busqueda live | `js/app.js:3091` `lvOpenSearch()` |
-| Foco visual | `js/app.js:1809` `tt()` |
-| Navegacion direccional | `js/app.js:1838` `at()` |
-| Escalado 1920x1080 | `js/app.js:5871` `mr()` |
-| Estilos Home | `css/style.css:115` |
-| Estilos rail | `css/style.css:170` |
-| Estilos live | `css/style.css:378` |
-| Estilos overlays live | `css/style.css:3685` y `3771` |
+| Shell de Home | `index.html` `#screen-home` |
+| Contenedor de paginas | `index.html` `#home-pages` |
+| Rail lateral | `index.html` `#home-tabs` |
+| Barra de estado/utilidades | `index.html` `#home-notify` |
+| Overlay de categorias live | `index.html` `#live-categories` |
+| Busqueda live | `index.html` `#live-search` |
+| Definicion de tabs | `src/ui/screens/home/homeTabs.ts` |
+| Shell y montaje de Home | `src/ui/screens/home/homeShell.ts` |
+| Paginas Home VOD | `src/ui/screens/home/homePages.ts` |
+| Pagina TV en vivo | `src/ui/screens/home/homeLivePage.ts` |
+| Lista y zapping live | `src/ui/screens/home/liveList.ts` |
+| Categorias y busqueda live | `src/ui/screens/home/liveMenu.ts` |
+| Panel de canales fullscreen | `src/ui/screens/player/liveChannelPanel.ts` |
+| Foco visual | `src/ui/runtime/focus.ts` |
+| Foco por pantalla y scroll | `src/ui/runtime/screenFocus.ts` |
+| Navegacion y BACK | `src/ui/runtime/navigation.ts` |
+| Escalado 1920x1080 | `src/ui/runtime/layout.ts` |
+| Estilos Home | `css/style.css` |
+| Estilos live | `css/style.css` |
+| Bootstrap webOS | `js/app.js` |
 
 ### 2.3 Restricciones detectadas
 
@@ -266,27 +266,69 @@ Reglas:
 
 ## 5. Foco y control remoto
 
+Esta seccion es obligatoria para la Fase 7. Los problemas de foco detectados en
+TV no fueron visuales solamente: afectaron navegacion, restauracion de foco y
+salida de la app.
+
 ### 5.1 Sistema de foco
 
-- Clase existente: `is-focused`.
-- Anillo exterior blanco de 3 px.
-- Halo rojo de 6 px con `box-shadow`.
-- Escala maxima 1.03 en cards; 1.0 en filas y paneles.
-- Nunca depender solo del color.
-- El foco debe quedar completamente visible; el scroll existente debe seguir
-  funcionando.
-- No animar `filter` ni `backdrop-filter` al enfocar.
+Implementacion actual:
+
+- `src/ui/runtime/focus.ts`: elemento enfocado, `is-focused` y movimiento.
+- `src/ui/runtime/screenFocus.ts`: visibilidad, scroll y restauracion por tab.
+- `src/ui/runtime/navigation.ts`: BACK, overlays, player y salida.
+- `src/ui/runtime/navigationActions.ts`: acciones de navegacion.
+
+Reglas visuales:
+
+- Clase existente: `is-focused`. No depender de `:hover`, `:focus` ni
+  `:focus-visible` en TV.
+- Anillo exterior blanco de 3 px + halo rojo. Construirlo con `box-shadow`, no
+  con `outline`.
+- **Chromium 53 dibuja `outline` cuadrado aunque el elemento tenga
+  `border-radius`.** Para pills, circulos y botones redondeados usar
+  `box-shadow` exterior/interior.
+- El radio del foco debe coincidir con el radio del componente. No aplicar
+  `border-radius: 50%` a elementos altos o rectangulares: produce elipses y
+  recorta el icono.
+- Escala maxima 1.03 en cards; 1.0 en filas y paneles. Evitar escalas que
+  recorten el foco dentro de contenedores con `overflow: hidden`.
+- Nunca depender solo del color; el foco debe distinguirse con forma, contraste
+  o elevacion.
+- No animar `filter`, `backdrop-filter`, sombras grandes ni `width/height` al
+  enfocar.
 - El foco del rail se muestra como pill de cristal rojo + texto blanco.
 - El foco de canal live se muestra como fila con gradiente rojo y anillo.
+- El foco de categorias fullscreen se muestra como pill con anillo interior;
+  no como rectangulo.
 
-### 5.2 Topologia
+### 5.2 Topologia y comportamiento
 
 - Se conserva el orden espacial actual: rail a la izquierda, contenido a la
   derecha, utilidades arriba, lista live a la derecha.
 - No se reordenan focusables ni se eliminan destinos de navegacion.
-- Cualquier cambio de geometria debe validar que `at()` siga eligiendo el
-  vecino correcto en las cuatro direcciones.
+- Cualquier cambio de geometria debe validar que el movimiento direccional
+  siga eligiendo el vecino correcto en las cuatro direcciones.
 - Los overlays live mantienen su propio confinamiento de foco.
+- Las cargas asincronas no deben robar el foco. Si una lista se vuelve a
+  renderizar, conservar el indice/fila enfocada.
+- Al cerrar un overlay, restaurar el foco al control que lo abrio.
+- En Home/TV, BACK enfoca primero el menu lateral; solo sale de la app si el
+  foco ya esta en las tabs.
+- En player, BACK cierra en orden: seek, categorias, episodios, ajustes,
+  canales, infobar y finalmente vuelve a la pantalla anterior.
+- El foco debe quedar completamente visible dentro del contenedor con scroll.
+
+### 5.3 Checklist antes de dar por terminada una pantalla
+
+1. El foco se ve claramente a distancia de TV, sobre fondo claro y oscuro.
+2. Se recorren todos los destinos con las cuatro direcciones sin saltos.
+3. Ningun re-render asincrono pierde ni duplica el foco.
+4. Las filas, pills y circulos tienen foco con la misma forma del componente.
+5. BACK respeta overlays, menu lateral y salida de la app.
+6. El scroll deja el foco completo dentro del area visible.
+7. Sin `outline` cuadrado, sin recortes y sin sombras costosas.
+8. Validado en TV fisica con control remoto, no solo en web.
 
 ## 6. Animaciones
 
@@ -464,12 +506,16 @@ Es un artefacto estatico de revision. No se carga desde la app, no importa
 `app.js` y no modifica el runtime. Muestra Home y TV en vivo a 1920x1080 con
 tokens, foco, cristal y fallback.
 
-## 14. Aprobacion pendiente
+## 14. Aprobacion y arranque
 
-Antes de implementar se requiere aprobar:
+Estado: aprobado. La Fase A cerro con IPK `1.7.2`, 504 pruebas y validacion en
+TV fisica. La implementacion de Fase 7 puede iniciar.
 
-- direccion visual y paleta;
-- layout de Home y TV en vivo;
-- sistema de foco;
-- alcance del piloto;
-- uso de `css/ui-glass.css`.
+Antes del primer cambio visual:
+
+- leer `docs/ARCHITECTURE.md` y esta seccion 5;
+- confirmar que el cambio no toca Core, API, servicio, IDs, claves ni
+  empaquetado;
+- partir de `1.7.2` y mantener `pnpm check` verde;
+- implementar por pantalla/componente, no en un solo bloque;
+- validar web y TV antes de continuar con la siguiente pantalla.

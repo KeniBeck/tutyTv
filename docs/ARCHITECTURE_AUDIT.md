@@ -1,3 +1,6 @@
+> Documento historico de la Fase 0 (auditoria inicial). El estado vigente
+> esta en `docs/ARCHITECTURE.md`.
+
 # TutyTV - Architecture Audit (Fase Inicial Obligatoria)
 
 Fecha: 2026-11-01
@@ -16,14 +19,14 @@ Esta auditoria se realizo **sin mover ni reestructurar** archivos de la aplicaci
 ### Frontend app (TV + web)
 
 - Stack: HTML + CSS + JavaScript sin framework UI.
-- Entry UI principal: `source/usr/palm/applications/com.webosflux.xuptertv.fidelity/index.html`
-- Script principal monolitico: `source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/app.js`
-- Bridge webOS: `source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/webOSTV.js`
-- Config runtime: `source/usr/palm/applications/com.webosflux.xuptertv.fidelity/config/api.js`
+- Entry UI principal: `src/webos/app/index.html`
+- Script principal monolitico: `src/webos/app/js/app.js`
+- Bridge webOS: `src/webos/app/js/webOSTV.js`
+- Config runtime: `src/webos/app/config/api.js`
 
 ### Servicio webOS (Node/Luna)
 
-- Entry servicio: `source/usr/palm/services/com.webosflux.xuptertv.fidelity.service/index.js`
+- Entry servicio: `src/webos/service/index.js`
 - Resolver/API portal: `magis.js`
 - Proxy media/HLS virtual: `proxy.js`
 - Relay ffmpeg TV: `ffmpeg-relay.js` + binario local `ffmpeg`
@@ -31,14 +34,14 @@ Esta auditoria se realizo **sin mover ni reestructurar** archivos de la aplicaci
 
 ### Entorno web local
 
-- Servidor dev web: `source/web/server.js`
-- Relay ffmpeg web: `source/web/ffmpeg-web.js`
-- HLS.js embebido: `source/web/hls.min.js`
-- Launchers: `source/web/start.sh`, `source/web/start.bat`, `TUTY-WEB.sh`, `TUTY-WEB.bat`
+- Servidor dev web: `src/web/server.js`
+- Relay ffmpeg web: `src/web/ffmpeg-web.js`
+- HLS.js embebido: `src/web/hls.min.js`
+- Launchers: `src/web/start.sh`, `src/web/start.bat`, `TUTY-WEB.sh`, `TUTY-WEB.bat`
 
 ### Empaquetado IPK
 
-- Script principal: `source/tools/build-ipk.sh`
+- Script principal: `src/tools/build-ipk.sh`
 - Metadatos: `source/control`, `source/debian-binary`, `source/usr/palm/**/appinfo.json|packageinfo.json|services.json`
 
 ## 3) Sistema de build actual
@@ -73,7 +76,7 @@ Conclusion: **no se debe reemplazar ni debilitar** esta validacion durante la mi
 
 ### Web
 
-- entry proceso: `source/web/server.js`
+- entry proceso: `src/web/server.js`
 - sirve HTML de app webOS con inyecciones runtime:
   - `window.TUTYTV_WEB=true`
   - `hls.min.js`
@@ -93,7 +96,7 @@ Conclusion: **no se debe reemplazar ni debilitar** esta validacion durante la mi
 - Node built-in: `http`, `https`, `crypto`, `url`, `fs`, `child_process`
 - Binario local: `ffmpeg` (TV) y ffmpeg del sistema (web)
 
-Riesgo: en entorno web local, el servicio no depende de `webos-service` porque usa `source/web/server.js`; en TV si depende del runtime Luna.
+Riesgo: en entorno web local, el servicio no depende de `webos-service` porque usa `src/web/server.js`; en TV si depende del runtime Luna.
 
 ## 7) Funcionalidades compartidas y acoplamientos
 
@@ -128,20 +131,20 @@ Conclusiones para migracion:
 
 ### Especificos Web
 
-- `source/web/server.js`
-- `source/web/ffmpeg-web.js`
-- `source/web/hls.min.js`
+- `src/web/server.js`
+- `src/web/ffmpeg-web.js`
+- `src/web/hls.min.js`
 - ramas en `app.js` protegidas por `window.TUTYTV_WEB`
 
 ## 9) Archivos/rutas que no pueden moverse sin adaptar referencias
 
 Rutas criticas hardcodeadas por empaquetado y runtime:
 
-- `source/usr/palm/applications/com.webosflux.xuptertv.fidelity/**`
-- `source/usr/palm/services/com.webosflux.xuptertv.fidelity.service/**`
-- `source/usr/palm/packages/com.webosflux.xuptertv.fidelity/packageinfo.json`
+- `src/webos/app/**`
+- `src/webos/service/**`
+- `src/webos/package/packageinfo.json`
 - `source/control` y `source/debian-binary`
-- `source/web/server.js` asume rutas relativas a `../usr/palm/...`
+- `src/web/server.js` asume rutas relativas a `../usr/palm/...`
 
 Cambiar ubicacion de estos archivos sin adaptar scripts/servidor rompe:
 
