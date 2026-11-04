@@ -96,7 +96,7 @@ function buildTabs(host: HomeShellHost): HomeShellNode[] {
   }
   host.clear(container);
   container.classList.add("scrollable");
-  container.classList.add("is-expanded");
+  container.classList.add("is-collapsed");
   for (let index = 0; index < tabConfig.length; index += 1) {
     const config = tabConfig[index] as HomeShellTab;
     const tab = host.el("div", "tab-item focusable");

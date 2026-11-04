@@ -78,12 +78,19 @@ export function renderLiveList(favoritesOnlyOverride?: boolean): boolean {
 
   const rows = runtime.getRows();
   const state = runtime.state;
-  const keepRow = Boolean(
-    state.focus &&
-      (state.focus as LiveNode)._channel !== undefined &&
-      state.focus.parentNode === container
+  const focusNode = state.focus as LiveNode | null;
+  const focusInList = Boolean(
+    focusNode
+      && (focusNode.parentNode === container || focusNode.parentNode?.parentNode === container)
   );
-  const keepChannel = keepRow ? (state.focus as LiveNode)._channel ?? -1 : -1;
+  const keepChannel = focusInList && focusNode?._channel !== undefined
+    ? focusNode._channel
+    : -1;
+  const keepFavorite = Boolean(
+    keepChannel >= 0
+      && focusNode
+      && String(focusNode.className || "").split(" ").indexOf("live-row-fav") !== -1
+  );
 
   runtime.clear(container);
   rows.length = 0;
@@ -97,6 +104,7 @@ export function renderLiveList(favoritesOnlyOverride?: boolean): boolean {
       const row = runtime.el("div", "live-row focusable");
       row._channel = index;
 
+      const number = runtime.el("div", "row-number", String(index + 1).padStart(2, "0"));
       const icon = runtime.el("div", "row-icon");
       if (channel.logo) {
         icon.style.backgroundImage = `url(${channel.logo})`;
@@ -106,7 +114,9 @@ export function renderLiveList(favoritesOnlyOverride?: boolean): boolean {
       }
 
       const play = runtime.el("div", "row-play");
+      const copy = runtime.el("div", "row-copy");
       const name = runtime.el("div", "row-name", channel.name || "");
+      copy.appendChild(name);
       const rowIndex = rows.length;
       const favorite = runtime.el(
         "div",
@@ -154,9 +164,10 @@ export function renderLiveList(favoritesOnlyOverride?: boolean): boolean {
         return true;
       };
 
+      row.appendChild(number);
       row.appendChild(icon);
+      row.appendChild(copy);
       row.appendChild(play);
-      row.appendChild(name);
       row.appendChild(favorite);
       if (index === state.channel) {
         row.classList.add("is-current");
@@ -228,10 +239,13 @@ export function renderLiveList(favoritesOnlyOverride?: boolean): boolean {
     container.appendChild(runtime.el("div", "live-list-status", message));
   }
 
-  if (keepRow && rows.length) {
+  if (keepChannel >= 0 && rows.length) {
     for (const row of rows) {
       if (row._channel === keepChannel) {
-        runtime.focus(row);
+        const target = keepFavorite ? row._favBtn : row;
+        if (target && runtime.canFocus(target)) {
+          runtime.focus(target);
+        }
         break;
       }
     }

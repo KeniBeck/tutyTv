@@ -97,6 +97,32 @@ describe("focus runtime", () => {
     expect(after).toHaveBeenCalledOnce();
   });
 
+  it("prefers a scrolled page card over topbar options when moving up", () => {
+    const page = fakeNode(0, 0, { page: true });
+    const current = fakeNode(100, 900);
+    const pageAbove = fakeNode(100, -600);
+    const topbar = fakeNode(100, 20);
+    Object.assign(current, { parentNode: page });
+    Object.assign(pageAbove, { parentNode: page });
+    const state = createAppState();
+    state.screen = "home";
+    state.focus = current;
+
+    attachFocus({
+      state,
+      byId: () => null,
+      getFocusables: () => [current, pageAbove, topbar],
+      getTabFocus: () => [],
+      getTabItems: () => [],
+      scrollIntoView: vi.fn(),
+      onFocusChanged: vi.fn(),
+      afterFocus: vi.fn()
+    });
+
+    expect(moveFocus("up")).toBe(true);
+    expect(state.focus).toBe(pageAbove);
+  });
+
   it("falls back to the active home tab when moving left from a page", () => {
     const current = fakeNode(100, 100, { page: true });
     const tab = fakeNode(0, 100, { tabs: true });

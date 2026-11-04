@@ -91,6 +91,8 @@ describe("homeShell", () => {
     expect((refs?.tabs[1] as FakeNode).children.map((child) => child.innerHTML)).toContain("<svg>movie</svg>");
     expect(harness.nodes.get("home-notify")?.children.length).toBe(6);
     expect(harness.nodes.get("notify-time")?.textContent).toBe("3:07 PM");
+    expect(harness.nodes.get("home-tabs")?.classes.has("is-collapsed")).toBe(true);
+    expect(harness.nodes.get("home-tabs")?.classes.has("is-expanded")).toBe(false);
   });
 
   it("activates tabs and focuses the correct target", () => {

@@ -87,8 +87,11 @@ export function moveFocus(direction: string): boolean {
     const currentRect = state.focus.getBoundingClientRect();
     const currentX = currentRect.left + currentRect.width / 2;
     const currentY = currentRect.top + currentRect.height / 2;
+    const currentPage = state.screen === "home" ? closest(state.focus, ".home-page") : null;
     let target: FocusableElement | null = null;
     let best = Infinity;
+    let pageTarget: FocusableElement | null = null;
+    let pageBest = Infinity;
 
     for (const candidate of candidates) {
       if (candidate === state.focus) {
@@ -109,6 +112,16 @@ export function moveFocus(direction: string): boolean {
         if (directScore !== null && directScore !== undefined && directScore < best) {
           best = directScore;
           target = candidate;
+        }
+        if (
+          currentPage
+          && closest(candidate, ".home-page") === currentPage
+          && directScore !== null
+          && directScore !== undefined
+          && directScore < pageBest
+        ) {
+          pageBest = directScore;
+          pageTarget = candidate;
         }
         continue;
       }
@@ -151,6 +164,18 @@ export function moveFocus(direction: string): boolean {
         best = value;
         target = candidate;
       }
+      if (
+        currentPage
+        && closest(candidate, ".home-page") === currentPage
+        && value < pageBest
+      ) {
+        pageBest = value;
+        pageTarget = candidate;
+      }
+    }
+
+    if (currentPage && (direction === "up" || direction === "down") && pageTarget) {
+      target = pageTarget;
     }
 
     if (target) {

@@ -171,9 +171,9 @@ export function createLegacyActions(ctx) {
     function dt() {
         ctx.Ke && (clearTimeout(ctx.Ke), clearInterval(ctx.Ke), ctx.Ke = null), !(window.TutyUI && window.TutyUI.isHomeTabsBuilt && window.TutyUI.isHomeTabsBuilt()) && ctx.vt(), ctx.nt("home"), ctx.ht(0, !1), tt(ctx.ie);
         var e = t("home-tabs");
-        e && (e.classList.add("is-expanded"), e.classList.remove("is-collapsed"));
+        e && (e.classList.remove("is-expanded"), e.classList.add("is-collapsed"));
         var i = document.querySelector(".home-sidebar-bg");
-        i && i.classList.add("is-on");
+        i && i.classList.remove("is-on");
     }
     function Rt(e) {
         var runtime = window.TutyUI;

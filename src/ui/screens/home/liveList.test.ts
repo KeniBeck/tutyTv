@@ -145,6 +145,18 @@ describe("live list runtime", () => {
     expect(rows[0]?._favBtn?.classList.contains("is-fav")).toBe(true);
   });
 
+  it("keeps focus on the favorite when the list reloads", () => {
+    const { host, state, rows } = createHost();
+    attachLiveList(host);
+    renderLiveList();
+    const firstFavorite = rows[0]?._favBtn;
+    state.focus = firstFavorite as never;
+
+    renderLiveList();
+
+    expect(host.focus).toHaveBeenLastCalledWith(rows[0]?._favBtn);
+  });
+
   it("shows the loading message when no channels exist", () => {
     const { host, channels, container } = createHost();
     channels.length = 0;
