@@ -301,11 +301,13 @@ Enfoque:
 - cambios por pantalla/componente con paridad funcional y pruebas
 - no redisenar todo en un solo cambio
 
-Estado: **desbloqueada y lista para iniciar (2026-11-03)**. La Fase A cerro con
-504 pruebas, builds verdes e IPK `1.7.2` validada en TV fisica. La capa legacy
-de `src/ui/legacy` se conserva como compatibilidad funcional hasta que el
-rediseno reemplace cada pantalla. Las reglas de foco y compatibilidad webOS
-obligatorias estan en `docs/UI_REDESIGN.md`, seccion 5.
+Estado: **en curso (2026-11-03)**. La Fase A cerro con 504 pruebas, builds
+verdes e IPK `1.7.2` validada en TV fisica. El primer corte visual de Home y TV
+en vivo vive en `src/webos/app/css/ui-glass.css`; no cambia DOM funcional, IDs,
+datos ni navegacion. La capa legacy de `src/ui/legacy` se conserva como
+compatibilidad funcional hasta que el rediseno reemplace cada pantalla. Las
+reglas de foco y compatibilidad webOS obligatorias estan en
+`docs/UI_REDESIGN.md`, seccion 5, y el registro del corte en la seccion 15.
 
 ## Freeze funcional (2026-11-02)
 
@@ -664,6 +666,56 @@ verificacion estructural del IPK y prueba en TV fisica.
     video anterior, por lo que no se vuelve a abrir el aviso ni se salta otro
     episodio. Verificados lint, typecheck, 318 pruebas y builds
     web/core/webOS. No se regenero IPK ni se probo en TV.
+
+95. Fase 7 iniciada: creada `src/webos/app/css/ui-glass.css` con tokens y capa
+    visual para Home y TV en vivo (barra superior, marca, rail expandido y
+    colapsado, foco con `box-shadow`, cards, preview live, panel de canales,
+    categorias y busqueda). Se agrego `.home-brand` no focusable en
+    `index.html`, import de la hoja en el plugin de desarrollo y cache-busting
+    en el servidor web. Sin cambios en Core, API, servicio, IDs, claves ni
+    empaquetado. Verificados `pnpm check` (504 pruebas), `pnpm build:web`,
+    `pnpm build:webos` y smoke HTTP 200 de la hoja y del bootstrap. No se
+    regenero IPK ni se probo en TV en este incremento.
+96. Fase 7, alineacion con el prototipo: `homePages.ts` se reestructuro a
+    `.home-content` con hero 1040x620, side card 416x620, cabecera y cuatro
+    cards 344x194; se retiro el backdrop de pagina. `homeLivePage.ts` usa
+    preview 1120x760 en x160, guia 1120x80 y panel 560x858 en x1320; se
+    retiraron badge EN VIVO, pills de categorias, fondo de pagina y
+    frame/logo del preview. La cabecera muestra favoritos y categoria
+    seleccionada; los botones llevan icono. `liveList.ts` anade numero,
+    icono, nombre, play y favorito. `ui-glass.css` fija rail x40 w320 y
+    `.home-pages` y124 h956. La guia es visual por falta de EPG. Se preservan
+    IDs, refs, foco, datos y navegacion. Verificados `pnpm check` (504
+    pruebas), `pnpm build:web`, `pnpm build:webos` y smoke HTTP 200. No se
+    regenero IPK ni se probo en TV.
+97. Fase 7, resto de paginas Home y pulido: `.home-content` pasa a x160 y16
+    con hero 1280x620, side card 416x620 y cards 415x194, al lado del rail
+    colapsado. `lazyPosters` incluye `.hero`, `.side-card` y `.card` para que
+    carguen las imagenes. Preview live y contenido bajan 16 px para evitar el
+    recorte del foco superior. El favorito de canal live usa boton circular
+    44x44 y foco circular. `buildExplore` ya no superpone sus filas con las
+    filas extra. Verificados lint, typecheck, 504 pruebas y builds
+    web/webOS. No se regenero IPK ni se probo en TV.
+98. Fase 7, datos reales y filas: la card lateral `Destacado` itera cada 5 s
+    entre los titulos de la pagina (sin el hero), muestra nombre, calificacion,
+    año/genero y poster, se detiene con foco y se reanuda al salir. Las paginas
+    filtran primero por categoria estricta para que Destacados y Peliculas no
+    repitan titulos. Las filas secundarias ya no muestran titulo repetido ni
+    `Ver todo`; solo la fila principal conserva `Ver todo`. `NUEVO` solo
+    aparece si el item trae marca de novedad. Verificados lint, typecheck, 505
+    pruebas y builds web/webOS. No se regenero IPK ni se probo en TV.
+99. Fase 7, navegacion y transicion: al subir desde cards inferiores el foco
+    prioriza candidatos del mismo `.home-page` antes que la barra superior,
+    manteniendo el fallback si no hay candidato arriba. La card `Destacado`
+    anima imagen y texto con `sideRotateIn` (opacidad y desplazamiento) para
+    suavizar la rotacion. Verificados lint, typecheck, 505 pruebas y builds
+    web/webOS. No se regenero IPK ni se probo en TV.
+
+100. Fase 7, arranque y foco live: el rail arranca colapsado y el foco inicia
+     en el preview; `dt` ya no reabre el menu al entrar a Home. La lista live
+     conserva el foco en la fila o corazon de favorito al recargarse, evitando
+     el parpadeo de la carga inicial. Verificados lint, typecheck, 506 pruebas
+     y builds web/webOS. No se regenero IPK ni se probo en TV.
 
 ## Riesgos pendientes
 

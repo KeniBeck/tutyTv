@@ -4,8 +4,8 @@ Fecha: 2026-11-02
 
 Actualizado: 2026-11-03
 
-Estado: direccion visual aprobada. **Fase A cerrada (2026-11-03): implementacion
-habilitada.**
+Estado: direccion visual aprobada. **Fase A cerrada (2026-11-03). Fase 7 en
+curso: Home y TV en vivo alineados al prototipo `home-live-glass.html`.**
 
 Base funcional: IPK `1.7.2`, 504 pruebas, flujos web/TV y foco validados.
 
@@ -519,3 +519,124 @@ Antes del primer cambio visual:
 - partir de `1.7.2` y mantener `pnpm check` verde;
 - implementar por pantalla/componente, no en un solo bloque;
 - validar web y TV antes de continuar con la siguiente pantalla.
+
+## 15. Registro de implementacion
+
+### 15.1 Primer corte (2026-11-03)
+
+Alcance aplicado sin cambiar DOM funcional, IDs, datos, navegacion ni
+empaquetado:
+
+- `src/webos/app/css/ui-glass.css`: tokens de color, radios, sombras, tipografia
+  y movimiento; shell de Home (fondo, barra superior de cristal, marca, rail
+  expandido/colapsado, barra de utilidades); foco unico con `box-shadow` para
+  rail, cards, posters, preview live, filas de canal y favoritos; overlays de
+  categorias y busqueda live.
+- `src/webos/app/index.html`: enlace a `ui-glass.css` despues de `style.css` y
+  marca visual `.home-brand` (no focusable).
+- `scripts/vite-legacy-web-plugin.ts`: import de `ui-glass.css` en desarrollo
+  para conservar HMR.
+- `src/web/server.js`: cache-busting de `ui-glass.css`.
+
+Decisiones tecnicas:
+
+- El rail se superpone al contenido como panel de cristal; conserva la topologia
+  de foco actual y colapsa a iconos al entrar al contenido.
+- Blur limitado a barra superior y rail. El panel live usa superficie fuerte
+  opaca, sin `backdrop-filter`, para respetar el maximo de 2 superficies.
+- El foco usa anillo blanco + halo rojo con `box-shadow`; se eliminan los
+  `outline`/`border` cuadrados de foco anteriores.
+- Sin CSS Grid, `gap`, `aspect-ratio`, `clamp`, `sticky` ni animaciones de
+  filtros o sombras grandes.
+
+Validado:
+
+- `pnpm check`: 504 pruebas, 120 archivos.
+- `pnpm build:web` y `pnpm build:webos`.
+- Smoke del servidor web: `/`, `/css/style.css`, `/css/ui-glass.css` y
+  `/js/app.js` responden 200.
+
+### 15.2 Alineacion con el prototipo (2026-11-03)
+
+El primer corte conservo el DOM funcional, pero no reproducia la composicion
+del prototipo `docs/proposals/home-live-glass.html`. Se reestructuro solo la
+capa de presentacion:
+
+- Home: `homePages.ts` genera un `.home-content` en x160 y16 con hero
+  1280x620, side card 416x620, cabecera de fila y cuatro cards de 415x194.
+  Se retiro el backdrop de pagina; el fondo lo aporta `#screen-home`.
+- Live: `homeLivePage.ts` genera preview 1120x760 en x160 y16, guia 1120x80
+  en y794 y panel 560x858 en x1320 y16. El preview queda junto al rail
+  colapsado y el rail expandido puede taparlo. Se retiraron el badge EN VIVO,
+  las pills de categorias, el fondo de pagina y el frame/logo de preview.
+- La cabecera muestra `Favoritos N` y la categoria seleccionada al lado; los
+  botones Categorias, Favoritos y Buscar llevan icono y texto.
+- `liveList.ts` anade numero, icono, nombre, play y favorito; se retiro el
+  subtitulo de categoria por fila.
+- `ui-glass.css` fija el rail en x40 w320 y `.home-pages` en y124 h956. La
+  guia es visual porque no hay EPG.
+- Se preservan IDs, refs runtime, destinos de foco, datos y navegacion.
+
+### 15.3 Ajustes de integracion (2026-11-04)
+
+- Las demas paginas Home usan el mismo `.home-content` en x160, al lado del
+  rail colapsado; cuando el rail se expande puede tapar el contenido.
+- `lazyPosters` reconoce `.hero`, `.side-card` y `.card`, por lo que las
+  imagenes de hero, continuar viendo y cards ya cargan fuera de `.poster`.
+- El contenido Home y el preview live bajan 16 px para que el anillo de foco
+  de la primera card grande no se recorte contra el borde superior.
+- El favorito de canal live pasa a un boton circular de 44x44 con foco
+  circular; se elimino el bloque cuadrado de 40x88.
+
+Validado:
+
+- `pnpm check`: 504 pruebas, 120 archivos.
+- `pnpm build:web` y `pnpm build:webos`.
+- Smoke del servidor web: HTTP 200.
+
+Pendiente:
+
+- revision visual en navegador y TV fisica de la alineacion;
+- aplicar el mismo lenguaje a las pantallas fuera de Home;
+- validar foco, scroll y rendimiento con control remoto antes de continuar.
+
+### 15.4 Card rotativa y filas secundarias (2026-11-04)
+
+- La card lateral `Destacado` rota automaticamente cada 5 s entre los titulos
+  de la pagina, excluyendo el hero. Muestra nombre, calificacion, año/genero y
+  poster. Se detiene mientras la card tiene foco y se reanuda al salir; el
+  click abre el titulo visible.
+- Las paginas filtran primero por categoria estricta (`destacado`, `pelicula`,
+  `serie`, `anime`) para evitar que Destacados y Peliculas compartan titulos;
+  solo usan el filtro amplio como fallback.
+- Las filas secundarias ya no repiten el titulo de la pagina con `· Mas` ni
+  muestran `Ver todo`; solo la fila principal conserva `Ver todo`.
+- `NUEVO` solo se muestra si el item trae una marca de novedad; ya no se aplica
+  a la primera card por posicion.
+- Eliminada la superposicion de filas extra en Explorar.
+
+Validado:
+
+- `pnpm check`: 506 pruebas, 120 archivos.
+- `pnpm build:web` y `pnpm build:webos`.
+- Smoke del servidor web: HTTP 200.
+
+### 15.5 Navegacion vertical y transicion (2026-11-04)
+
+- Al subir desde las cards inferiores, el foco prioriza candidatos dentro del
+  mismo `.home-page` antes que las opciones de la barra superior; si no hay
+  candidato arriba en la pagina, mantiene el fallback anterior.
+- La card `Destacado` anima la entrada de imagen y texto (`sideRotateIn`,
+  opacidad + desplazamiento de 10 px) para suavizar el cambio automatico.
+
+### 15.6 Arranque y foco live (2026-11-04)
+
+- El arranque deja el rail colapsado y el foco en el preview de TV/Home; ya no
+  se muestra el menu abierto con el foco fuera de el.
+- Al recargar la lista live se conserva el foco en la fila o en el corazon de
+  favorito, evitando el parpadeo durante la carga inicial de canales.
+
+Pendiente:
+
+- revision visual en navegador y TV fisica de la alineacion;
+- aplicar el mismo lenguaje a las pantallas fuera de Home.
