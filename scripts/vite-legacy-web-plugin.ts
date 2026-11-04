@@ -25,7 +25,7 @@ export function legacyWebPlugin(options: LegacyWebPluginOptions): Plugin {
   const devUiUrl = `/@fs${pathToFileURL(options.devUiFile).pathname}`;
   const legacyAppDir = resolve(
     options.repoRoot,
-    "source/usr/palm/applications/com.webosflux.xuptertv.fidelity"
+    "src/webos/app"
   );
   const fullReloadFiles = new Set([
     resolve(legacyAppDir, "config/api.js"),
@@ -38,7 +38,7 @@ export function legacyWebPlugin(options: LegacyWebPluginOptions): Plugin {
   const getLegacyServer = (): LegacyServerModule => {
     if (!legacyServer) {
       legacyServer = requireFromRepo(
-        resolve(options.repoRoot, "source/web/server.js")
+        resolve(options.repoRoot, "src/web/server.js")
       ) as LegacyServerModule;
     }
     return legacyServer;

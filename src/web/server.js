@@ -7,16 +7,17 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const ROOT = path.resolve(__dirname, "..");
-const DEFAULT_APP_DIR = path.join(ROOT, "usr/palm/applications/com.webosflux.xuptertv.fidelity");
-const SERVICE_DIR = path.join(ROOT, "usr/palm/services/com.webosflux.xuptertv.fidelity.service");
+const WEBOS_DIR = path.join(ROOT, "webos");
+const DEFAULT_APP_DIR = path.join(WEBOS_DIR, "app");
+const SERVICE_DIR = path.join(WEBOS_DIR, "service");
 const HLS_FILE = path.join(__dirname, "hls.min.js");
 
 const magis = require(path.join(SERVICE_DIR, "magis.js"));
 const proxy = require(path.join(SERVICE_DIR, "proxy.js"));
 const webRelay = require(path.join(__dirname, "ffmpeg-web.js"));
 
-const VERSION = "1.6.5";
-const BUILD = "1.6.5-r12";
+const VERSION = "1.7.2";
+const BUILD = "1.7.2";
 
 const API_METHODS = new Set([
   "ping",

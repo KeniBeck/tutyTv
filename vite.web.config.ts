@@ -5,7 +5,7 @@ import { legacyWebPlugin } from "./scripts/vite-legacy-web-plugin";
 const repoRoot = __dirname;
 const legacyAppDir = resolve(
   repoRoot,
-  "source/usr/palm/applications/com.webosflux.xuptertv.fidelity"
+  "src/webos/app"
 );
 
 export default defineConfig({
@@ -28,7 +28,7 @@ export default defineConfig({
   plugins: [
     legacyWebPlugin({
       repoRoot,
-      hlsFile: resolve(repoRoot, "source/web/hls.min.js"),
+      hlsFile: resolve(repoRoot, "src/web/hls.min.js"),
       devCoreFile: resolve(repoRoot, "src/platforms/web/legacyCoreDev.ts"),
       devUiFile: resolve(repoRoot, "src/ui/dev.ts")
     })

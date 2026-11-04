@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 const legacyJsDir = resolve(
   __dirname,
-  "source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js"
+  "src/webos/app/js"
 );
 
 export default defineConfig({

@@ -9,18 +9,18 @@
     "dev": "vite --config vite.web.config.ts",
     "dev:web": "pnpm run dev",
     "build:web": "node scripts/build-web.mjs && vite build --config vite.core.web.config.ts && vite build --config vite.ui.web.config.ts",
-    "start:web": "node source/web/server.js --app-dir=dist/web --no-open",
-    "start": "node source/web/server.js",
+    "start:web": "node src/web/server.js --app-dir=dist/web --no-open",
+    "start": "node src/web/server.js",
     "build:webos": "vite build --config vite.webos.config.ts",
     "build:core": "vite build --config vite.core.config.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src scripts vite.core.config.ts vite.core.web.config.ts vite.ui.config.ts vite.ui.web.config.ts vite.web.config.ts vite.webos.config.ts vitest.config.ts eslint.config.mjs",
     "check": "pnpm run lint && pnpm run lint:legacy && pnpm run typecheck && pnpm run test",
-    "build:ipk": "pnpm run build:core && pnpm run build:ui && cd source && ./tools/build-ipk.sh",
+    "build:ipk": "pnpm run build:core && pnpm run build:ui && ./src/tools/build-ipk.sh",
     "build:ui": "vite build --config vite.ui.config.ts",
     "build:ui:web": "vite build --config vite.ui.web.config.ts",
-    "lint:legacy": "eslint source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/app.js --config eslint.legacy.config.mjs"
+    "lint:legacy": "eslint src/webos/app/js/app.js --config eslint.legacy.config.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",

@@ -1,4 +1,4 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-call "%~dp0source\web\start.bat" %*
+call "%~dp0src\web\start.bat" %*

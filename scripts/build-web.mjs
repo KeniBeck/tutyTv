@@ -4,14 +4,13 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const appId = "com.webosflux.xuptertv.fidelity";
-const sourceApp = resolve(repoRoot, "source/usr/palm/applications", appId);
-const hlsFile = resolve(repoRoot, "source/web/hls.min.js");
+const sourceApp = resolve(repoRoot, "src/webos/app");
+const hlsFile = resolve(repoRoot, "src/web/hls.min.js");
 const outDir = resolve(repoRoot, "dist/web");
 
 export async function prepareWeb({ sourceApp, hlsFile, outDir }) {
   if (!existsSync(resolve(sourceApp, "index.html"))) {
-    throw new Error("No se encontro index.html de la app legacy.");
+    throw new Error("No se encontro index.html de la app webOS.");
   }
 
   const coreFile = resolve(sourceApp, "js/tuty-core.js");

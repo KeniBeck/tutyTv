@@ -1,7 +1,7 @@
 import globals from "globals";
 
 export default [{
-  files: ["source/usr/palm/applications/com.webosflux.xuptertv.fidelity/js/app.js"],
+  files: ["src/webos/app/js/app.js"],
   languageOptions: {
     ecmaVersion: 2022,
     sourceType: "script",

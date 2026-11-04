@@ -4,7 +4,7 @@ var http = require("http"),
     crypto = require("crypto"),
     urlmod = require("url"),
     tsIndexer = require("./ts-indexer"),
-    MAX_TOKENS = 6,
+    MAX_TOKENS = 64,
     tokens = {},
     order = [],
     subtitleTokens = {},
@@ -14,12 +14,12 @@ var http = require("http"),
     port = 0,
     httpAgent = new http.Agent({
         keepAlive: !0,
-        maxSockets: 4,
+        maxSockets: 16,
         keepAliveMsecs: 15e3
     }),
     httpsAgent = new https.Agent({
         keepAlive: !0,
-        maxSockets: 4,
+        maxSockets: 16,
         keepAliveMsecs: 15e3,
         rejectUnauthorized: !1
     }),
@@ -30,6 +30,7 @@ var http = require("http"),
 
 function destroyConnection(e) {
     if (e) {
+        if (e.res && !e.res.finished) return;
         if (e.up) {
             try {
                 e.up.unpipe()
@@ -266,7 +267,7 @@ function rewriteHlsManifest(e, t, r) {
 }
 
 function forward(e, t, r, n) {
-    activeToken !== n && (killActiveStreams(), activeToken = n);
+    activeToken = n;
     var o = {};
     e.headers.range && (o.Range = e.headers.range), e.headers["if-range"] && (o["If-Range"] = e.headers["if-range"]);
     var a = mediaRequest(r, "HEAD" === e.method ? "HEAD" : "GET", o),
@@ -285,7 +286,7 @@ function forward(e, t, r, n) {
     function c() {
         var e = activeUpstreams.indexOf(l); - 1 !== e && activeUpstreams.splice(e, 1), destroyConnection(l)
     }
-    activeUpstreams.push(l), e.on("close", c), e.on("aborted", c), t.on("close", c), t.on("finish", c), t.on("error", c);
+    activeUpstreams.push(l), e.on("aborted", c), t.on("close", c), t.on("finish", c), t.on("error", c);
     var u = (s ? https : http).request(i, function(o) {
         if (l.up = o, o.socket) try {
             o.socket.setNoDelay(!0)
@@ -322,9 +323,7 @@ function forward(e, t, r, n) {
         }
         t.writeHead(o.statusCode || 200, d), o.on("error", function() {
             c()
-        }), o.on("close", function() {
-            c()
-        }), o.on("end", function() {
+        }), o.on("aborted", function() {
             c()
         }), o.pipe(t)
     });

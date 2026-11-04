@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #
-# Genera un IPK de TutyTV a partir de source/usr.
+# Genera un IPK de TutyTV desde src/webos.
 #
 # Uso:
-#   ./tools/build-ipk.sh                 # usa la version actual de appinfo.json
-#   ./tools/build-ipk.sh 1.6.6           # cambia la version a 1.6.6 y compila
-#   ./tools/build-ipk.sh 1.6.6 salida.ipk
+#   ./src/tools/build-ipk.sh                 # usa la version de appinfo.json
+#   ./src/tools/build-ipk.sh 1.7.3           # cambia la version y compila
+#   ./src/tools/build-ipk.sh 1.7.3 salida.ipk
 #
-# El IPK por defecto se guarda en la carpeta padre de source/ (junto al
-# instalador INSTALAR-TUTYTV.sh).
+# El IPK por defecto se guarda en la raiz del repositorio. El arbol webOS se
+# ensambla en un staging temporal; no se escribe dentro de src/.
 
 set -euo pipefail
 
@@ -16,9 +16,11 @@ APP_ID="com.webosflux.xuptertv.fidelity"
 SVC_ID="${APP_ID}.service"
 
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-APP_DIR="${ROOT}/usr/palm/applications/${APP_ID}"
-PKG_DIR="${ROOT}/usr/palm/packages/${APP_ID}"
-SVC_DIR="${ROOT}/usr/palm/services/${SVC_ID}"
+REPO_ROOT=$(dirname -- "$ROOT")
+WEBOS_DIR="${ROOT}/webos"
+APP_DIR="${WEBOS_DIR}/app"
+PKG_DIR="${WEBOS_DIR}/package"
+SVC_DIR="${WEBOS_DIR}/service"
 
 VERSION="${1:-}"
 OUT="${2:-}"
@@ -129,8 +131,8 @@ validate_ipk() {
     echo "Validacion OK: estructura, integridad y metadatos correctos."
 }
 
-if [ ! -f "${ROOT}/control" ] || [ ! -f "${ROOT}/debian-binary" ] || [ ! -d "${ROOT}/usr" ]; then
-    echo "No encuentro control, debian-binary o usr/ dentro de ${ROOT}" >&2
+if [ ! -f "${WEBOS_DIR}/control" ] || [ ! -f "${WEBOS_DIR}/debian-binary" ] || [ ! -d "${APP_DIR}" ]; then
+    echo "No encuentro control, debian-binary o app/ dentro de ${WEBOS_DIR}" >&2
     exit 1
 fi
 
@@ -140,7 +142,7 @@ fi
 [ -n "$VERSION" ] || { echo "No pude detectar la version." >&2; exit 1; }
 
 if [ -z "$OUT" ]; then
-    OUT="$(dirname -- "$ROOT")/${APP_ID}_${VERSION}_all.ipk"
+    OUT="${REPO_ROOT}/${APP_ID}_${VERSION}_all.ipk"
 fi
 case "$OUT" in
     /*) ;;
@@ -157,20 +159,25 @@ sed -i -E "s/(\"version\"[[:space:]]*:[[:space:]]*\")[^\"]*(\")/\1${VERSION}\2/"
 if [ -f "${SVC_DIR}/package.json" ]; then
     sed -i -E "s/(\"version\"[[:space:]]*:[[:space:]]*\")[^\"]*(\")/\1${VERSION}\2/" "${SVC_DIR}/package.json"
 fi
-sed -i -E "s/^Version: .*/Version: ${VERSION}/" "${ROOT}/control"
+sed -i -E "s/^Version: .*/Version: ${VERSION}/" "${WEBOS_DIR}/control"
 sed -i -E "s/(<div class=\"welcome-version\">v)[^<]*(<\/div>)/\1${VERSION}\2/" "${APP_DIR}/index.html"
-
-SIZE=$(du -sb "${ROOT}/usr" | awk '{print $1}')
-sed -i -E "s/^Installed-Size: .*/Installed-Size: ${SIZE}/" "${ROOT}/control"
 
 BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/tuty-build.XXXXXX")
 trap 'rm -rf "$BUILD_DIR"' EXIT
+DATA_DIR="${BUILD_DIR}/data"
+mkdir -p "${DATA_DIR}/usr/palm/applications" "${DATA_DIR}/usr/palm/packages" "${DATA_DIR}/usr/palm/services"
+cp -a "${APP_DIR}" "${DATA_DIR}/usr/palm/applications/${APP_ID}"
+cp -a "${PKG_DIR}" "${DATA_DIR}/usr/palm/packages/${APP_ID}"
+cp -a "${SVC_DIR}" "${DATA_DIR}/usr/palm/services/${SVC_ID}"
 
-tar --format=ustar --owner=0 --group=0 --numeric-owner -cf "${BUILD_DIR}/control.tar" -C "$ROOT" control
-tar --format=ustar --owner=0 --group=0 --numeric-owner -cf "${BUILD_DIR}/data.tar" -C "$ROOT" usr
+SIZE=$(du -sb "${DATA_DIR}/usr" | awk '{print $1}')
+sed -i -E "s/^Installed-Size: .*/Installed-Size: ${SIZE}/" "${WEBOS_DIR}/control"
+
+tar --format=ustar --owner=0 --group=0 --numeric-owner -cf "${BUILD_DIR}/control.tar" -C "$WEBOS_DIR" control
+tar --format=ustar --owner=0 --group=0 --numeric-owner -cf "${BUILD_DIR}/data.tar" -C "$DATA_DIR" usr
 gzip -n -9 "${BUILD_DIR}/control.tar"
 gzip -n -9 "${BUILD_DIR}/data.tar"
-cp "${ROOT}/debian-binary" "${BUILD_DIR}/debian-binary"
+cp "${WEBOS_DIR}/debian-binary" "${BUILD_DIR}/debian-binary"
 
 rm -f "$OUT"
 (

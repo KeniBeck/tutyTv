@@ -5,7 +5,7 @@ import importPlugin from "eslint-plugin-import";
 
 export default [
   {
-    ignores: ["dist/**", "source/**", "capturas/**", "*.ipk"]
+    ignores: ["dist/**", "src/web/**", "src/webos/**", "src/tools/**", "capturas/**", "*.ipk", "src/ui/legacy/**"]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

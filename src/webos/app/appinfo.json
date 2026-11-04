@@ -1,0 +1,18 @@
+{
+  "id": "com.webosflux.xuptertv.fidelity",
+  "version": "1.7.2",
+  "vendor": "webosflux",
+  "type": "web",
+  "main": "index.html",
+  "title": "TutyTV",
+  "icon": "images/icon_80x80.png",
+  "largeIcon": "images/icon_130x130.png",
+  "resolution": "1920x1080",
+  "bgColor": "#000000",
+  "bgImage": "",
+  "spinnerOnLaunch": false,
+  "uiRevision": 2,
+  "disableBackHistoryAPI": true,
+  "requiredACG": [],
+  "requiredPermissions": []
+}
