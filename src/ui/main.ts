@@ -750,10 +750,13 @@ export type {
 export {
   attachDetail,
   closeSeasonPopup,
+  closeSettingsPopup,
   hasDetailRuntime,
   hasSeasonPopup,
+  hasSettingsPopup,
   renderDetail,
-  resetDetailRuntime
+  resetDetailRuntime,
+  syncDetailCurrentEpisode
 } from "./screens/detail/detailScreen";
 export type {
   DetailEpisode,

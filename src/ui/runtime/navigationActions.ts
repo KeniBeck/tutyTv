@@ -124,22 +124,29 @@ export function returnFromPlayer(): boolean {
       state.detailNeedsRebuild = false;
       host.renderDetail(state.detail);
       rebuilt = true;
-      const season = host.getDetailBottom()?.querySelector?.(".detail-season") || null;
-      if (season) {
-        host.focus(season);
-      }
     } else if (state.detail) {
       host.markDetailPlaying(state.detail);
     }
-    if (!rebuilt) {
-      const saved = target.focus;
-      if (saved && host.canFocus(saved)) {
-        host.focus(saved);
-      } else {
-        const first = host.getDetailButtons()?.querySelector?.(".focusable") || null;
-        if (first) {
-          host.focus(first);
-        }
+    const bottom = host.getDetailBottom();
+    const current = bottom?.querySelector?.(".detail-episode.is-current") || null;
+    if (current && host.canFocus(current)) {
+      host.focus(current);
+      return true;
+    }
+    if (rebuilt) {
+      const season = bottom?.querySelector?.(".detail-season") || null;
+      if (season) {
+        host.focus(season);
+      }
+      return true;
+    }
+    const saved = target.focus;
+    if (saved && host.canFocus(saved)) {
+      host.focus(saved);
+    } else {
+      const first = host.getDetailButtons()?.querySelector?.(".focusable") || null;
+      if (first) {
+        host.focus(first);
       }
     }
     return true;
@@ -200,7 +207,7 @@ export function toggleDetailSynopsis(): boolean {
   detail.classList.toggle("is-synopsis-open", open);
   const more = host.getSynopsisMore();
   if (more) {
-    more.textContent = open ? "Menos" : "Más";
+    more.textContent = open ? "Ocultar sinopsis" : "Ver sinopsis";
   }
   return true;
 }

@@ -11,6 +11,7 @@ export interface LivePlaybackResponse {
   returnValue?: boolean;
   proxyPath?: string;
   url?: string;
+  headers?: Record<string, string>;
   [key: string]: unknown;
 }
 
@@ -26,7 +27,7 @@ export interface PlayerLiveHost {
   ): void;
   notify(message: string): void;
   showInfobar(): void;
-  loadSource(url: string): void;
+  loadSource(url: string, options?: { headers?: Record<string, string> }): void;
 }
 
 let host: PlayerLiveHost | null = null;
@@ -86,7 +87,11 @@ export function playLiveChannel(
       }
       host.notify("");
       host.showInfobar();
-      host.loadSource(url);
+      if (response.headers && Object.keys(response.headers).length) {
+        host.loadSource(url, { headers: response.headers });
+      } else {
+        host.loadSource(url);
+      }
     });
   }
 

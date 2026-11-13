@@ -52,14 +52,14 @@ describe("lazy posters", () => {
     expect(posters[0]?.style.display).toBe("");
   });
 
-  it("clears sources outside the active page", () => {
+  it("keeps loaded posters when they leave the active viewport", () => {
     const { posters } = setup("home", false);
     posters[0]!.src = "poster.jpg";
     posters[0]!.setAttribute("src", "poster.jpg");
 
     expect(loadVisiblePosters()).toBe(true);
-    expect(posters[0]?.src).toBe("");
-    expect(posters[0]?.getAttribute("src")).toBeNull();
+    expect(posters[0]?.src).toBe("poster.jpg");
+    expect(posters[0]?.getAttribute("src")).toBe("poster.jpg");
   });
 
   it("handles search and detail visibility", () => {

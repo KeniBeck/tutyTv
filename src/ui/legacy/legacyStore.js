@@ -287,7 +287,13 @@ export function startLegacyStore() {
         state: j,
         byId: t,
         focus: tt,
-        getDetailFocusable: () => oe ? oe.querySelector(".focusable") : null,
+        getDetailFocusable: function () {
+            var bottom = t("detail-bottom");
+            var current = bottom ? bottom.querySelector(".detail-episode.is-current") : null;
+            var playing = bottom ? bottom.querySelector(".detail-episode.is-playing") : null;
+            var episode = bottom ? bottom.querySelector(".detail-episode.focusable") : null;
+            return current || playing || episode || (oe ? oe.querySelector(".focusable") : null);
+        },
         getPlayerStage: () => ye,
         findHistory: (item) => historyRuntime.find(item),
         syncMediaInfo: qa,

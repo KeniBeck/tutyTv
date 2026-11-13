@@ -1,5 +1,6 @@
 import { currentPlaybackPosition } from "../../../core/usecases/playback/playbackSession";
 import { resolvePlaybackTotalWithRelay } from "../../../core/usecases/playback/playbackProgress";
+import { isAvPlayActive, isAvPlayAvailable, startAvPlay } from "../../../platforms/tizen/avPlay";
 import type { AppState } from "../../runtime/state";
 
 export interface SourceVideo {
@@ -229,7 +230,7 @@ export function getPlayerPlaybackTotal(): number {
 
 export function loadPlayerSource(
   url?: string,
-  options?: { nativeHls?: boolean }
+  options?: { nativeHls?: boolean; headers?: Record<string, string> }
 ): boolean {
   if (!host || !url) {
     return false;
@@ -239,8 +240,13 @@ export function loadPlayerSource(
     return false;
   }
 
+  const requestHeaders = (options && options.headers) || {};
+  const hasHeaders = Object.keys(requestHeaders).length > 0;
   const state = host.state;
-  const nativeHls = Boolean(options && options.nativeHls);
+  const nativeHls =
+    Boolean(options && options.nativeHls) ||
+    (host.nativeTvPlayback() &&
+      /Tizen|SMART-TV/i.test(typeof navigator !== "undefined" ? navigator.userAgent : ""));
   let resumeAt = Number(state.resumePosition) || 0;
   state.resumePosition = 0;
   const applyResume = (): void => {
@@ -316,6 +322,9 @@ export function loadPlayerSource(
     error: function onError() {
       const active = host;
       if (!active) {
+        return;
+      }
+      if (isAvPlayActive() && !video.error) {
         return;
       }
       active.hideLoading();
@@ -461,12 +470,22 @@ export function loadPlayerSource(
     progress: updateRelayProgress
   });
 
-  const useHls = host.shouldUseHls(
-    isHls,
-    nativeHls,
-    host.nativeTvPlayback(),
-    host.isHlsSupported()
-  );
+  if (state.playerMode === "vod" && !isHls && isAvPlayAvailable()) {
+    host.applyPlaybackSurface(video, true);
+    if (startAvPlay(video, url)) {
+      host.notify("");
+      return true;
+    }
+  }
+
+  const useHls =
+    (hasHeaders && isHls && host.isHlsSupported()) ||
+    host.shouldUseHls(
+      isHls,
+      nativeHls,
+      host.nativeTvPlayback(),
+      host.isHlsSupported()
+    );
   if (useHls) {
     host.destroyHls();
     try {
@@ -493,7 +512,44 @@ export function loadPlayerSource(
       // Ignore media option cleanup failures before HLS setup.
     }
 
-    const hls = host.createHls({ enableWorker: true, backBufferLength: 30 });
+    const hlsOptions: Record<string, unknown> = {
+      enableWorker: true,
+      backBufferLength: 30
+    };
+    if (hasHeaders) {
+      hlsOptions.xhrSetup = function xhrSetup(xhr: XMLHttpRequest, url: string): void {
+        try {
+          if (xhr.readyState === 0) {
+            xhr.open("GET", url, true);
+          }
+        } catch {
+          // hls.js will retry the setup if opening fails here.
+        }
+        for (const name of Object.keys(requestHeaders)) {
+          try {
+            xhr.setRequestHeader(name, requestHeaders[name] as string);
+          } catch {
+            // Some headers (User-Agent, Host...) are forbidden in browsers.
+          }
+        }
+      };
+      hlsOptions.fetchSetup = function fetchSetup(
+        context: { url: string },
+        init: RequestInit
+      ): Request {
+        const headers = new Headers(init.headers || {});
+        for (const name of Object.keys(requestHeaders)) {
+          try {
+            headers.set(name, requestHeaders[name] as string);
+          } catch {
+            // Some headers (User-Agent, Host...) are forbidden in browsers.
+          }
+        }
+        init.headers = headers;
+        return new Request(context.url, init);
+      };
+    }
+    const hls = host.createHls(hlsOptions);
     host.setActiveHls(hls);
     host.wireHlsEvents(
       hls,

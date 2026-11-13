@@ -11,6 +11,7 @@ describe("detectPlatformCapabilities", () => {
 
     expect(capabilities).toEqual({
       isWebOS: true,
+      isTizen: false,
       supportsNativeHls: true,
       supportsMse: true
     });
@@ -20,6 +21,15 @@ describe("detectPlatformCapabilities", () => {
     expect(
       detectPlatformCapabilities({ hasPalmSystem: true, userAgent: "Mozilla/5.0" }).isWebOS
     ).toBe(true);
+  });
+
+  it("detects Tizen through the Samsung user agent", () => {
+    const capabilities = detectPlatformCapabilities({
+      userAgent: "Mozilla/5.0 (SMART-TV; LINUX; Tizen 6.0) AppleWebKit/537.36"
+    });
+
+    expect(capabilities.isWebOS).toBe(false);
+    expect(capabilities.isTizen).toBe(true);
   });
 
   it("reports no native HLS on desktop browsers", () => {
@@ -60,10 +70,13 @@ describe("createPlatformAdapter", () => {
     expect(adapter.canPlayPreviewHls({})).toBe(false);
     const webBack = vi.fn();
     const palmBack = vi.fn();
+    const tizenExit = vi.fn();
     adapter.platformBack({ webOSTV: { platformBack: webBack }, PalmSystem: { platformBack: palmBack } });
     expect(webBack).toHaveBeenCalledOnce();
     expect(palmBack).not.toHaveBeenCalled();
     adapter.platformBack({ PalmSystem: { platformBack: palmBack } });
     expect(palmBack).toHaveBeenCalledOnce();
+    adapter.platformBack({ tizen: { application: { getCurrentApplication: () => ({ exit: tizenExit }) } } });
+    expect(tizenExit).toHaveBeenCalledOnce();
   });
 });

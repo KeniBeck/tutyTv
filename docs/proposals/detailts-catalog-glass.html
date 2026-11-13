@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TutyTV - Detalle Película y Serie (Dark Glassmorphism + Minimal)</title>
+<style>
+:root {
+  --ink-0: #05070c;
+  --ink-1: #080c16;
+  --ink-2: #0e1523;
+  --surface-1: #121a2a;
+  --surface-2: #182338;
+  --text-1: #f5f8ff;
+  --text-2: #b3bfd2;
+  --text-3: #7f8da3;
+  --accent: #c91923;
+  --accent-bright: #e50914;
+  --accent-deep: #6f0b16;
+  --line: rgba(255,255,255,.12);
+  --line-strong: rgba(255,255,255,.22);
+  --focus: #ffffff;
+  --glow: rgba(201,25,35,.42);
+  --glass-soft: rgba(255,255,255,.055);
+  --glass: rgba(18,27,43,.66);
+  --glass-strong: rgba(10,16,27,.86);
+  --glass-border: rgba(255,255,255,.14);
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.28);
+  --shadow-md: 0 10px 30px rgba(0,0,0,.38);
+  --shadow-lg: 0 24px 70px rgba(0,0,0,.55);
+  --font-ui: Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 260ms;
+}
+* { box-sizing: border-box; }
+html { background: #04060a; }
+body {
+  margin: 0;
+  color: var(--text-1);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(201,25,35,.14), transparent 34%),
+    radial-gradient(circle at 92% 8%, rgba(110,168,254,.10), transparent 30%),
+    #04060a;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+.proposal-wrap { width: 1680px; max-width: 100%; margin: 0 auto; padding: 48px 40px 80px; }
+.proposal-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 34px; }
+.eyebrow { color: var(--accent-bright); font-size: 14px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+h1 { margin: 10px 0 8px; font-size: 42px; line-height: 1.08; letter-spacing: -.02em; }
+.lede { margin: 0; max-width: 920px; color: var(--text-2); font-size: 17px; line-height: 1.55; }
+.status {
+  flex: 0 0 auto;
+  margin-left: 40px;
+  padding: 12px 18px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-pill);
+  background: rgba(18,27,43,.78);
+  color: var(--text-2);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.status strong { color: var(--text-1); }
+.board { margin-top: 44px; }
+.board-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; }
+.board-head h2 { margin: 0; font-size: 25px; letter-spacing: -.01em; }
+.board-head p { margin: 5px 0 0; color: var(--text-3); font-size: 14px; }
+.board-tag {
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: rgba(201,25,35,.16);
+  border: 1px solid rgba(229,9,20,.34);
+  color: #ffd6da;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.screen-frame {
+  position: relative;
+  width: 1600px;
+  height: 900px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 26px;
+  background: #000;
+  box-shadow: var(--shadow-lg);
+}
+.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  transform: scale(.8333333);
+  transform-origin: top left;
+  background: var(--ink-0);
+  color: var(--text-1);
+}
+.canvas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(4,7,13,.10) 0%, rgba(4,7,13,.08) 42%, rgba(4,7,13,.80) 100%),
+    radial-gradient(circle at 50% -10%, transparent 45%, rgba(0,0,0,.34) 100%);
+}
+.backdrop { position: absolute; inset: 0; overflow: hidden; }
+.backdrop img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.8) brightness(.38); transform: scale(1.04); }
+.backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(5,7,12,.94) 0%, rgba(5,7,12,.66) 38%, rgba(5,7,12,.12) 76%),
+    linear-gradient(0deg, rgba(5,7,12,.93) 0%, transparent 48%);
+}
+.glass {
+  background: rgba(13,20,33,.94);
+  border: 1px solid var(--glass-border);
+}
+@supports ((backdrop-filter: blur(18px)) or (-webkit-backdrop-filter: blur(18px))) {
+  .glass {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(18px) saturate(125%);
+    backdrop-filter: blur(18px) saturate(125%);
+  }
+  .glass-strong {
+    background: var(--glass-strong);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+    backdrop-filter: blur(24px) saturate(120%);
+  }
+}
+.topbar {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  top: 24px;
+  height: 64px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.brand { display: flex; align-items: center; min-width: 250px; }
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  margin-right: 12px;
+  border-radius: 11px;
+  background: linear-gradient(145deg, var(--accent-bright), var(--accent-deep));
+  box-shadow: 0 0 24px rgba(201,25,35,.38);
+  position: relative;
+}
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 2px solid rgba(255,255,255,.88);
+  border-radius: 5px;
+  border-right-color: transparent;
+}
+.brand-text { font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+.brand-text span { color: var(--accent-bright); }
+.credit { flex: 1; text-align: center; color: var(--text-3); font-size: 13px; letter-spacing: .02em; }
+.credit b { color: var(--accent-bright); font-weight: 600; }
+.top-actions { display: flex; align-items: center; min-width: 250px; justify-content: flex-end; }
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  margin-left: 10px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(255,255,255,.05);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn svg { width: 18px; height: 18px; }
+.clock { margin-left: 18px; padding-left: 18px; border-left: 1px solid var(--line); font-size: 20px; color: var(--text-1); }
+
+/* ============================
+   DETALLE PELÍCULA / SERIE
+   ============================ */
+.detail-poster {
+  position: absolute;
+  left: 80px;
+  top: 140px;
+  width: 260px;
+  height: 390px;
+  z-index: 12;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-lg);
+}
+.detail-poster img { width: 100%; height: 100%; object-fit: cover; }
+.detail-poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(4,7,13,.7), transparent 50%);
+}
+.poster-quality {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  z-index: 2;
+  padding: 5px 10px;
+  border-radius: var(--r-xs);
+  background: rgba(6,10,17,.82);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+.detail-info {
+  position: absolute;
+  left: 380px;
+  top: 140px;
+  width: 660px;
+  z-index: 12;
+}
+.detail-title-row { display: flex; align-items: center; margin-bottom: 6px; }
+.detail-title-row h2 {
+  margin: 0;
+  font-size: 52px;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  text-shadow: 0 3px 18px rgba(0,0,0,.55);
+}
+.score-badge {
+  margin-left: 16px;
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  background: rgba(246,196,83,.14);
+  border: 1px solid rgba(246,196,83,.32);
+  color: #f6c453;
+  font-size: 20px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.detail-subtitle {
+  color: var(--text-3);
+  font-size: 17px;
+  margin-bottom: 18px;
+  letter-spacing: .01em;
+}
+.meta-pills { display: flex; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.meta-pills span {
+  padding: 4px 12px;
+  margin: 0 10px 8px 0;
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+.genre-pills { display: flex; flex-wrap: wrap; margin-bottom: 18px; }
+.genre-pills span {
+  padding: 6px 14px;
+  margin: 0 8px 8px 0;
+  border-radius: var(--r-pill);
+  border: 1px solid rgba(201,25,35,.32);
+  background: rgba(201,25,35,.12);
+  color: #ffc7cc;
+  font-size: 13px;
+  font-weight: 600;
+}
+.info-rows {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+.info-row { display: flex; margin-bottom: 8px; font-size: 15px; line-height: 1.45; }
+.info-row:last-child { margin-bottom: 0; }
+.info-row b { flex: 0 0 96px; color: var(--text-3); font-weight: 600; }
+.info-row span { color: var(--text-2); }
+.synopsis {
+  margin: 0 0 20px;
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 660px;
+}
+.synopsis a {
+  color: var(--accent-bright);
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.detail-actions { display: flex; flex-wrap: wrap; align-items: center; margin-bottom: 4px; }
+.dbtn {
+  height: 50px;
+  padding: 0 22px;
+  margin: 0 10px 10px 0;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-strong);
+  background: rgba(255,255,255,.06);
+  color: var(--text-1);
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dbtn svg { width: 18px; height: 18px; margin-right: 8px; flex: 0 0 auto; }
+.dbtn-primary {
+  background: linear-gradient(120deg, var(--accent-bright), var(--accent));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(201,25,35,.32);
+}
+.dbtn-primary.is-focused {
+  border-color: #fff;
+  box-shadow: 0 0 0 4px var(--glow), 0 10px 28px rgba(201,25,35,.4);
+}
+.dbtn.is-focused {
+  border-color: #fff;
+  background: rgba(201,25,35,.28);
+  box-shadow: 0 0 0 4px var(--glow), var(--shadow-md);
+}
+
+/* Preview (película) */
+.detail-still {
+  position: absolute;
+  left: 1120px;
+  top: 140px;
+  width: 720px;
+  height: 405px;
+  z-index: 11;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-lg);
+  background: #000;
+}
+.detail-still > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .9;
+}
+.detail-still::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(0deg, rgba(4,7,13,.72) 0%, transparent 45%),
+    linear-gradient(90deg, rgba(4,7,13,.30) 0%, transparent 40%);
+  pointer-events: none;
+}
+.still-badge {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  z-index: 2;
+  padding: 7px 12px;
+  border-radius: var(--r-pill);
+  background: rgba(8,12,20,.76);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.still-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 76px;
+  height: 76px;
+  margin: -38px 0 0 -38px;
+  border-radius: 50%;
+  background: rgba(229,9,20,.92);
+  border: 1px solid rgba(255,255,255,.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 18px 40px rgba(0,0,0,.5), 0 0 0 8px rgba(229,9,20,.18);
+}
+.still-play svg { width: 28px; height: 28px; margin-left: 4px; color: #fff; }
+
+/* Ajustes de reproducción (idioma + fluidez) */
+.settings-wrap { position: relative; display: inline-flex; }
+.settings-wrap[open] .settings-btn {
+  border-color: #fff;
+  background: rgba(201,25,35,.28);
+  box-shadow: 0 0 0 4px var(--glow);
+}
+.settings-btn { list-style: none; }
+.settings-btn::-webkit-details-marker { display: none; }
+.settings-pop {
+  position: absolute;
+  left: 0;
+  top: 58px;
+  width: 320px;
+  z-index: 40;
+  padding: 18px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-strong);
+  box-shadow: var(--shadow-lg);
+}
+.settings-pop--up { top: auto; bottom: 58px; }
+.settings-pop--right { left: calc(100% + 12px); top: 0; }
+.settings-title { margin-bottom: 12px; color: var(--text-3); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.settings-row:last-of-type { margin-bottom: 0; }
+.settings-row span { color: var(--text-2); font-size: 14px; }
+.settings-row select {
+  height: 36px;
+  min-width: 132px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,.07);
+  color: var(--text-1);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+.settings-note { margin: 12px 0 0; color: var(--text-3); font-size: 11px; line-height: 1.45; }
+
+/* Detalle de serie minimalista */
+.series-poster { left: 80px; top: 140px; width: 230px; height: 345px; }
+.series-info { left: 350px; top: 140px; width: 1080px; }
+.series-info .detail-title-row h2 { font-size: 56px; }
+.series-info .synopsis { max-width: 940px; }
+.series-credits { margin-top: 16px; max-width: 940px; color: var(--text-3); font-size: 14px; line-height: 1.5; }
+.series-credits b { color: var(--text-2); font-weight: 600; }
+
+/* Episodios full-width tipo streaming */
+.episode-section {
+  position: absolute;
+  left: 80px;
+  right: 80px;
+  top: 554px;
+  z-index: 12;
+}
+.episode-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 14px; }
+.episode-head h3 { margin: 0; font-size: 32px; letter-spacing: -.01em; }
+.episode-head p { margin: 6px 0 0; color: var(--text-3); font-size: 14px; }
+.episode-title-row { display: flex; align-items: center; }
+.episode-title-row h3 { margin-right: 16px; }
+.season-select {
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,.06);
+  color: var(--text-1);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.season-select svg { width: 14px; height: 14px; margin-left: 10px; color: var(--text-3); }
+.range-row { display: flex; flex-wrap: wrap; margin-bottom: 12px; }
+.range-pill {
+  height: 30px;
+  margin: 0 6px 6px 0;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,.055);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 28px;
+}
+.range-pill.is-selected { background: rgba(201,25,35,.22); border-color: rgba(229,9,20,.46); color: #fff; }
+.range-pill.is-focused { background: var(--accent); border-color: #fff; color: #fff; box-shadow: 0 0 0 3px var(--glow); }
+.episode-rail { display: flex; }
+.ep-card {
+  position: relative;
+  width: 280px;
+  height: 270px;
+  margin-right: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: rgba(12,19,31,.88);
+  box-shadow: var(--shadow-sm);
+}
+.ep-card:last-child { margin-right: 0; }
+.ep-card-thumb { position: relative; width: 100%; height: 158px; overflow: hidden; background: #0b101a; }
+.ep-card-thumb img { width: 100%; height: 100%; object-fit: cover; opacity: .92; }
+.ep-card-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(4,7,13,.72) 0%, transparent 58%);
+}
+.ep-card-num {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 2;
+  min-width: 30px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: var(--r-xs);
+  background: rgba(6,10,17,.82);
+  border: 1px solid var(--line);
+  color: var(--text-1);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 24px;
+  text-align: center;
+}
+.ep-card-body { padding: 12px 14px 14px; }
+.ep-card-title {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ep-card-meta { margin-top: 5px; color: var(--text-3); font-size: 13px; }
+.ep-card-desc {
+  margin-top: 7px;
+  max-height: 36px;
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.ep-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,.18); }
+.ep-progress i { display: block; height: 100%; background: var(--accent-bright); }
+.ep-card.is-focused {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px var(--glow), var(--shadow-md);
+}
+.ep-transition { margin-top: 10px; color: var(--text-3); font-size: 12px; }
+
+/* Película minimalista con poster, preview y recomendaciones */
+.movie-poster { left: 80px; top: 140px; width: 230px; height: 345px; }
+.minimal-info { position: absolute; left: 350px; top: 140px; width: 680px; z-index: 12; }
+.minimal-kicker { margin-bottom: 10px; color: var(--accent-bright); font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.minimal-info .detail-title-row h2 { font-size: 52px; }
+.minimal-info .detail-subtitle { margin-bottom: 14px; font-size: 16px; }
+.minimal-info .meta-pills { margin-bottom: 14px; }
+.minimal-copy { margin: 0 0 18px; max-width: 680px; color: var(--text-2); font-size: 15px; line-height: 1.55; }
+.minimal-credits { margin-top: 16px; max-width: 680px; color: var(--text-3); font-size: 13px; line-height: 1.5; }
+.minimal-credits b { color: var(--text-2); font-weight: 600; }
+.similar-section { position: absolute; left: 80px; right: 80px; top: 600px; z-index: 12; }
+.similar-link { color: var(--text-3); font-size: 14px; font-weight: 600; }
+
+/* Recomendaciones */
+.similar {
+  position: absolute;
+  left: 80px;
+  right: 80px;
+  top: 680px;
+  z-index: 12;
+}
+.similar-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 14px; }
+.similar-head h3 { margin: 0; font-size: 26px; letter-spacing: -.01em; }
+.similar-head span { color: var(--text-3); font-size: 15px; }
+.similar-cards { display: flex; justify-content: space-between; }
+.similar-card {
+  position: relative;
+  width: 230px;
+  height: 345px;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-sm);
+}
+.similar-card img { width: 100%; height: 100%; object-fit: cover; }
+.similar-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(4,7,13,.88) 0%, transparent 55%);
+}
+.similar-copy {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  z-index: 2;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.similar-badge {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 2;
+  padding: 4px 8px;
+  border-radius: var(--r-xs);
+  background: rgba(6,10,17,.8);
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+.similar-card.is-focused {
+  border-color: #fff;
+  box-shadow: 0 0 0 4px var(--glow), var(--shadow-md);
+}
+
+/* Hints */
+.detail-hint {
+  position: absolute;
+  left: 80px;
+  right: 80px;
+  bottom: 22px;
+  z-index: 30;
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-3);
+  font-size: 13px;
+}
+.key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  margin-right: 6px;
+  padding: 0 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  color: var(--text-1);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Review */
+.review {
+  margin-top: 46px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: rgba(12,19,31,.72);
+}
+.review h2 { margin: 0 0 16px; font-size: 22px; }
+.review-grid { display: flex; flex-wrap: wrap; }
+.review-block { width: 25%; padding-right: 24px; }
+.review-block b { display: block; margin-bottom: 7px; font-size: 14px; }
+.review-block p { margin: 0; color: var(--text-3); font-size: 13px; line-height: 1.5; }
+.swatches { display: flex; margin-top: 18px; }
+.swatch { width: 46px; height: 46px; margin-right: 10px; border-radius: 12px; border: 1px solid var(--line); }
+.labels { display: flex; margin-top: 8px; color: var(--text-3); font-size: 11px; }
+.labels span { width: 56px; margin-right: 0; }
+.fallback { display: flex; margin-top: 22px; }
+.fallback-card { width: 270px; height: 96px; margin-right: 14px; border-radius: var(--r-md); border: 1px solid var(--glass-border); background: rgba(13,20,33,.94); padding: 16px; }
+.fallback-card.glass { background: var(--glass); }
+.fallback-card b { display: block; font-size: 13px; }
+.fallback-card span { display: block; margin-top: 6px; color: var(--text-3); font-size: 12px; line-height: 1.4; }
+.note { margin-top: 12px; color: var(--text-3); font-size: 12px; line-height: 1.55; }
+@media (max-width: 1680px) {
+  .proposal-wrap { padding-left: 24px; padding-right: 24px; }
+  .screen-frame { transform-origin: top left; }
+}
+</style>
+</head>
+<body>
+<div class="proposal-wrap">
+  <header class="proposal-head">
+    <div>
+      <div class="eyebrow">TutyTV / Fase 7 / Propuesta visual</div>
+      <h1>Detalle de Película y Serie</h1>
+      <p class="lede">Propuesta Dark Glassmorphism con referencia cinematográfica y variantes minimalistas. La serie elimina "Quizás te guste" y lleva los episodios a un carril full-width tipo streaming, con transición de temporada documentada. La película conserva poster, preview del video y recomendaciones, pero con ficha breve y las recomendaciones en formato de card de episodio. Idioma y fluidez salen de la ficha y se agrupan en Ajustes de reproducción. Esta página es un artefacto de revisión: no carga la app ni modifica el runtime.</p>
+    </div>
+    <div class="status"><strong>1920x1080</strong> · Canvas escalado · Variantes A/B/C</div>
+  </header>
+
+  <!-- ==============================================
+       PANTALLA 01 · DETALLE DE PELÍCULA (REFERENCIA)
+       ============================================== -->
+  <section class="board" id="movie">
+    <div class="board-head">
+      <div>
+        <h2>Película / Detalle (referencia)</h2>
+        <p>Poster 2:3, ficha técnica, sinopsis con "Más", acciones y recomendaciones. Idioma y fluidez se retiran de la ficha y pasan a Ajustes.</p>
+      </div>
+      <div class="board-tag">Pantalla piloto 03</div>
+    </div>
+    <div class="screen-frame">
+      <div class="canvas">
+        <div class="backdrop">
+          <img src="../../src/webos/app/assets/catalog/sacrifice.jpg" alt="">
+        </div>
+
+        <header class="topbar glass">
+          <div class="brand">
+            <div class="brand-mark"></div>
+            <div class="brand-text">Tuty<span>TV</span></div>
+          </div>
+          <div class="credit">Port LG webOS <b>tuty</b></div>
+          <div class="top-actions">
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+            </div>
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            </div>
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg>
+            </div>
+            <div class="clock">1:13 PM</div>
+          </div>
+        </header>
+
+        <!-- Poster -->
+        <article class="detail-poster">
+          <img src="../../src/webos/app/assets/catalog/spiderman.jpg" alt="">
+          <div class="poster-quality">4K HDR</div>
+        </article>
+
+        <!-- Ficha técnica -->
+        <section class="detail-info">
+          <div class="detail-title-row">
+            <h2>Érase una Vez en México</h2>
+            <span class="score-badge">6.4</span>
+          </div>
+          <div class="detail-subtitle">Érase una vez en México</div>
+
+          <div class="meta-pills">
+            <span>2023</span>
+            <span>2h 8min</span>
+            <span>16+</span>
+            <span>Dolby Atmos</span>
+          </div>
+
+          <div class="genre-pills">
+            <span>Acción</span>
+            <span>Crimen</span>
+            <span>Thriller</span>
+          </div>
+
+          <div class="info-rows">
+            <div class="info-row"><b>Director</b><span>Robert Rodriguez</span></div>
+            <div class="info-row"><b>Reparto</b><span>Antonio Banderas, Salma Hayek, Johnny Depp</span></div>
+          </div>
+
+          <p class="synopsis">
+            Sands (interpretado por Johnny Depp), un peculiar agente de la CIA, quien ha sido enviado a México con la misión de encontrar a un peligroso narcotraficante. Lo que parecía un trabajo sencillo termina convirtiéndose en una carrera contra el tiempo...
+            <a>Más</a>
+          </p>
+
+          <div class="detail-actions">
+            <button class="dbtn dbtn-primary is-focused">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l11 7-11 7z"/></svg>
+              Reproducir
+            </button>
+            <button class="dbtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 5.6a5.5 5.5 0 00-7.8 0L12 6.7l-1.1-1.1a5.5 5.5 0 00-7.8 7.8L12 22l8.8-8.6a5.5 5.5 0 000-7.8z"/></svg>
+              Favorito
+            </button>
+            <button class="dbtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+              Recordatorio
+            </button>
+            <button class="dbtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3"/></svg>
+              Pantalla completa
+            </button>
+            <details class="settings-wrap">
+              <summary class="dbtn settings-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21h-4v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3v-4h.1a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 001.9.3 1.7 1.7 0 001-1.6V3h4v.1a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 00-.3 1.9 1.7 1.7 0 001.6 1h.1v4H21a1.7 1.7 0 00-1.6 1z"/></svg>
+                Ajustes
+              </summary>
+              <div class="settings-pop glass-strong">
+                <div class="settings-title">Reproducción</div>
+                <div class="settings-row"><span>Idioma</span><select><option>Español</option><option>Original</option></select></div>
+                <div class="settings-row"><span>Fluidez</span><select><option>Normal</option><option>Fluido</option></select></div>
+                <p class="settings-note">Se aplica al iniciar el reproductor; también disponible en pantalla completa.</p>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <!-- Preview / Still -->
+        <aside class="detail-still">
+          <img src="../../src/webos/app/assets/catalog/sacrifice.jpg" alt="">
+          <div class="still-badge">Vista previa</div>
+          <div class="still-play">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l11 7-11 7z"/></svg>
+          </div>
+        </aside>
+
+        <!-- Recomendaciones -->
+        <section class="similar">
+          <div class="similar-head">
+            <h3>Quizás te guste</h3>
+            <span>Ver todo</span>
+          </div>
+          <div class="similar-cards">
+            <div class="similar-card is-focused">
+              <img src="../../src/webos/app/assets/catalog/carrie.jpg" alt="">
+              <div class="similar-badge">NUEVO</div>
+              <div class="similar-copy">Niñera, ten...</div>
+            </div>
+            <div class="similar-card">
+              <img src="../../src/webos/app/assets/catalog/fall2.jpg" alt="">
+              <div class="similar-copy">Madre adole...</div>
+            </div>
+            <div class="similar-card">
+              <img src="../../src/webos/app/assets/catalog/hechizo.jpg" alt="">
+              <div class="similar-copy">Papá se vol...</div>
+            </div>
+            <div class="similar-card">
+              <img src="../../src/webos/app/assets/catalog/tenzing.jpg" alt="">
+              <div class="similar-copy">Montevideo</div>
+            </div>
+            <div class="similar-card">
+              <img src="../../src/webos/app/assets/catalog/matchbox.jpg" alt="">
+              <div class="similar-copy">Cascabeles</div>
+            </div>
+            <div class="similar-card">
+              <img src="../../src/webos/app/assets/catalog/spiderman.jpg" alt="">
+              <div class="similar-copy">Green Lante...</div>
+            </div>
+            <div class="similar-card">
+              <img src="../../src/webos/app/assets/catalog/animales.jpg" alt="">
+              <div class="similar-copy">Tom and Jer...</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="detail-hint">
+          <div><span class="key">OK</span>Seleccionar <span class="key">BACK</span>Volver <span class="key">INFO</span>Sinopsis</div>
+          <div>Foco simulado: botón principal + card (solo demo)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================
+       PANTALLA 02 · DETALLE DE SERIE
+       ============================================== -->
+  <section class="board" id="series">
+    <div class="board-head">
+      <div>
+        <h2>Serie / Detalle minimalista</h2>
+        <p>Poster compacto, ficha reducida y episodios full-width con still 16:9, número, título, duración y progreso. Sin "Quizás te guste". Temporada y bloques se conservan como navegación secundaria.</p>
+      </div>
+      <div class="board-tag">Pantalla piloto 04 · Variante B</div>
+    </div>
+    <div class="screen-frame">
+      <div class="canvas">
+        <div class="backdrop">
+          <img src="../../src/webos/app/assets/catalog/animales.jpg" alt="">
+        </div>
+
+        <header class="topbar glass">
+          <div class="brand">
+            <div class="brand-mark"></div>
+            <div class="brand-text">Tuty<span>TV</span></div>
+          </div>
+          <div class="credit">Port LG webOS <b>tuty</b></div>
+          <div class="top-actions">
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+            </div>
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            </div>
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg>
+            </div>
+            <div class="clock">1:13 PM</div>
+          </div>
+        </header>
+
+        <!-- Poster compacto -->
+        <article class="detail-poster series-poster">
+          <img src="../../src/webos/app/assets/catalog/matchbox.jpg" alt="">
+          <div class="poster-quality">HD</div>
+        </article>
+
+        <!-- Ficha técnica reducida -->
+        <section class="detail-info series-info">
+          <div class="detail-title-row">
+            <h2>Pájaro soñador</h2>
+            <span class="score-badge">7.4</span>
+          </div>
+          <div class="detail-subtitle">Turkey · 2018 · 4 temporadas · 129 episodios</div>
+
+          <div class="meta-pills">
+            <span>HD</span>
+            <span>4K</span>
+            <span>+16</span>
+            <span>Drama</span>
+            <span>Romance</span>
+          </div>
+
+          <p class="synopsis">
+            Sanem, a young girl with aspirations of becoming a writer, is forced by her parents to choose between an arranged marriage and finding a proper job. She ends up working at an advertising agency where she meets the man of her dreams...
+            <a>Más</a>
+          </p>
+
+          <div class="detail-actions">
+            <button class="dbtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 5.6a5.5 5.5 0 00-7.8 0L12 6.7l-1.1-1.1a5.5 5.5 0 00-7.8 7.8L12 22l8.8-8.6a5.5 5.5 0 000-7.8z"/></svg>
+              Favorito
+            </button>
+            <button class="dbtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+              Recordatorios
+            </button>
+            <button class="dbtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3"/></svg>
+              Pantalla completa
+            </button>
+            <details class="settings-wrap" open>
+              <summary class="dbtn settings-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21h-4v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3v-4h.1a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 001.9.3 1.7 1.7 0 001-1.6V3h4v.1a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 00-.3 1.9 1.7 1.7 0 001.6 1h.1v4H21a1.7 1.7 0 00-1.6 1z"/></svg>
+                Ajustes
+              </summary>
+              <div class="settings-pop settings-pop--right glass-strong">
+                <div class="settings-title">Reproducción</div>
+                <div class="settings-row"><span>Idioma</span><select><option>Español</option><option>Original</option></select></div>
+                <div class="settings-row"><span>Fluidez</span><select><option>Normal</option><option>Fluido</option></select></div>
+                <p class="settings-note">Se aplica al iniciar el reproductor; también disponible en pantalla completa.</p>
+              </div>
+            </details>
+          </div>
+
+          <div class="series-credits"><b>Creado por</b> Cagri Bayrak, Aytac Cicek · <b>Reparto</b> Demet Özdemir, Can Yaman, Öznur Serçeler</div>
+        </section>
+
+        <!-- Episodios full-width -->
+        <section class="episode-section">
+          <div class="episode-head">
+            <div>
+              <div class="episode-title-row">
+                <h3>Episodios</h3>
+                <button class="season-select" type="button">
+                  Temporada 1
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+              </div>
+              <p>20 de 129 episodios</p>
+            </div>
+          </div>
+
+          <div class="range-row">
+            <div class="range-pill is-selected">1-20</div>
+            <div class="range-pill">21-40</div>
+            <div class="range-pill">41-60</div>
+            <div class="range-pill">61-80</div>
+            <div class="range-pill">81-100</div>
+            <div class="range-pill">101-120</div>
+            <div class="range-pill">121-129</div>
+          </div>
+
+          <div class="episode-rail">
+            <article class="ep-card is-focused">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/carrie.jpg" alt="">
+                <span class="ep-card-num">E1</span>
+                <div class="ep-progress"><i style="width:64%"></i></div>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">Un nuevo comienzo</div>
+                <div class="ep-card-meta">42 min · HD</div>
+                <div class="ep-card-desc">Sanem decide cambiar de rumbo y acepta un trabajo lejos de casa.</div>
+              </div>
+            </article>
+
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/fall2.jpg" alt="">
+                <span class="ep-card-num">E2</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">La entrevista</div>
+                <div class="ep-card-meta">41 min · HD</div>
+                <div class="ep-card-desc">Una reunión inesperada pone a prueba su seguridad frente al equipo.</div>
+              </div>
+            </article>
+
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/hechizo.jpg" alt="">
+                <span class="ep-card-num">E3</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">Doble juego</div>
+                <div class="ep-card-meta">43 min · HD</div>
+                <div class="ep-card-desc">Los secretos de la agencia empiezan a salir a la luz.</div>
+              </div>
+            </article>
+
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/tenzing.jpg" alt="">
+                <span class="ep-card-num">E4</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">Secretos de oficina</div>
+                <div class="ep-card-meta">40 min · HD</div>
+                <div class="ep-card-desc">Sanem descubre una verdad que cambia su relación con el trabajo.</div>
+              </div>
+            </article>
+
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/matchbox.jpg" alt="">
+                <span class="ep-card-num">E5</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">La cena</div>
+                <div class="ep-card-meta">44 min · HD</div>
+                <div class="ep-card-desc">Una cena familiar termina en una confesión que nadie esperaba.</div>
+              </div>
+            </article>
+
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/spiderman.jpg" alt="">
+                <span class="ep-card-num">E6</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">Sin marcha atrás</div>
+                <div class="ep-card-meta">42 min · HD</div>
+                <div class="ep-card-desc">La decisión está tomada y el equipo deberá asumir las consecuencias.</div>
+              </div>
+            </article>
+          </div>
+
+          <div class="ep-transition">Cambio de temporada: skeleton 180 ms · crossfade · foco conservado · scroll al primer episodio.</div>
+        </section>
+
+        <div class="detail-hint">
+          <div><span class="key">OK</span>Reproducir <span class="key">BACK</span>Volver <span class="key">ARRIBA</span>Temporada</div>
+          <div>Foco simulado: primer episodio (solo demo)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================
+       PANTALLA 03 · DETALLE DE PELÍCULA MINIMALISTA
+       ============================================== -->
+  <section class="board" id="movie-minimal">
+    <div class="board-head">
+      <div>
+        <h2>Película / Detalle minimalista</h2>
+        <p>Ficha breve y acciones reducidas, conservando poster, preview del video y "Quizás te guste" en el mismo formato de card que los episodios. El panel de Ajustes se muestra abierto en la pantalla de serie.</p>
+      </div>
+      <div class="board-tag">Variante C · Híbrida</div>
+    </div>
+    <div class="screen-frame">
+      <div class="canvas">
+        <div class="backdrop">
+          <img src="../../src/webos/app/assets/catalog/sacrifice.jpg" alt="">
+        </div>
+
+        <header class="topbar glass">
+          <div class="brand">
+            <div class="brand-mark"></div>
+            <div class="brand-text">Tuty<span>TV</span></div>
+          </div>
+          <div class="credit">Port LG webOS <b>tuty</b></div>
+          <div class="top-actions">
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+            </div>
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            </div>
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg>
+            </div>
+            <div class="clock">1:13 PM</div>
+          </div>
+        </header>
+
+        <!-- Poster -->
+        <article class="detail-poster movie-poster">
+          <img src="../../src/webos/app/assets/catalog/spiderman.jpg" alt="">
+          <div class="poster-quality">4K HDR</div>
+        </article>
+
+        <!-- Ficha breve -->
+        <section class="minimal-info">
+          <div class="minimal-kicker">Película · 4K HDR</div>
+          <div class="detail-title-row">
+            <h2>Érase una Vez en México</h2>
+            <span class="score-badge">6.4</span>
+          </div>
+          <div class="detail-subtitle">2023 · 2h 8min · Acción / Crimen / Thriller</div>
+
+          <div class="meta-pills">
+            <span>4K HDR</span>
+            <span>Dolby Atmos</span>
+            <span>16+</span>
+            <span>Español / Original</span>
+          </div>
+
+          <p class="minimal-copy">
+            Sands, un peculiar agente de la CIA, llega a México para encontrar a un peligroso narcotraficante. Lo que parecía un trabajo sencillo termina convirtiéndose en una carrera contra el tiempo.
+          </p>
+
+          <div class="detail-actions">
+            <button class="dbtn is-focused">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 5.6a5.5 5.5 0 00-7.8 0L12 6.7l-1.1-1.1a5.5 5.5 0 00-7.8 7.8L12 22l8.8-8.6a5.5 5.5 0 000-7.8z"/></svg>
+              Favorito
+            </button>
+            <button class="dbtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+              Recordatorio
+            </button>
+            <button class="dbtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3"/></svg>
+              Pantalla completa
+            </button>
+            <details class="settings-wrap">
+              <summary class="dbtn settings-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21h-4v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3v-4h.1a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 001.9.3 1.7 1.7 0 001-1.6V3h4v.1a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 00-.3 1.9 1.7 1.7 0 001.6 1h.1v4H21a1.7 1.7 0 00-1.6 1z"/></svg>
+                Ajustes
+              </summary>
+              <div class="settings-pop settings-pop--right glass-strong">
+                <div class="settings-title">Reproducción</div>
+                <div class="settings-row"><span>Idioma</span><select><option>Español</option><option>Original</option></select></div>
+                <div class="settings-row"><span>Fluidez</span><select><option>Normal</option><option>Fluido</option></select></div>
+                <p class="settings-note">Se aplica al iniciar el reproductor; también disponible en pantalla completa.</p>
+              </div>
+            </details>
+
+          </div>
+
+          <div class="minimal-credits"><b>Director</b> Robert Rodriguez · <b>Reparto</b> Antonio Banderas, Salma Hayek, Johnny Depp</div>
+        </section>
+
+        <!-- Preview del video -->
+        <aside class="detail-still">
+          <img src="../../src/webos/app/assets/catalog/sacrifice.jpg" alt="">
+          <div class="still-badge">Vista previa</div>
+          <div class="still-play">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l11 7-11 7z"/></svg>
+          </div>
+        </aside>
+
+        <!-- Recomendaciones en formato de card de episodio -->
+        <section class="similar-section">
+          <div class="episode-head">
+            <div>
+              <h3>Quizás te guste</h3>
+              <p>Basado en tu historial</p>
+            </div>
+            <span class="similar-link">Ver todo</span>
+          </div>
+
+          <div class="episode-rail">
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/carrie.jpg" alt="">
+                <span class="ep-card-num">NUEVO</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">Niñera, ten...</div>
+                <div class="ep-card-meta">2024 · Suspenso · 4K</div>
+                <div class="ep-card-desc">Una niñera descubre que la casa guarda un secreto.</div>
+              </div>
+            </article>
+
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/fall2.jpg" alt="">
+                <span class="ep-card-num">HD</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">Madre adolescente</div>
+                <div class="ep-card-meta">2023 · Drama · HD</div>
+                <div class="ep-card-desc">Una familia enfrenta una decisión que lo cambia todo.</div>
+              </div>
+            </article>
+
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/hechizo.jpg" alt="">
+                <span class="ep-card-num">HD</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">Papá se volvió...</div>
+                <div class="ep-card-meta">2022 · Comedia · HD</div>
+                <div class="ep-card-desc">Un hechizo cambia la rutina de toda la familia.</div>
+              </div>
+            </article>
+
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/tenzing.jpg" alt="">
+                <span class="ep-card-num">4K</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">Montevideo</div>
+                <div class="ep-card-meta">2021 · Aventura · 4K</div>
+                <div class="ep-card-desc">Una expedición revive una historia que parecía perdida.</div>
+              </div>
+            </article>
+
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/matchbox.jpg" alt="">
+                <span class="ep-card-num">HD</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">Cascabeles</div>
+                <div class="ep-card-meta">2024 · Acción · HD</div>
+                <div class="ep-card-desc">Un regalo de Navidad desata una persecución inesperada.</div>
+              </div>
+            </article>
+
+            <article class="ep-card">
+              <div class="ep-card-thumb">
+                <img src="../../src/webos/app/assets/catalog/animales.jpg" alt="">
+                <span class="ep-card-num">HD</span>
+              </div>
+              <div class="ep-card-body">
+                <div class="ep-card-title">Tom and Jerry</div>
+                <div class="ep-card-meta">2021 · Animación · HD</div>
+                <div class="ep-card-desc">La rivalidad más famosa vuelve con una nueva aventura.</div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <div class="detail-hint">
+          <div><span class="key">OK</span>Reproducir <span class="key">BACK</span>Volver <span class="key">INFO</span>Sinopsis</div>
+          <div>Foco simulado: Favorito + Ajustes (solo demo)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================
+       TOKENS Y NOTAS
+       ============================================== -->
+  <section class="review">
+    <h2>Tokens y decisiones aplicadas</h2>
+    <div class="swatches">
+      <div class="swatch" style="background:#05070c"></div>
+      <div class="swatch" style="background:#0e1523"></div>
+      <div class="swatch" style="background:#182338"></div>
+      <div class="swatch" style="background:#c91923"></div>
+      <div class="swatch" style="background:#e50914"></div>
+      <div class="swatch" style="background:#f5f8ff"></div>
+      <div class="swatch" style="background:#b3bfd2"></div>
+      <div class="swatch" style="background:#f6c453"></div>
+    </div>
+    <div class="labels"><span>ink-0</span><span>ink-2</span><span>surface</span><span>accent</span><span>bright</span><span>text-1</span><span>text-2</span><span>score</span></div>
+
+    <div class="review-grid" style="margin-top:26px">
+      <div class="review-block"><b>Serie minimalista</b><p>Poster compacto, ficha sin filas ni bloque de géneros, sin "Quizás te guste". El backdrop y los episodios ocupan el protagonismo.</p></div>
+      <div class="review-block"><b>Episodios streaming</b><p>Carril full-width de cards 16:9 con still, número, título, duración, descripción y progreso. Seis cards visibles a 1920 px.</p></div>
+      <div class="review-block"><b>Temporada</b><p>Selector de temporada + bloques de 20 episodios por rendimiento. Al cambiar: skeleton 180 ms, crossfade, foco conservado y scroll al primer episodio.</p></div>
+      <div class="review-block"><b>Ajustes</b><p>Idioma y fluidez salen de la ficha. Se agrupan en un icono de ajustes con dos selects y quedan disponibles también en pantalla completa.</p></div>
+      <div class="review-block"><b>Película</b><p>La variante conserva poster, preview y "Quizás te guste" en cards 16:9; reduce la ficha y las acciones sin perder contexto visual.</p></div>
+      <div class="review-block"><b>Carátulas de episodio</b><p>En runtime se obtienen de TVMaze por IMDb/título. Si no hay still, se repite la imagen de la serie como fallback.</p></div>
+      <div class="review-block"><b>Foco</b><p>Anillo blanco 3 px + halo rojo. En cards de episodio el foco rodea la card completa; el número no desplaza el layout.</p></div>
+      <div class="review-block"><b>Datos</b><p>Se conservan temporadas, bloques, progreso, IDs y acciones. El rediseño es de presentación; no cambia el contrato de detalle.</p></div>
+    </div>
+
+    <div class="fallback">
+      <div class="fallback-card glass"><b>Con blur</b><span>Topbar y menú de ajustes con profundidad sobre el backdrop. Sin animar filtros.</span></div>
+      <div class="fallback-card"><b>Sin blur / webOS 4</b><span>Superficie azul-negro al 94%. Misma jerarquía, mismo foco, sin depender de backdrop-filter.</span></div>
+      <div class="fallback-card"><b>Foco</b><span>Borde blanco 3-4 px + halo rojo. Visible sin depender del color ni del blur.</span></div>
+    </div>
+    <p class="note">Esta propuesta no modifica el runtime. Las carátulas de episodios del prototipo son placeholders locales; en la app provienen de TVMaze con fallback a la imagen de la serie. La implementación técnica está documentada en <b>docs/EPISODE_ARTWORK.md</b>.</p>
+  </section>
+</div>
+</body>
+</html>

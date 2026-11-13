@@ -45,6 +45,7 @@ export interface NavigationHost {
   isQuickSettingsOpen(): boolean;
   isAddonsOpen(): boolean;
   hasSeasonPopup(): boolean;
+  hasSettingsPopup(): boolean;
   isSynopsisOpen(): boolean;
   navigationAction(event: NavigationEvent): string | null;
   mapMediaKey(code: number, key: string): string | null;
@@ -62,6 +63,7 @@ export interface NavigationHost {
   closeSeek(): void;
   closeChannels(): void;
   closeSeasonPopup(): void;
+  closeSettingsPopup(): void;
   schedulePlaySettingsClose(): void;
   hideInfobar(): void;
   hideVodInfobar(): void;
@@ -187,6 +189,10 @@ export function handleNavigationBack(): boolean {
       host.platformBack();
       return true;
     }
+    return true;
+  }
+  if (host.hasSettingsPopup()) {
+    host.closeSettingsPopup();
     return true;
   }
   if (host.hasSeasonPopup()) {

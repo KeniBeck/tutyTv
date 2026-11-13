@@ -328,10 +328,18 @@ export function createLegacyActions(ctx) {
         ctx._e || (ctx._e = t("next-episode-loading")), ctx._e && (ctx._e.style.backgroundImage = item && (item.backdrop || item.landscape || item.poster) ? 'url("' + String(item.backdrop || item.landscape || item.poster).replace(/"/g, "%22") + '")' : "", ctx._e.classList.add("is-active"));
     }
     function bn(e) {
+        var runtime = window.TutyUI;
+        if (e && runtime && runtime.hasDetailRuntime && runtime.hasDetailRuntime() && runtime.syncDetailCurrentEpisode && runtime.syncDetailCurrentEpisode(e))
+            return;
         if (ctx.se)
             for (var t = ctx.se.querySelectorAll(".detail-episode"), i = 0; i < t.length; i++) {
-                var a = !(!t[i]._ep || !ctx.j.detailEpisode || t[i]._ep.id !== ctx.j.detailEpisode.id);
+                var current = ctx.j.detailEpisode, episode = t[i]._ep;
+                var a = !!(episode && current && (
+                    episode.id !== void 0 && episode.id !== null && current.id !== void 0 && current.id !== null && String(episode.id) === String(current.id)
+                    || episode.number !== void 0 && episode.number !== null && current.number !== void 0 && current.number !== null && String(episode.number) === String(current.number)
+                ));
                 t[i].classList.toggle("is-playing", a);
+                t[i].classList.toggle("is-current", a);
             }
     }
     function Mn(e) {

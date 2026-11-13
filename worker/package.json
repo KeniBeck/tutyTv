@@ -1,0 +1,18 @@
+{
+  "name": "tuty-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:debug": "node build.mjs --debug",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "wrangler": "^4.0.0"
+  }
+}

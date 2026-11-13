@@ -7,3 +7,5 @@ src/webos/app/js/tuty-ui.js
 *.ipk
 pnpm-debug.log*
 .pnpm-store/
+
+instalar-config-tizen.json

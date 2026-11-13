@@ -24,6 +24,10 @@ export function createLegacyWiring(ctx) {
             isQuickSettingsOpen: () => ctx.va,
             isAddonsOpen: () => ctx.Pt,
             hasSeasonPopup: ctx.hasDetailSeasonPopup,
+            hasSettingsPopup: function () {
+                var runtime = window.TutyUI;
+                return !!(runtime && runtime.hasDetailRuntime && runtime.hasDetailRuntime() && runtime.hasSettingsPopup && runtime.hasSettingsPopup());
+            },
             navigationAction: ctx.legacyNavigationAction,
             mapMediaKey: ctx.legacyMediaKey,
             closeCategoryPicker: ctx.An,
@@ -39,6 +43,11 @@ export function createLegacyWiring(ctx) {
             closeQuickSettings: ctx.an,
             closeChannels: ctx.gr,
             closeSeasonPopup: ctx.closeSeasonPopupAndFocus,
+            closeSettingsPopup: function () {
+                var runtime = window.TutyUI;
+                if (runtime && runtime.hasDetailRuntime && runtime.hasDetailRuntime() && runtime.closeSettingsPopup)
+                    runtime.closeSettingsPopup();
+            },
             scheduleInfobarHide: ctx.Ai,
             schedulePlaySettingsClose: ctx.en,
             hideInfobar: ctx.Ni,
@@ -331,6 +340,7 @@ export function createLegacyWiring(ctx) {
             getProfile: () => ctx.X,
             isSeries: ctx.S,
             openHistory: ctx.Oa,
+            openDetail: ctx.ei,
             formatTime: ctx.ki,
             refreshPlayback: function () {
                 ctx.ka(), ctx.Q();
@@ -355,19 +365,20 @@ export function createLegacyWiring(ctx) {
             loadSeason: function (item, index, done) {
                 var season = item.seasons && item.seasons[index];
                 if (!season || !season.id)
-                    return void done();
+                    return void done(false);
                 ctx.nr("Cargando temporada…"), ctx.q("detail", {
                     contentId: season.id
                 }, function (error, response) {
-                    if (!error && response && !1 !== response.returnValue) {
+                    var loaded = !error && response && !1 !== response.returnValue;
+                    if (loaded) {
                         if (response.item)
                             ctx.R(item, response.item);
                         item.episodes = response.episodes || [];
                         item.seasonId = season.id;
                         season._episodes = item.episodes;
-                        ctx.j.detailEpisode = item.episodes[0] || null;
+                        ctx.j.detailEpisode = null;
                     }
-                    done();
+                    ctx.nr(""), done(!!loaded);
                 });
             },
             getMedia: () => ctx.we,

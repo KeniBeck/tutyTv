@@ -23,6 +23,7 @@ export interface ScreenRuntimeDeps {
   getProfile(): unknown;
   isSeries(item: unknown): boolean;
   openHistory(entry: unknown): void;
+  openDetail(item: unknown): void;
   formatTime(value: number): string;
   refreshPlayback(): void;
   onStreamModeChanged(): void;
@@ -37,7 +38,7 @@ export interface ScreenRuntimeDeps {
   openLanguage(item: unknown): void;
   isSmooth(item: unknown): boolean;
   toggleSmooth(item: unknown): boolean;
-  loadSeason(item: unknown, seasonIndex: number, done: () => void): void;
+  loadSeason(item: unknown, seasonIndex: number, done: (ok?: boolean) => void): void;
 }
 
 export interface ScreenRuntimeHosts {
@@ -97,6 +98,7 @@ export function createScreenRuntimeHosts(deps: ScreenRuntimeDeps): ScreenRuntime
     isReminderActive: deps.isReminderActive,
     toggleReminder: deps.toggleReminder,
     toast: deps.toast,
+    openDetail: deps.openDetail,
     play: deps.playItem,
     playEpisode: deps.playEpisode,
     startPlayback: deps.startPlayback,

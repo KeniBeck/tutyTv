@@ -25,6 +25,22 @@ export interface ServiceRuntime {
   ensureWebOsService(): boolean;
 }
 
+interface PortalBridge {
+  request(
+    method: string,
+    params: Record<string, unknown>,
+    done: (error: string | null, response: unknown) => void
+  ): boolean | void;
+}
+
+function getPortalBridge(): PortalBridge | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const bridge = (window as unknown as { TutyPortalBridge?: PortalBridge }).TutyPortalBridge;
+  return bridge && typeof bridge.request === "function" ? bridge : null;
+}
+
 export function createServiceRuntime(deps: ServiceRuntimeDeps): ServiceRuntime {
   let client: ReturnType<typeof createServiceClient> | null = null;
 
@@ -123,6 +139,17 @@ export function createServiceRuntime(deps: ServiceRuntimeDeps): ServiceRuntime {
 
   return {
     request: function request(method, params, done) {
+      const portal = getPortalBridge();
+      if (portal) {
+        try {
+          portal.request(method, params || {}, function onPortal(error, response) {
+            done(error || null, response);
+          });
+        } catch (error) {
+          done(error instanceof Error ? error.message : "Error del portal", null);
+        }
+        return true;
+      }
       return getClient().request(method, params, done);
     },
     requestDev,

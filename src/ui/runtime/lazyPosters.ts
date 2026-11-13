@@ -17,6 +17,9 @@ export interface LazyPosterHost {
   getViewport(): { width: number; height: number };
 }
 
+const PRELOAD_MARGIN_X = 640;
+const PRELOAD_MARGIN_Y = 640;
+
 let host: LazyPosterHost | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -69,21 +72,14 @@ export function loadVisiblePosters(): boolean {
     if (
       isPosterVisible(image)
       && rect
-      && rect.bottom > -420
-      && rect.top < viewport.height + 420
-      && rect.right > -320
-      && rect.left < viewport.width + 320
+      && rect.bottom > -PRELOAD_MARGIN_Y
+      && rect.top < viewport.height + PRELOAD_MARGIN_Y
+      && rect.right > -PRELOAD_MARGIN_X
+      && rect.left < viewport.width + PRELOAD_MARGIN_X
     ) {
       if (!image.getAttribute("src")) {
         image.style.display = "";
         image.src = image.getAttribute("data-poster-src") || "";
-      }
-    } else if (image.getAttribute("src")) {
-      image.removeAttribute("src");
-      try {
-        image.src = "";
-      } catch {
-        // Ignore source cleanup failures for lazy posters.
       }
     }
   }

@@ -56,6 +56,7 @@ function createHarness() {
     isQuickSettingsOpen: () => flags.quick,
     isAddonsOpen: () => flags.addons,
     hasSeasonPopup: () => false,
+    hasSettingsPopup: () => false,
     isSynopsisOpen: () => flags.synopsis,
     navigationAction: (event) => {
       if (event.key === "Back") return "back";
@@ -77,6 +78,7 @@ function createHarness() {
     closeSeek: () => calls.push("close-seek"),
     closeChannels: () => calls.push("close-channels"),
     closeSeasonPopup: () => calls.push("close-season"),
+    closeSettingsPopup: () => calls.push("close-settings"),
     scheduleInfobarHide: () => calls.push("schedule-infobar"),
     schedulePlaySettingsClose: () => calls.push("schedule-settings"),
     hideInfobar: () => calls.push("hide-infobar"),
@@ -313,6 +315,7 @@ describe("navigation host factory", () => {
       isQuickSettingsOpen: base.isQuickSettingsOpen,
       isAddonsOpen: base.isAddonsOpen,
       hasSeasonPopup: base.hasSeasonPopup,
+      hasSettingsPopup: base.hasSettingsPopup,
       navigationAction: base.navigationAction,
       mapMediaKey: base.mapMediaKey,
       closeCategoryPicker: base.closeCategoryPicker,
@@ -328,6 +331,7 @@ describe("navigation host factory", () => {
       closeQuickSettings: base.closeQuickSettings,
       closeChannels: base.closeChannels,
       closeSeasonPopup: base.closeSeasonPopup,
+      closeSettingsPopup: base.closeSettingsPopup,
       scheduleInfobarHide: base.scheduleInfobarHide,
       schedulePlaySettingsClose: base.schedulePlaySettingsClose,
       hideInfobar: base.hideInfobar,

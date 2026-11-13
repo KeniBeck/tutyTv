@@ -30,6 +30,7 @@ function createTarget(): NavigationTarget & { dispatch: (event: KeyboardEventLik
 describe("mapKeyToAction", () => {
   it("maps webOS remote codes", () => {
     expect(mapKeyToAction({ keyCode: 461 })).toBe("back");
+    expect(mapKeyToAction({ keyCode: 10009 })).toBe("back");
     expect(mapKeyToAction({ keyCode: 38 })).toBe("up");
     expect(mapKeyToAction({ keyCode: 40 })).toBe("down");
     expect(mapKeyToAction({ keyCode: 37 })).toBe("left");

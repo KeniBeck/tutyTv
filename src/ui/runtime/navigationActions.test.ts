@@ -29,6 +29,7 @@ function node(classes: string[] = []): ActionNode {
 
 let season: ActionNode | null = null;
 let first: ActionNode | null = null;
+let current: ActionNode | null = null;
 
 function setup(screen = "player") {
   const state = createAppState();
@@ -42,6 +43,7 @@ function setup(screen = "player") {
   };
   season = node();
   first = node();
+  current = null;
   const synopsisMore = vi.fn<() => ActionNode | null>(() => null);
   const host = {
     state,
@@ -50,7 +52,9 @@ function setup(screen = "player") {
     canFocus: () => true,
     getTabs: () => [node(), node(), node()],
     getDetailButtons: () => ({ querySelector: () => first }),
-    getDetailBottom: () => ({ querySelector: () => season }),
+    getDetailBottom: () => ({
+      querySelector: (selector: string) => selector === ".detail-episode.is-current" ? current : season
+    }),
     getSynopsisMore: synopsisMore,
     renderDetail: vi.fn(),
     markDetailPlaying: vi.fn(),
@@ -95,6 +99,19 @@ describe("navigation actions", () => {
     expect(host.focus).toHaveBeenCalledWith(season);
   });
 
+  it("returns to the current episode instead of a stale focus", () => {
+    const { state, host } = setup();
+    state.detail = { id: "item" };
+    const saved = node();
+    state.playerReturn = { screen: "detail", focus: saved };
+    current = node();
+
+    expect(returnFromPlayer()).toBe(true);
+    expect(host.markDetailPlaying).toHaveBeenCalledWith(state.detail);
+    expect(host.focus).toHaveBeenCalledWith(current);
+    expect(host.focus).not.toHaveBeenCalledWith(saved);
+  });
+
   it("returns to home and focuses the selected tab", () => {
     const { state, host } = setup();
     state.playerReturn = { screen: "home", focus: null };
@@ -119,14 +136,14 @@ describe("navigation actions", () => {
   it("toggles the synopsis label", () => {
     const { nodes, synopsisMore } = setup("detail");
     const more = node();
-    more.textContent = "Más";
+    more.textContent = "Ver sinopsis";
     synopsisMore.mockReturnValue(more);
 
     expect(toggleDetailSynopsis()).toBe(true);
     expect(nodes["screen-detail"]?.classList.contains("is-synopsis-open")).toBe(true);
-    expect(more.textContent).toBe("Menos");
+    expect(more.textContent).toBe("Ocultar sinopsis");
     expect(toggleDetailSynopsis()).toBe(true);
-    expect(more.textContent).toBe("Más");
+    expect(more.textContent).toBe("Ver sinopsis");
   });
   it("switches screens and clears overlays outside player/detail", () => {
     const { state, host } = setup("player");

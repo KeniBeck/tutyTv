@@ -122,7 +122,7 @@ export function mapKeyToAction(event: KeyboardEventLike): NavigationAction | nul
   }
 
   const keyCode = event.keyCode;
-  if (keyCode === 461 || keyCode === 8 || keyCode === 27) {
+  if (keyCode === 461 || keyCode === 10009 || keyCode === 8 || keyCode === 27) {
     return "back";
   }
 

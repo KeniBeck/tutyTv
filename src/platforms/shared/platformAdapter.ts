@@ -5,6 +5,7 @@ export interface PlatformProbe {
   canPlayType?: (mime: string) => string;
   hasMediaSource?: boolean;
   hasPalmSystem?: boolean;
+  hasTizen?: boolean;
 }
 
 export interface LegacyPlatformAdapter extends PlatformAdapter {
@@ -17,6 +18,11 @@ export interface LegacyPlatformAdapter extends PlatformAdapter {
 export interface LegacyPlatformBackEnvironment {
   webOSTV?: { platformBack?: () => void } | null;
   PalmSystem?: { platformBack?: () => void } | null;
+  tizen?: {
+    application?: {
+      getCurrentApplication?(): { exit?: () => void } | null;
+    } | null;
+  } | null;
 }
 
 const HLS_MIME_TYPES = [
@@ -30,9 +36,11 @@ export function detectPlatformCapabilities(probe: PlatformProbe = {}): PlatformC
   const canPlayType = probe.canPlayType ?? (() => "");
   const isWebOS =
     probe.hasPalmSystem === true || /web0s|webos|lg browser/i.test(userAgent);
+  const isTizen = probe.hasTizen === true || /tizen|samsung|smart-tv/i.test(userAgent);
 
   return {
     isWebOS,
+    isTizen,
     supportsNativeHls: HLS_MIME_TYPES.some((mime) => canPlayType(mime) !== ""),
     supportsMse: probe.hasMediaSource === true
   };
@@ -41,7 +49,8 @@ export function detectPlatformCapabilities(probe: PlatformProbe = {}): PlatformC
 export function createPlatformAdapter(probe: PlatformProbe = {}): LegacyPlatformAdapter {
   return {
     capabilities: () => detectPlatformCapabilities(probe),
-    prefersNativeTvPlayback: () => /webOS|SmartTV|Large Screen/i.test(probe.userAgent ?? ""),
+    prefersNativeTvPlayback: () =>
+      /webOS|SmartTV|Large Screen|Tizen|SMART-TV/i.test(probe.userAgent ?? ""),
     canUseLunaService: (bridge) => !!bridge,
     canPlayPreviewHls: (video) => !!(video.canPlayType && video.canPlayType("application/vnd.apple.mpegurl")),
     platformBack: (environment) => {
@@ -49,6 +58,9 @@ export function createPlatformAdapter(probe: PlatformProbe = {}): LegacyPlatform
         environment.webOSTV.platformBack();
       } else if (environment.PalmSystem && environment.PalmSystem.platformBack) {
         environment.PalmSystem.platformBack();
+      } else if (environment.tizen && environment.tizen.application) {
+        const application = environment.tizen.application.getCurrentApplication?.();
+        application?.exit?.();
       }
     }
   };

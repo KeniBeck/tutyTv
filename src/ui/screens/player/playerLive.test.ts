@@ -86,6 +86,21 @@ describe("playerLive", () => {
     expect(harness.loadSource).toHaveBeenCalledWith("http://stream");
   });
 
+  it("passes resolved headers as source options", () => {
+    const harness = createHarness();
+    playLiveChannel(harness.channel, true);
+
+    harness.respond(null, {
+      returnValue: true,
+      proxyPath: "http://stream",
+      headers: { "Content-Auth": "token" }
+    });
+
+    expect(harness.loadSource).toHaveBeenCalledWith("http://stream", {
+      headers: { "Content-Auth": "token" }
+    });
+  });
+
   it("resolves immediately when requested and falls back to the current channel", () => {
     const harness = createHarness();
 

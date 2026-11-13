@@ -60,7 +60,22 @@ export function createLegacyBootstrapDeps(ctx) {
   };
 }
 
+function applyTvPerformanceMode() {
+  try {
+    var userAgent = window.navigator && window.navigator.userAgent || "";
+    if (
+      document.documentElement &&
+      /web0s|webos|tizen|smart-tv|samsung|large screen/i.test(userAgent)
+    ) {
+      document.documentElement.classList.add("tv-perf");
+    }
+  } catch (error) {
+    // Ignore device-detection failures on restricted browsers.
+  }
+}
+
 export function startLegacyBootstrap(runtime, deps) {
+  applyTvPerformanceMode();
   if (runtime && runtime.startBootstrap) {
     runtime.startBootstrap(runtime.createBootstrapHost(deps));
   }

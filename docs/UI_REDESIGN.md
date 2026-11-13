@@ -2,12 +2,15 @@
 
 Fecha: 2026-11-02
 
-Actualizado: 2026-11-03
+Actualizado: 2026-11-05
 
 Estado: direccion visual aprobada. **Fase A cerrada (2026-11-03). Fase 7 en
-curso: Home y TV en vivo alineados al prototipo `home-live-glass.html`.**
+curso: Home y TV en vivo alineados a `home-live-glass.html`; detalle de serie y
+pelicula minimalista aplicado al runtime y reflejado en
+`detailts-catalog-glass.html`.**
 
-Base funcional: IPK `1.7.2`, 504 pruebas, flujos web/TV y foco validados.
+Base funcional: IPK `1.7.2`, 508 pruebas, flujos web/TV y foco validados.
+Caratulas de episodio: TVMaze + fallback, ver `docs/EPISODE_ARTWORK.md`.
 
 ## 1. Objetivo
 
@@ -397,6 +400,93 @@ Reglas:
 | Hero VOD | 1040x620 px |
 | Focus ring | 3 px + 6 px halo |
 
+### 7.4 Detalle de serie minimalista
+
+Objetivo: reducir ruido visual y acercar la ficha de serie al patron de los
+sitios de streaming actuales, sin cambiar datos ni navegacion funcional.
+
+Composicion propuesta:
+
+- Backdrop cinematografico a pantalla completa.
+- Poster compacto 230x345 en x80, y140.
+- Preview de video 720x405 en x1080, y140. Se conserva en runtime para no
+  perder la funcion existente de preview.
+- Ficha en x350, ancho 680: titulo, score, linea de año/temporadas/episodios,
+  pills de metadatos, sinopsis de 2-3 lineas y acciones.
+- Acciones: `Favorito`, `Recordatorios`, `Pantalla completa` y `Ajustes`.
+  No hay boton `Reproducir`: la reproduccion se inicia desde la card de
+  episodio. Idioma y fluidez dejan de ser botones independientes; pantalla
+  completa se conserva como acceso directo.
+- Se elimina la seccion "Quizas te guste" del detalle de serie.
+- Episodios full-width en x80, y610, ancho 1760.
+
+Episodios tipo streaming:
+
+- Carril horizontal de 6 cards de 280x270.
+- Still 16:9 de 280x158, badge de numero, titulo, duracion/calidad y
+  descripcion de dos lineas. El progreso por episodio queda para una fase
+  posterior porque el detalle actual no expone ese dato.
+- El selector de temporada se muestra junto a la leyenda "Episodios"; el
+  contador de episodios queda al extremo derecho del encabezado.
+- Se conservan los bloques de 20 episodios como paginacion tecnica para no
+  renderizar 129 cards de golpe. Los rangos pasan a ser navegacion secundaria.
+- La card completa es el foco; el badge de numero no altera el layout al
+  enfocar.
+- Las imagenes vienen de TVMaze con fallback a la imagen de la serie. Ver
+  `docs/EPISODE_ARTWORK.md`.
+
+Transicion de temporada:
+
+1. El foco permanece en el selector de temporada al confirmar el cambio.
+2. Se muestran skeletons de cards durante la carga; no se vacia el layout.
+3. Al llegar los datos, crossfade/slide de 180 ms y actualizacion del contador.
+4. El bloque de rangos vuelve al primero de la nueva temporada.
+5. Si el foco estaba dentro de los episodios, se restaura en el primer episodio;
+   si estaba en la temporada, no se roba el foco.
+6. Si la carga falla, se conserva la temporada anterior y se informa con toast.
+7. Al volver del reproductor se conserva temporada, bloque y episodio activo.
+8. No se reinicia el scroll de la pagina; solo se desplaza el carril de
+   episodios al inicio.
+
+Orden de foco propuesto: temporada -> rangos -> primer episodio -> resto de
+cards -> acciones superiores. BACK vuelve a la pantalla anterior sin abrir
+paneles intermedios.
+
+### 7.5 Detalle de pelicula minimalista
+
+La propuesta incluye dos variantes de pelicula para comparar:
+
+- Referencia: poster, ficha tecnica, still de vista previa y recomendaciones
+  verticales.
+- Minimalista: conserva poster, preview del video y "Quizas te guste", pero
+  reduce la ficha y cambia las recomendaciones al formato de card de episodio.
+
+Variante minimalista:
+
+- Backdrop full-bleed, poster compacto 230x345 en x80, y140 y preview 720x405
+  en x1080, y140.
+- Ficha en x350, ancho 680: titulo 52 px, score, metadatos, sinopsis de dos
+  lineas y acciones.
+- Acciones: `Favorito`, `Recordatorios`, `Pantalla completa` y `Ajustes`.
+  No hay boton `Reproducir`: el preview del video es el punto de inicio; el
+  poster es referencia visual.
+- Director y reparto en dos lineas compactas; sin filas de ficha tecnica.
+- "Quizas te guste" se presenta como carril full-width de 6 cards 16:9 en
+  y610, usando el mismo componente visual que los episodios.
+- El foco inicial queda en `Favorito`; `Ajustes` abre el panel de
+  configuracion sin sacar al usuario de la ficha.
+
+Consolidacion de ajustes:
+
+- Idioma y fluidez salen de la ficha de detalle.
+- Se encapsulan en un icono de ajustes con dos selects:
+  - Idioma: Español / Original.
+  - Fluidez: Normal / Fluido.
+- El mismo panel debe existir en pantalla completa. El detalle solo muestra el
+  icono y el resumen; no duplica controles en la accion principal.
+- La reproduccion se inicia desde la card de episodio en series y desde el
+  preview en peliculas; no hay boton `Reproducir` en las pantallas rediseñadas.
+
 ## 8. Componentes reutilizables
 
 | Componente | Variantes | Notas |
@@ -407,6 +497,11 @@ Reglas:
 | `HeroStage` | VOD, Live | Imagen/video + gradiente + metadata |
 | `MediaCard` | Vertical, Horizontal, Continue | Sin blur; foco con anillo |
 | `ContentRow` | Scroll horizontal | Titulo + cards; sin Grid |
+| `DetailHero` | Reference, Minimal | Poster/backdrop + ficha corta |
+| `EpisodeRail` | Scroll horizontal | 6 cards de 280x270; sin Grid ni gap |
+| `EpisodeCard` | Normal, Focused, InProgress | Still 16:9, numero, progreso |
+| `SeasonSelect` | Normal, Focused, Open | Temporada + bloques; transicion |
+| `SettingsPopover` | Closed, Open | Idioma y fluidez en dos selects |
 | `LiveChannelRow` | Normal, Focused, Favorite | Numero, logo, nombre, corazon |
 | `CategoryTile` | Normal, Selected, Focused | Overlay de categorias |
 | `Pill` | Filter, Status, Badge | Selected usa accent |
@@ -500,10 +595,12 @@ y una prueba manual de navegacion.
 
 La propuesta grafica revisable esta en:
 
-`docs/proposals/home-live-glass.html`
+- `docs/proposals/home-live-glass.html`: Home y TV en vivo.
+- `docs/proposals/detailts-catalog-glass.html`: detalle de pelicula y serie,
+  con referencia, serie minimalista y variante minimalista de pelicula.
 
-Es un artefacto estatico de revision. No se carga desde la app, no importa
-`app.js` y no modifica el runtime. Muestra Home y TV en vivo a 1920x1080 con
+Son artefactos estaticos de revision. No se cargan desde la app, no importan
+`app.js` y no modifican el runtime. Muestran las pantallas a 1920x1080 con
 tokens, foco, cristal y fallback.
 
 ## 14. Aprobacion y arranque
@@ -636,7 +733,98 @@ Validado:
 - Al recargar la lista live se conserva el foco en la fila o en el corazon de
   favorito, evitando el parpadeo durante la carga inicial de canales.
 
+### 15.7 Caratulas de episodio y detalle minimalista (2026-11-05)
+
+Caratulas de episodio:
+
+- Implementado `src/webos/service/episodeArt.js`: TVMaze por IMDb o titulo,
+  cache de 24 h, cola de 500 ms, timeouts y fallback a la imagen de la serie.
+- `magis.detail()` enriquece los episodios con `picture`, `still` y
+  `pictureFallback`; si TVMaze falla, el detalle sigue funcionando.
+- La UI de detalle pinta still 16:9, overlay y numero; se agrego prueba de
+  render en `detailScreen.test.ts`.
+- Validacion real: `La edad dorada T1` 9/9,
+  `Bridgerton T1` 8/8, `Los Tudor T1` 10/10 y `Bridgerton T2` 8/8.
+- Detalle tecnico completo en `docs/EPISODE_ARTWORK.md`.
+
+Propuesta de rediseno:
+
+- `docs/proposals/detailts-catalog-glass.html` ahora muestra la serie en una
+  variante minimalista: sin "Quizas te guste", poster compacto y episodios
+  full-width con cards 16:9 tipo streaming.
+- Se documenta la transicion de temporada: skeleton 180 ms, crossfade, reset
+  de bloque, restauracion de foco y conservacion de temporada/episodio al
+  volver del reproductor.
+- Idioma y fluidez se retiran de las acciones de detalle y se agrupan en un
+  icono de ajustes con dos selects; el mismo panel se propone para pantalla
+  completa.
+- Se agrego una variante minimalista de pelicula que conserva poster, preview
+  del video y "Quizas te guste" en formato de cards de episodio, con ficha
+  breve y acciones reducidas.
+
+Validado:
+
+- `pnpm run typecheck`, `pnpm run lint`, `pnpm run lint:legacy` y
+  `pnpm test`: 509 pruebas, 120 archivos.
+- `pnpm run build:ui` regenerado.
+- `xmllint --html --noout` sobre el prototipo: sin errores.
+
+### 15.8 Detalle minimalista aplicado al runtime (2026-11-05)
+
+- `src/ui/screens/detail/detailScreen.ts` ahora renderiza backdrop, poster
+  compacto, ficha reducida, preview 720x405 y acciones en pildoras.
+- Serie: elimina "Quizas te guste", muestra encabezado Episodios + Temporada,
+  rangos compactos y cards 16:9 con still, numero, titulo, duracion/calidad y
+  descripcion.
+- Pelicula: conserva poster, preview y "Quizas te guste" con el mismo
+  componente de card 16:9.
+- Se retiraron los botones Idioma y Modo fluido. `Ajustes` abre un popup con
+  acceso al dialogo de idioma y un selector de dos estados Normal/Fluido.
+- El foco inicial de una serie queda en el episodio actual (o en el primero
+  si aun no hay uno activo); en pelicula queda en la primera accion. BACK
+  cierra el popup de Ajustes antes que el de temporada.
+- `src/ui/runtime/navigation.ts` y `src/ui/legacy/legacyWiring.js` incorporan
+  `hasSettingsPopup`/`closeSettingsPopup`.
+- `src/webos/app/css/style.css` define backdrop, poster, ficha, pildoras,
+  popup de ajustes, season inline, rangos y cards compartidas.
+- `getDetailFocusable` en `legacyStore.js` prioriza el episodio actual
+  (`.detail-episode.is-current`), luego el que se esta reproduciendo y, como
+  respaldo, el primer episodio.
+- Transicion de temporada aplicada: el foco se queda en el selector, se
+  muestran 6 cards skeleton con "Cargando episodios…", no se vacia el layout,
+  se reinicia el bloque, se anima la entrada con fade/slide de 180 ms y se
+  conserva la temporada anterior con toast si la carga falla.
+- Cambiar de temporada ya no inicia reproduccion automatica; la preview
+  reproduce el primer episodio solo si no hay uno activo.
+- Las cargas de temporada usan un token de secuencia para ignorar respuestas
+  antiguas y evitar pisar una seleccion mas reciente.
+- El popup de temporadas mantiene el foco dentro de la lista: arriba/abajo
+  cambian de temporada con limite en los extremos y los laterales no lo sacan
+  del popup. Al abrirlo se desplaza automaticamente hasta la temporada actual y
+  la barra de scroll nativa queda oculta.
+- Al volver del reproductor o al abrir una serie con progreso, el bloque de
+  episodios se sincroniza con el episodio actual, se marca con `is-current` y
+  badge "Viendo", y el foco se restaura en esa card.
+- El control "Ver sinopsis" es enfocable y activable; abre un panel de lectura
+  sobre la ficha y BACK lo cierra antes de salir del detalle. Con el panel
+  abierto, arriba/abajo desplazan el texto por lineas para poder leer sinopsis
+  largas desde el control remoto; la barra de scroll queda oculta.
+
+Validado:
+
+- `pnpm run lint`, `pnpm run lint:legacy`, `pnpm run typecheck` y
+  `pnpm test`: 515 pruebas, 120 archivos.
+- `pnpm run build:ui`, `pnpm run build:web` y `pnpm run build:tizen`
+  regenerados; ver `docs/SAMSUNG_TIZEN.md`.
+- En Tizen/TV se conservan las caratulas ya cargadas y se evita el escalado al
+  mover el foco para reducir parpadeos; BACK del mando Samsung (`10009`) esta
+  mapeado y en la raiz usa la API de salida de Tizen.
+
 Pendiente:
 
 - revision visual en navegador y TV fisica de la alineacion;
-- aplicar el mismo lenguaje a las pantallas fuera de Home.
+- validar en TV la animacion real de skeleton/crossfade;
+- definir la atribucion visible a TVMaze (CC BY-SA);
+- aplicar el mismo lenguaje a las pantallas fuera de Home y detalle;
+- probar el `.wgt` firmado en una TV Samsung real y, si un titulo no reproduce,
+  implementar el adaptador AVPlay.

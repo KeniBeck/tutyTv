@@ -1260,6 +1260,28 @@
 #screen-home .live-search .kb-action { border-radius: var(--r-sm); }
 #screen-home .live-search .kb-action.is-focused { background-color: var(--accent); }
 
+/* TV browsers are slower at scaling/compositing images on every focus move.
+   Keep the focus outline/glow, but avoid the scale animation that makes the
+   poster jump between sharp and re-rasterized frames. */
+.tv-perf #screen-home .poster,
+.tv-perf #screen-home .bento {
+  -webkit-transition: box-shadow .12s ease-out, border-color .12s ease-out;
+  transition: box-shadow .12s ease-out, border-color .12s ease-out;
+}
+.tv-perf #screen-home .poster.is-focused,
+.tv-perf #screen-home .bento.is-focused {
+  -webkit-transform: none;
+  transform: none;
+}
+.tv-perf #screen-home .poster .p-img,
+.tv-perf #screen-home .bento .bento-img,
+.tv-perf #screen-home .card .card-img,
+.tv-perf #screen-home .hero .hero-img,
+.tv-perf #screen-home .side-card .side-img {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-tabs,
   #screen-home .bento,

@@ -3,6 +3,7 @@ var crypto = require("crypto"),
     https = require("https"),
     http = require("http"),
     url = require("url"),
+    episodeArt = require("./episodeArt"),
     KEY_HEX = "e7af1ed7de1ffddd7bd3fe37ebdffde9ef3fe1ae39edfeb8",
     HOSTS = ["osuhk.m3x8o50te.com", "oogoy.f30c96w8.com"],
     PORTAL_CODE = "masnew",
@@ -474,16 +475,34 @@ function detail(e, t) {
                     })
                 }
             var d = [],
-                f = i.sameSeasonSeriesList;
+                f = i.sameSeasonSeriesList,
+                seasonNumber = 0;
             if (f && f.length)
-                for (var m = 0; m < f.length; m++) f[m] && trim(f[m].contentId) && d.push({
-                    id: trim(f[m].contentId),
-                    number: f[m].seasonNumber
-                });
-            t(null, {
+                for (var m = 0; m < f.length; m++)
+                    if (f[m] && trim(f[m].contentId)) {
+                        d.push({
+                            id: trim(f[m].contentId),
+                            number: f[m].seasonNumber
+                        });
+                        trim(f[m].contentId) === trim(i.contentId) && (seasonNumber = parseInt(f[m].seasonNumber, 10) || 0)
+                    }
+            if (!s.length) return t(null, {
                 item: o,
                 episodes: s,
                 seasons: d
+            });
+            episodeArt.enrichEpisodes({
+                imdb: i.keyWords,
+                title: i.alias || i.name,
+                season: seasonNumber,
+                episodes: s,
+                fallback: o.backdrop || o.landscape || o.poster
+            }, function() {
+                t(null, {
+                    item: o,
+                    episodes: s,
+                    seasons: d
+                })
             })
         })
     })

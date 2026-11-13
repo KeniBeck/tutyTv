@@ -1,7 +1,8 @@
 {
   "name": "com.webosflux.xuptertv.fidelity.service",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "description": "TutyTV portal catalog and playback resolver",
   "main": "index.js",
-  "private": true
+  "private": true,
+  "type": "commonjs"
 }

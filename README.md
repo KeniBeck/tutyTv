@@ -70,6 +70,17 @@ pnpm build:ipk        # genera y valida el IPK en la raiz del repo
 `src/tools/build-ipk.sh`. El IPK mantiene el identificador tecnico
 `com.webosflux.xuptertv.fidelity`. La version actual es `1.7.2`.
 
+## Samsung Tizen
+
+```bash
+pnpm build:tizen                  # WGT sin firmar en dist/
+./INSTALAR-TUTYTV-TIZEN.sh        # pide la IP, firma e instala en la TV
+```
+
+El instalador usa Tizen Studio (`tizen`/`sdb`), firma con el perfil activo y
+guarda la última IP en `instalar-config-tizen.json`. Guía completa:
+`docs/SAMSUNG_TIZEN.md`.
+
 ## Calidad
 
 ```bash

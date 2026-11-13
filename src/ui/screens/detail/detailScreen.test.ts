@@ -2,9 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   attachDetail,
   closeSeasonPopup,
+  closeSettingsPopup,
   hasSeasonPopup,
+  hasSettingsPopup,
   renderDetail,
   resetDetailRuntime,
+  syncDetailCurrentEpisode,
   type DetailHost,
   type DetailItem,
   type DetailNode
@@ -20,6 +23,11 @@ class FakeNode {
   src = "";
   alt = "";
   style: Record<string, string> = {};
+  offsetTop = 0;
+  offsetHeight = 0;
+  scrollTop = 0;
+  scrollHeight = 0;
+  clientHeight = 0;
   children: FakeNode[] = [];
   parentNode: FakeNode | null = null;
   _activate?: () => void;
@@ -92,6 +100,7 @@ function textOf(node: FakeNode): string {
 
 function createHost() {
   const state = createAppState();
+  state.screen = "detail";
   const nodes: Record<string, FakeNode> = {
     "detail-left": new FakeNode(),
     "detail-player": new FakeNode(),
@@ -110,6 +119,9 @@ function createHost() {
   const playEpisode = vi.fn();
   const startPlayback = vi.fn();
   const openLanguage = vi.fn();
+  const openDetail = vi.fn();
+  const toggleSmooth = vi.fn(() => true);
+  const toast = vi.fn();
   const loadSeason = vi.fn((item: DetailItem, index: number, done: () => void) => {
     item.seasons![index]!.number = index + 1;
     item.episodes = [{ id: `e-${index}`, number: 1 }];
@@ -125,13 +137,14 @@ function createHost() {
     toggleFavorite,
     isReminderActive: () => false,
     toggleReminder,
-    toast: vi.fn(),
+    toast,
+    openDetail,
     play,
     playEpisode,
     startPlayback,
     openLanguage,
     isSmooth: () => false,
-    toggleSmooth: () => true,
+    toggleSmooth,
     loadSeason,
     buildPoster: (item, left, top, width, height) => {
       const node = new FakeNode();
@@ -149,6 +162,9 @@ function createHost() {
       node.className = className || "";
       node.textContent = text || "";
       node.tagName = tag.toUpperCase();
+      if (node.className === "season-popup") {
+        node.clientHeight = 108;
+      }
       return node as unknown as DetailNode;
     },
     text: (value) => {
@@ -168,7 +184,22 @@ function createHost() {
     },
     focus
   };
-  return { host, state, nodes, focus, toggleFavorite, toggleReminder, play, playEpisode, startPlayback, loadSeason };
+  return {
+    host,
+    state,
+    nodes,
+    focus,
+    toggleFavorite,
+    toggleReminder,
+    play,
+    playEpisode,
+    startPlayback,
+    openLanguage,
+    openDetail,
+    toggleSmooth,
+    loadSeason,
+    toast
+  };
 }
 
 describe("detail screen runtime", () => {
@@ -209,6 +240,23 @@ describe("detail screen runtime", () => {
     expect(textOf(reminder!)).toContain("En recordatorios");
   });
 
+  it("renders episode thumbnails when a picture is available", () => {
+    const { host, nodes } = createHost();
+    attachDetail(host);
+    renderDetail({
+      id: "s",
+      title: "Series",
+      seasons: [{ id: "s1", number: 1 }],
+      episodes: [{ id: "e1", number: 1, picture: "https://example.test/e1.jpg" }]
+    });
+
+    const episode = nodes["detail-bottom"]!.querySelectorAll(".detail-episode")[0];
+    expect(episode?.className).toContain("has-thumb");
+    const thumb = episode?.children.find((node) => node.className.includes("detail-card-thumb"));
+    const image = thumb?.children.find((node) => node.className.includes("detail-card-img"));
+    expect(image?.src).toBe("https://example.test/e1.jpg");
+  });
+
   it("renders seasons, ranges and episodes for a series", () => {
     const { host, state, nodes, playEpisode, startPlayback, loadSeason } = createHost();
     attachDetail(host);
@@ -231,7 +279,7 @@ describe("detail screen runtime", () => {
     ranges[1]?._activate?.();
     expect(state.detailRange).toBe(1);
 
-    const seasonButton = nodes["detail-bottom"]!.children.find((node) => node.className.includes("detail-season"));
+    const seasonButton = nodes["detail-bottom"]!.querySelector(".detail-season");
     expect(seasonButton).toBeDefined();
     seasonButton?._activate?.();
     expect(hasSeasonPopup()).toBe(true);
@@ -239,7 +287,7 @@ describe("detail screen runtime", () => {
     popup?.children[1]?._activate?.();
     expect(state.detailSeason).toBe(1);
     expect(loadSeason).toHaveBeenCalledWith(series, 1, expect.any(Function));
-    expect(startPlayback).toHaveBeenCalled();
+    expect(startPlayback).not.toHaveBeenCalled();
     expect(hasSeasonPopup()).toBe(false);
 
     const episode = nodes["detail-bottom"]!.querySelectorAll(".detail-episode")[0];
@@ -247,7 +295,44 @@ describe("detail screen runtime", () => {
     expect(playEpisode).toHaveBeenCalled();
   });
 
-  it("routes vertical focus through season, ranges, episodes and related", () => {
+  it("shows skeletons while a season loads and restores the previous season on failure", () => {
+    const { host, state, nodes, startPlayback, toast } = createHost();
+    attachDetail(host);
+    const series: DetailItem = {
+      id: "s",
+      title: "Series",
+      episodes: [{ id: "old", number: 1, title: "Old episode" }],
+      seasons: [
+        { id: "s1", number: 1 },
+        { id: "s2", number: 2 }
+      ]
+    };
+    const deferred: { done: ((ok?: boolean) => void) | null } = { done: null };
+    host.loadSeason = vi.fn((_item: DetailItem, _index: number, done: (ok?: boolean) => void) => {
+      deferred.done = done;
+    });
+    renderDetail(series);
+    state.detailSeason = 0;
+
+    const seasonButton = nodes["detail-bottom"]!.querySelector(".detail-season");
+    seasonButton?._activate?.();
+    const popup = nodes["detail-bottom"]!.children.find((node) => node.className.includes("season-popup"));
+    popup?.children[1]?._activate?.();
+
+    expect(state.detailSeason).toBe(1);
+    expect(nodes["detail-bottom"]!.querySelectorAll(".is-skeleton")).toHaveLength(6);
+    expect(textOf(nodes["detail-bottom"]!)).toContain("Cargando episodios");
+    expect(startPlayback).not.toHaveBeenCalled();
+
+    deferred.done?.(false);
+
+    expect(state.detailSeason).toBe(0);
+    expect(nodes["detail-bottom"]!.querySelectorAll(".is-skeleton")).toHaveLength(0);
+    expect(textOf(nodes["detail-bottom"]!)).toContain("Old episode");
+    expect(toast).toHaveBeenCalledWith("No se pudo cargar la temporada");
+  });
+
+  it("routes vertical focus through season, ranges and episodes", () => {
     const { host, nodes, focus } = createHost();
     attachDetail(host);
     const series: DetailItem = {
@@ -264,7 +349,6 @@ describe("detail screen runtime", () => {
     const season = bottom.querySelector(".detail-season");
     const range = bottom.querySelectorAll(".detail-range")[0];
     const episode = bottom.querySelectorAll(".detail-episode")[0];
-    const poster = bottom.querySelectorAll(".poster")[0];
 
     focus.mockClear();
     expect(episode?._onMove?.("up")).toBe(true);
@@ -277,10 +361,168 @@ describe("detail screen runtime", () => {
     focus.mockClear();
     expect(season?._onMove?.("down")).toBe(true);
     expect(focus).toHaveBeenCalledWith(range);
+  });
+
+  it("keeps focus inside the season popup while navigating seasons", () => {
+    const { host, state, nodes, focus } = createHost();
+    attachDetail(host);
+    state.detailSeason = 0;
+    renderDetail({
+      id: "s",
+      title: "Series",
+      seasons: [
+        { id: "s1", number: 1 },
+        { id: "s2", number: 2 },
+        { id: "s3", number: 3 }
+      ],
+      episodes: [{ id: "e1" }]
+    });
+
+    const seasonButton = nodes["detail-bottom"]!.querySelector(".detail-season");
+    seasonButton?._activate?.();
+    const popup = nodes["detail-bottom"]!.children.find((node) => node.className.includes("season-popup"));
+    const first = popup?.children[0];
+    const second = popup?.children[1];
+    const third = popup?.children[2];
+    const popupNode = popup as unknown as FakeNode;
+    popupNode.clientHeight = 108;
+    [first, second, third].forEach((item, index) => {
+      if (item) {
+        item.offsetTop = index * 54;
+        item.offsetHeight = 54;
+      }
+    });
 
     focus.mockClear();
-    expect(poster?._onMove?.("up")).toBe(true);
-    expect(focus).toHaveBeenCalledWith(episode);
+    expect(first?._onMove?.("down")).toBe(true);
+    expect(focus).toHaveBeenLastCalledWith(second);
+    expect(popupNode.scrollTop).toBe(0);
+    expect(second?._onMove?.("down")).toBe(true);
+    expect(focus).toHaveBeenLastCalledWith(third);
+    expect(popupNode.scrollTop).toBe(54);
+    expect(third?._onMove?.("down")).toBe(true);
+    expect(focus).toHaveBeenLastCalledWith(third);
+    expect(third?._onMove?.("up")).toBe(true);
+    expect(focus).toHaveBeenLastCalledWith(second);
+    expect(first?._onMove?.("left")).toBe(true);
+    expect(focus).toHaveBeenLastCalledWith(second);
+    expect(hasSeasonPopup()).toBe(true);
+  });
+
+  it("opens the season popup on the current season", () => {
+    const { host, state, nodes, focus } = createHost();
+    attachDetail(host);
+    state.detailSeason = 2;
+    renderDetail({
+      id: "s",
+      title: "Series",
+      seasons: Array.from({ length: 10 }, (_, index) => ({ id: `s${index}`, number: index + 1 })),
+      episodes: [{ id: "e1" }]
+    });
+
+    const seasonButton = nodes["detail-bottom"]!.querySelector(".detail-season");
+    seasonButton?._activate?.();
+    const popup = nodes["detail-bottom"]!.children.find((node) => node.className.includes("season-popup"));
+    expect(popup?.scrollTop).toBe(54);
+    expect(focus).toHaveBeenLastCalledWith(popup?.children[2]);
+  });
+
+  it("reveals and marks the episode that is currently playing", () => {
+    const { host, state, nodes } = createHost();
+    attachDetail(host);
+    const episodes = Array.from({ length: 45 }, (_, index) => ({
+      id: `e${index}`,
+      number: index + 1,
+      title: `Episode ${index + 1}`
+    }));
+    const series: DetailItem = {
+      id: "s",
+      title: "Series",
+      episodes,
+      seasons: [{ id: "s1", number: 1 }]
+    };
+    state.detailEpisode = episodes[25];
+
+    renderDetail(series);
+    expect(state.detailRange).toBe(1);
+    expect(nodes["detail-bottom"]!.querySelectorAll(".detail-range")[1]?.className).toContain("is-selected");
+    let currentCards = nodes["detail-bottom"]!
+      .querySelectorAll(".detail-episode")
+      .filter((node) => node.className.split(/\s+/).includes("is-current"));
+    expect(currentCards).toHaveLength(1);
+    expect(textOf(currentCards[0]!)).toContain("E26");
+    expect(textOf(currentCards[0]!)).toContain("Viendo");
+
+    nodes["detail-bottom"]!.querySelectorAll(".detail-range")[0]?._activate?.();
+    expect(state.detailRange).toBe(0);
+
+    state.detailEpisode = episodes[30];
+    expect(syncDetailCurrentEpisode(series)).toBe(true);
+    expect(state.detailRange).toBe(1);
+    currentCards = nodes["detail-bottom"]!
+      .querySelectorAll(".detail-episode")
+      .filter((node) => node.className.split(/\s+/).includes("is-current"));
+    expect(currentCards).toHaveLength(1);
+    expect(textOf(currentCards[0]!)).toContain("E31");
+  });
+
+  it("opens and closes the synopsis from its focusable control", () => {
+    const { host, nodes } = createHost();
+    attachDetail(host);
+    renderDetail({ id: "m", title: "Movie", synopsis: "A long synopsis" });
+
+    const more = nodes["detail-left"]!.querySelectorAll(".detail-more")[0];
+    expect(more?.className).toContain("focusable");
+    expect(more?.textContent).toBe("Ver sinopsis");
+    more?._activate?.();
+    expect(nodes["screen-detail"]!.classList.contains("is-synopsis-open")).toBe(true);
+    expect(more?.textContent).toBe("Ocultar sinopsis");
+
+    const text = nodes["detail-left"]!.querySelectorAll(".detail-synopsis")[0]?.querySelector(".text") as unknown as FakeNode;
+    text.scrollHeight = 600;
+    text.clientHeight = 216;
+    expect(more?._onMove?.("down")).toBe(true);
+    expect(text.scrollTop).toBe(90);
+    expect(more?._onMove?.("down")).toBe(true);
+    expect(text.scrollTop).toBe(180);
+    expect(more?._onMove?.("up")).toBe(true);
+    expect(text.scrollTop).toBe(90);
+    text.scrollTop = 0;
+    expect(more?._onMove?.("up")).toBe(false);
+    text.scrollTop = 384;
+    expect(more?._onMove?.("down")).toBe(false);
+
+    more?._activate?.();
+    expect(nodes["screen-detail"]!.classList.contains("is-synopsis-open")).toBe(false);
+    expect(more?.textContent).toBe("Ver sinopsis");
+  });
+
+  it("opens recommendations and closes the settings popup", () => {
+    const { host, nodes, focus, openDetail, openLanguage, toggleSmooth } = createHost();
+    attachDetail(host);
+    renderDetail({ id: "m", title: "Movie", synopsis: "Sin" });
+
+    const related = nodes["detail-bottom"]!.querySelectorAll(".detail-rec-card")[0];
+    expect(related).toBeDefined();
+    related?._activate?.();
+    expect(openDetail).toHaveBeenCalled();
+
+    const settings = nodes["detail-buttons"]!.children.find((node) => textOf(node).includes("Ajustes"));
+    settings?._activate?.();
+    expect(hasSettingsPopup()).toBe(true);
+    expect(focus).toHaveBeenCalled();
+
+    const language = nodes["detail-buttons"]!.querySelectorAll(".detail-setting-row")[0];
+    language?._activate?.();
+    expect(openLanguage).toHaveBeenCalled();
+    expect(hasSettingsPopup()).toBe(false);
+
+    settings?._activate?.();
+    const fluid = nodes["detail-buttons"]!.querySelectorAll(".detail-setting-option")[1];
+    fluid?._activate?.();
+    expect(toggleSmooth).toHaveBeenCalled();
+    expect(closeSettingsPopup()).toBe(true);
+    expect(hasSettingsPopup()).toBe(false);
   });
 
   it("closes the season popup on back", () => {
@@ -293,7 +535,7 @@ describe("detail screen runtime", () => {
       seasons: [{ id: "s1", number: 1 }, { id: "s2", number: 2 }],
       episodes: [{ id: "e1" }]
     });
-    const seasonButton = nodes["detail-bottom"]!.children.find((node) => node.className.includes("detail-season"));
+    const seasonButton = nodes["detail-bottom"]!.querySelector(".detail-season");
     seasonButton?._activate?.();
     expect(hasSeasonPopup()).toBe(true);
     expect(closeSeasonPopup()).toBe(true);
